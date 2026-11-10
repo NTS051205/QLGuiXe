@@ -1,248 +1,30 @@
-#nullable disable
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
-
-namespace QLGuiXe.Forms;
-
-partial class frmXeRa
+using System.Drawing; using System.Windows.Forms;
+namespace QLGuiXe.Forms
 {
-    private System.ComponentModel.IContainer components = null;
-    private Panel pnlTieuDe;
-    private Label lblTieuDe;
-    private Label lblMoTa;
-    private Panel pnlTimKiem;
-    private FlowLayoutPanel flpTimKiem;
-    private TextBox txtBienSoHoacMaThe;
-    private Button btnTimKiemXe;
-    private Button btnLamMoiXeRa;
-    private TableLayoutPanel tlpNoiDung;
-    private Panel pnlThongTinLuotGui;
-    private TableLayoutPanel tlpThongTinLuotGui;
-    private Label lblTieuDeLuotGui;
-    private Label lblBienSo;
-    private Label lblGiaTriBienSo;
-    private Label lblLoaiXe;
-    private Label lblGiaTriLoaiXe;
-    private Label lblMaThe;
-    private Label lblGiaTriMaThe;
-    private Label lblKhuVuc;
-    private Label lblGiaTriKhuVuc;
-    private Label lblThoiGianVao;
-    private Label lblGiaTriThoiGianVao;
-    private Label lblThoiGianRa;
-    private Label lblGiaTriThoiGianRa;
-    private Label lblThoiGianGui;
-    private Label lblGiaTriThoiGianGui;
-    private Label lblLoaiVe;
-    private Label lblGiaTriLoaiVe;
-    private Panel pnlThanhToan;
-    private TableLayoutPanel tlpThanhToan;
-    private Label lblTieuDeThanhToan;
-    private Label lblSoTienThanhToan;
-    private Label lblGiaTriSoTien;
-    private Label lblPhuongThucThanhToan;
-    private ComboBox cboPhuongThucThanhToan;
-    private Label lblTrangThaiXuLy;
-    private Button btnXacNhanXeRa;
-    private Button btnThanhToanXeRa;
-
-    protected override void Dispose(bool disposing)
+    partial class frmXeRa
     {
-        if (disposing) components?.Dispose();
-        base.Dispose(disposing);
-    }
-
-    private void InitializeComponent()
-    {
-        pnlTieuDe = new Panel();
-        lblTieuDe = new Label();
-        lblMoTa = new Label();
-        pnlTimKiem = new Panel();
-        flpTimKiem = new FlowLayoutPanel();
-        txtBienSoHoacMaThe = new TextBox();
-        btnTimKiemXe = new Button();
-        btnLamMoiXeRa = new Button();
-        tlpNoiDung = new TableLayoutPanel();
-        pnlThongTinLuotGui = new Panel();
-        tlpThongTinLuotGui = new TableLayoutPanel();
-        lblTieuDeLuotGui = new Label();
-        lblBienSo = new Label();
-        lblGiaTriBienSo = new Label();
-        lblLoaiXe = new Label();
-        lblGiaTriLoaiXe = new Label();
-        lblMaThe = new Label();
-        lblGiaTriMaThe = new Label();
-        lblKhuVuc = new Label();
-        lblGiaTriKhuVuc = new Label();
-        lblThoiGianVao = new Label();
-        lblGiaTriThoiGianVao = new Label();
-        lblThoiGianRa = new Label();
-        lblGiaTriThoiGianRa = new Label();
-        lblThoiGianGui = new Label();
-        lblGiaTriThoiGianGui = new Label();
-        lblLoaiVe = new Label();
-        lblGiaTriLoaiVe = new Label();
-        pnlThanhToan = new Panel();
-        tlpThanhToan = new TableLayoutPanel();
-        lblTieuDeThanhToan = new Label();
-        lblSoTienThanhToan = new Label();
-        lblGiaTriSoTien = new Label();
-        lblPhuongThucThanhToan = new Label();
-        cboPhuongThucThanhToan = new ComboBox();
-        lblTrangThaiXuLy = new Label();
-        btnXacNhanXeRa = new Button();
-        btnThanhToanXeRa = new Button();
-        pnlTieuDe.SuspendLayout();
-        pnlTimKiem.SuspendLayout();
-        flpTimKiem.SuspendLayout();
-        tlpNoiDung.SuspendLayout();
-        pnlThongTinLuotGui.SuspendLayout();
-        tlpThongTinLuotGui.SuspendLayout();
-        pnlThanhToan.SuspendLayout();
-        tlpThanhToan.SuspendLayout();
-        SuspendLayout();
-
-        pnlTieuDe.Controls.Add(lblMoTa);
-        pnlTieuDe.Controls.Add(lblTieuDe);
-        pnlTieuDe.Dock = DockStyle.Top;
-        pnlTieuDe.Name = "pnlTieuDe";
-        pnlTieuDe.Padding = new Padding(24, 10, 24, 6);
-        pnlTieuDe.Size = new Size(1064, 80);
-        lblTieuDe.Dock = DockStyle.Top; lblTieuDe.Font = new Font("Segoe UI", 20F, FontStyle.Bold); lblTieuDe.Name = "lblTieuDe"; lblTieuDe.Size = new Size(1016, 42); lblTieuDe.Text = "Xử lý xe ra & thu phí";
-        lblMoTa.Dock = DockStyle.Fill; lblMoTa.ForeColor = Color.FromArgb(100, 116, 139); lblMoTa.Name = "lblMoTa"; lblMoTa.Text = "Tra cứu lượt gửi, xác nhận phí và hoàn tất thanh toán.";
-
-        pnlTimKiem.BackColor = Color.White;
-        pnlTimKiem.Controls.Add(flpTimKiem);
-        pnlTimKiem.Dock = DockStyle.Top;
-        pnlTimKiem.Name = "pnlTimKiem";
-        pnlTimKiem.Padding = new Padding(24, 20, 24, 16);
-        pnlTimKiem.Size = new Size(1064, 88);
-        flpTimKiem.Controls.Add(txtBienSoHoacMaThe);
-        flpTimKiem.Controls.Add(btnTimKiemXe);
-        flpTimKiem.Controls.Add(btnLamMoiXeRa);
-        flpTimKiem.Dock = DockStyle.Fill;
-        flpTimKiem.Name = "flpTimKiem";
-        flpTimKiem.WrapContents = false;
-        txtBienSoHoacMaThe.Font = new Font("Segoe UI", 14F, FontStyle.Bold); txtBienSoHoacMaThe.Margin = new Padding(0, 1, 16, 0); txtBienSoHoacMaThe.Name = "txtBienSoHoacMaThe"; txtBienSoHoacMaThe.Size = new Size(440, 39);
-        btnTimKiemXe.Margin = new Padding(0, 0, 14, 0); btnTimKiemXe.Name = "btnTimKiemXe"; btnTimKiemXe.Size = new Size(135, 44); btnTimKiemXe.Text = "Tìm kiếm"; btnTimKiemXe.Click += btnTimKiemXe_Click;
-        btnLamMoiXeRa.Margin = new Padding(0); btnLamMoiXeRa.Name = "btnLamMoiXeRa"; btnLamMoiXeRa.Size = new Size(110, 44); btnLamMoiXeRa.Text = "Làm mới"; btnLamMoiXeRa.Click += btnLamMoiXeRa_Click;
-
-        tlpNoiDung.ColumnCount = 2;
-        tlpNoiDung.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62F));
-        tlpNoiDung.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
-        tlpNoiDung.Controls.Add(pnlThongTinLuotGui, 0, 0);
-        tlpNoiDung.Controls.Add(pnlThanhToan, 1, 0);
-        tlpNoiDung.Dock = DockStyle.Fill;
-        tlpNoiDung.Name = "tlpNoiDung";
-        tlpNoiDung.Padding = new Padding(24, 18, 24, 24);
-        tlpNoiDung.RowCount = 1;
-        tlpNoiDung.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-        pnlThongTinLuotGui.BackColor = Color.White;
-        pnlThongTinLuotGui.Controls.Add(tlpThongTinLuotGui);
-        pnlThongTinLuotGui.Dock = DockStyle.Fill;
-        pnlThongTinLuotGui.Margin = new Padding(0, 0, 16, 0);
-        pnlThongTinLuotGui.Name = "pnlThongTinLuotGui";
-        pnlThongTinLuotGui.Padding = new Padding(24, 18, 24, 20);
-        tlpThongTinLuotGui.ColumnCount = 2;
-        tlpThongTinLuotGui.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-        tlpThongTinLuotGui.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-        tlpThongTinLuotGui.Controls.Add(lblTieuDeLuotGui, 0, 0);
-        tlpThongTinLuotGui.Controls.Add(lblBienSo, 0, 1); tlpThongTinLuotGui.Controls.Add(lblLoaiXe, 1, 1);
-        tlpThongTinLuotGui.Controls.Add(lblGiaTriBienSo, 0, 2); tlpThongTinLuotGui.Controls.Add(lblGiaTriLoaiXe, 1, 2);
-        tlpThongTinLuotGui.Controls.Add(lblMaThe, 0, 3); tlpThongTinLuotGui.Controls.Add(lblKhuVuc, 1, 3);
-        tlpThongTinLuotGui.Controls.Add(lblGiaTriMaThe, 0, 4); tlpThongTinLuotGui.Controls.Add(lblGiaTriKhuVuc, 1, 4);
-        tlpThongTinLuotGui.Controls.Add(lblThoiGianVao, 0, 5); tlpThongTinLuotGui.Controls.Add(lblThoiGianRa, 1, 5);
-        tlpThongTinLuotGui.Controls.Add(lblGiaTriThoiGianVao, 0, 6); tlpThongTinLuotGui.Controls.Add(lblGiaTriThoiGianRa, 1, 6);
-        tlpThongTinLuotGui.Controls.Add(lblThoiGianGui, 0, 7); tlpThongTinLuotGui.Controls.Add(lblLoaiVe, 1, 7);
-        tlpThongTinLuotGui.Controls.Add(lblGiaTriThoiGianGui, 0, 8); tlpThongTinLuotGui.Controls.Add(lblGiaTriLoaiVe, 1, 8);
-        tlpThongTinLuotGui.Dock = DockStyle.Fill;
-        tlpThongTinLuotGui.Name = "tlpThongTinLuotGui";
-        tlpThongTinLuotGui.RowCount = 9;
-        tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
-        tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F)); tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
-        tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F)); tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
-        tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F)); tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
-        tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F)); tlpThongTinLuotGui.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        tlpThongTinLuotGui.SetColumnSpan(lblTieuDeLuotGui, 2);
-        lblTieuDeLuotGui.Dock = DockStyle.Fill; lblTieuDeLuotGui.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblTieuDeLuotGui.Name = "lblTieuDeLuotGui"; lblTieuDeLuotGui.Text = "THÔNG TIN LƯỢT GỬI";
-
-        lblBienSo.Dock = DockStyle.Fill; lblBienSo.ForeColor = Color.FromArgb(100, 116, 139); lblBienSo.Name = "lblBienSo"; lblBienSo.Text = "Biển số";
-        lblLoaiXe.Dock = DockStyle.Fill; lblLoaiXe.ForeColor = Color.FromArgb(100, 116, 139); lblLoaiXe.Name = "lblLoaiXe"; lblLoaiXe.Text = "Loại xe";
-        lblMaThe.Dock = DockStyle.Fill; lblMaThe.ForeColor = Color.FromArgb(100, 116, 139); lblMaThe.Name = "lblMaThe"; lblMaThe.Text = "Mã thẻ";
-        lblKhuVuc.Dock = DockStyle.Fill; lblKhuVuc.ForeColor = Color.FromArgb(100, 116, 139); lblKhuVuc.Name = "lblKhuVuc"; lblKhuVuc.Text = "Khu vực";
-        lblThoiGianVao.Dock = DockStyle.Fill; lblThoiGianVao.ForeColor = Color.FromArgb(100, 116, 139); lblThoiGianVao.Name = "lblThoiGianVao"; lblThoiGianVao.Text = "Thời gian vào";
-        lblThoiGianRa.Dock = DockStyle.Fill; lblThoiGianRa.ForeColor = Color.FromArgb(100, 116, 139); lblThoiGianRa.Name = "lblThoiGianRa"; lblThoiGianRa.Text = "Thời gian ra dự kiến";
-        lblThoiGianGui.Dock = DockStyle.Fill; lblThoiGianGui.ForeColor = Color.FromArgb(100, 116, 139); lblThoiGianGui.Name = "lblThoiGianGui"; lblThoiGianGui.Text = "Thời gian gửi";
-        lblLoaiVe.Dock = DockStyle.Fill; lblLoaiVe.ForeColor = Color.FromArgb(100, 116, 139); lblLoaiVe.Name = "lblLoaiVe"; lblLoaiVe.Text = "Loại vé";
-        lblGiaTriBienSo.Dock = DockStyle.Fill; lblGiaTriBienSo.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblGiaTriBienSo.Name = "lblGiaTriBienSo"; lblGiaTriBienSo.Text = "—";
-        lblGiaTriLoaiXe.Dock = DockStyle.Fill; lblGiaTriLoaiXe.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblGiaTriLoaiXe.Name = "lblGiaTriLoaiXe"; lblGiaTriLoaiXe.Text = "—";
-        lblGiaTriMaThe.Dock = DockStyle.Fill; lblGiaTriMaThe.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblGiaTriMaThe.Name = "lblGiaTriMaThe"; lblGiaTriMaThe.Text = "—";
-        lblGiaTriKhuVuc.Dock = DockStyle.Fill; lblGiaTriKhuVuc.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblGiaTriKhuVuc.Name = "lblGiaTriKhuVuc"; lblGiaTriKhuVuc.Text = "—";
-        lblGiaTriThoiGianVao.Dock = DockStyle.Fill; lblGiaTriThoiGianVao.Font = new Font("Segoe UI", 10F, FontStyle.Bold); lblGiaTriThoiGianVao.Name = "lblGiaTriThoiGianVao"; lblGiaTriThoiGianVao.Text = "—";
-        lblGiaTriThoiGianRa.Dock = DockStyle.Fill; lblGiaTriThoiGianRa.Font = new Font("Segoe UI", 10F, FontStyle.Bold); lblGiaTriThoiGianRa.Name = "lblGiaTriThoiGianRa"; lblGiaTriThoiGianRa.Text = "—";
-        lblGiaTriThoiGianGui.Dock = DockStyle.Fill; lblGiaTriThoiGianGui.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblGiaTriThoiGianGui.Name = "lblGiaTriThoiGianGui"; lblGiaTriThoiGianGui.Text = "—";
-        lblGiaTriLoaiVe.Dock = DockStyle.Fill; lblGiaTriLoaiVe.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblGiaTriLoaiVe.Name = "lblGiaTriLoaiVe"; lblGiaTriLoaiVe.Text = "—";
-
-        pnlThanhToan.BackColor = Color.White;
-        pnlThanhToan.Controls.Add(tlpThanhToan);
-        pnlThanhToan.Dock = DockStyle.Fill;
-        pnlThanhToan.Margin = new Padding(0);
-        pnlThanhToan.Name = "pnlThanhToan";
-        pnlThanhToan.Padding = new Padding(26, 18, 26, 20);
-        tlpThanhToan.ColumnCount = 1;
-        tlpThanhToan.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        tlpThanhToan.Controls.Add(lblTieuDeThanhToan, 0, 0);
-        tlpThanhToan.Controls.Add(lblSoTienThanhToan, 0, 1);
-        tlpThanhToan.Controls.Add(lblGiaTriSoTien, 0, 2);
-        tlpThanhToan.Controls.Add(lblPhuongThucThanhToan, 0, 3);
-        tlpThanhToan.Controls.Add(cboPhuongThucThanhToan, 0, 4);
-        tlpThanhToan.Controls.Add(lblTrangThaiXuLy, 0, 5);
-        tlpThanhToan.Controls.Add(btnXacNhanXeRa, 0, 6);
-        tlpThanhToan.Controls.Add(btnThanhToanXeRa, 0, 7);
-        tlpThanhToan.Dock = DockStyle.Fill;
-        tlpThanhToan.Name = "tlpThanhToan";
-        tlpThanhToan.RowCount = 8;
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 28F));
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 68F));
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 58F));
-        tlpThanhToan.RowStyles.Add(new RowStyle(SizeType.Absolute, 58F));
-        lblTieuDeThanhToan.Dock = DockStyle.Fill; lblTieuDeThanhToan.Font = new Font("Segoe UI", 11F, FontStyle.Bold); lblTieuDeThanhToan.Name = "lblTieuDeThanhToan"; lblTieuDeThanhToan.Text = "THANH TOÁN";
-        lblSoTienThanhToan.Dock = DockStyle.Fill; lblSoTienThanhToan.ForeColor = Color.FromArgb(100, 116, 139); lblSoTienThanhToan.Name = "lblSoTienThanhToan"; lblSoTienThanhToan.Text = "Số tiền cần thanh toán";
-        lblGiaTriSoTien.Dock = DockStyle.Fill; lblGiaTriSoTien.Font = new Font("Segoe UI", 25F, FontStyle.Bold); lblGiaTriSoTien.ForeColor = Color.FromArgb(220, 38, 38); lblGiaTriSoTien.Name = "lblGiaTriSoTien"; lblGiaTriSoTien.Text = "0 ₫";
-        lblPhuongThucThanhToan.Dock = DockStyle.Fill; lblPhuongThucThanhToan.ForeColor = Color.FromArgb(100, 116, 139); lblPhuongThucThanhToan.Name = "lblPhuongThucThanhToan"; lblPhuongThucThanhToan.Text = "Phương thức thanh toán";
-        cboPhuongThucThanhToan.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right; cboPhuongThucThanhToan.DropDownStyle = ComboBoxStyle.DropDownList; cboPhuongThucThanhToan.Name = "cboPhuongThucThanhToan";
-        lblTrangThaiXuLy.Dock = DockStyle.Fill; lblTrangThaiXuLy.ForeColor = Color.FromArgb(100, 116, 139); lblTrangThaiXuLy.Name = "lblTrangThaiXuLy"; lblTrangThaiXuLy.TextAlign = ContentAlignment.TopLeft;
-        btnXacNhanXeRa.Dock = DockStyle.Fill; btnXacNhanXeRa.Margin = new Padding(0, 5, 0, 5); btnXacNhanXeRa.Name = "btnXacNhanXeRa"; btnXacNhanXeRa.Text = "XÁC NHẬN XE RA"; btnXacNhanXeRa.Click += btnXacNhanXeRa_Click;
-        btnThanhToanXeRa.Dock = DockStyle.Fill; btnThanhToanXeRa.Margin = new Padding(0, 5, 0, 5); btnThanhToanXeRa.Name = "btnThanhToanXeRa"; btnThanhToanXeRa.Text = "THANH TOÁN"; btnThanhToanXeRa.Click += btnThanhToanXeRa_Click;
-
-        AutoScaleDimensions = new SizeF(96F, 96F);
-        AutoScaleMode = AutoScaleMode.Dpi;
-        BackColor = Color.FromArgb(248, 250, 252);
-        ClientSize = new Size(1064, 650);
-        Controls.Add(tlpNoiDung);
-        Controls.Add(pnlTimKiem);
-        Controls.Add(pnlTieuDe);
-        Font = new Font("Segoe UI", 9F);
-        MinimumSize = new Size(920, 620);
-        Name = "frmXeRa";
-        Text = "Xe ra";
-        pnlTieuDe.ResumeLayout(false);
-        pnlTimKiem.ResumeLayout(false);
-        flpTimKiem.ResumeLayout(false);
-        flpTimKiem.PerformLayout();
-        tlpNoiDung.ResumeLayout(false);
-        pnlThongTinLuotGui.ResumeLayout(false);
-        tlpThongTinLuotGui.ResumeLayout(false);
-        pnlThanhToan.ResumeLayout(false);
-        tlpThanhToan.ResumeLayout(false);
-        ResumeLayout(false);
+        private System.ComponentModel.IContainer components = null; private Label lblTieuDe, lblMoTa, lblTieuDeLuotGui, lblBienSo, lblGiaTriBienSo, lblLoaiXe, lblGiaTriLoaiXe, lblMaThe, lblGiaTriMaThe, lblKhuVuc, lblGiaTriKhuVuc, lblThoiGianVao, lblGiaTriThoiGianVao, lblThoiGianRa, lblGiaTriThoiGianRa, lblThoiGianGui, lblGiaTriThoiGianGui, lblLoaiVe, lblGiaTriLoaiVe, lblTieuDeThanhToan, lblSoTienThanhToan, lblGiaTriSoTien, lblPhuongThucThanhToan, lblTrangThaiXuLy, lblDanhSachXeDangGui; private TextBox txtBienSoHoacMaThe; private Button btnTimKiemXe, btnLamMoiXeRa, btnXacNhanXeRa, btnThanhToanXeRa, btnThoat; private ComboBox cboPhuongThucThanhToan; private DataGridView dgvXeDangGui;
+        protected override void Dispose(bool disposing) { if (disposing && components != null) components.Dispose(); base.Dispose(disposing); }
+        private void InitializeComponent()
+        {
+            this.lblTieuDe = new Label(); this.lblMoTa = new Label(); this.txtBienSoHoacMaThe = new TextBox(); this.btnTimKiemXe = new Button(); this.btnLamMoiXeRa = new Button(); this.lblTieuDeLuotGui = new Label(); this.lblBienSo = new Label(); this.lblGiaTriBienSo = new Label(); this.lblLoaiXe = new Label(); this.lblGiaTriLoaiXe = new Label(); this.lblMaThe = new Label(); this.lblGiaTriMaThe = new Label(); this.lblKhuVuc = new Label(); this.lblGiaTriKhuVuc = new Label(); this.lblThoiGianVao = new Label(); this.lblGiaTriThoiGianVao = new Label(); this.lblThoiGianRa = new Label(); this.lblGiaTriThoiGianRa = new Label(); this.lblThoiGianGui = new Label(); this.lblGiaTriThoiGianGui = new Label(); this.lblLoaiVe = new Label(); this.lblGiaTriLoaiVe = new Label(); this.lblTieuDeThanhToan = new Label(); this.lblSoTienThanhToan = new Label(); this.lblGiaTriSoTien = new Label(); this.lblPhuongThucThanhToan = new Label(); this.cboPhuongThucThanhToan = new ComboBox(); this.lblTrangThaiXuLy = new Label(); this.btnXacNhanXeRa = new Button(); this.btnThanhToanXeRa = new Button(); this.btnThoat = new Button(); this.lblDanhSachXeDangGui = new Label(); this.dgvXeDangGui = new DataGridView(); ((System.ComponentModel.ISupportInitialize)(this.dgvXeDangGui)).BeginInit(); this.SuspendLayout();
+            this.lblTieuDe.AutoSize = true; this.lblTieuDe.Font = new Font("Segoe UI", 16F, FontStyle.Bold); this.lblTieuDe.Location = new Point(20, 15); this.lblTieuDe.Text = "XÁC NHẬN XE RA"; this.lblTieuDe.Name = "lblTieuDe"; this.lblMoTa.AutoSize = true; this.lblMoTa.Location = new Point(22, 50); this.lblMoTa.Text = "Tìm theo biển số hoặc mã thẻ, kiểm tra phí và xác nhận xe ra."; this.lblMoTa.Name = "lblMoTa";
+            this.txtBienSoHoacMaThe.Font = new Font("Segoe UI", 12F, FontStyle.Bold); this.txtBienSoHoacMaThe.Location = new Point(25, 85); this.txtBienSoHoacMaThe.Name = "txtBienSoHoacMaThe"; this.txtBienSoHoacMaThe.Size = new Size(300, 29); this.btnTimKiemXe.Location = new Point(340, 83); this.btnTimKiemXe.Name = "btnTimKiemXe"; this.btnTimKiemXe.Size = new Size(110, 34); this.btnTimKiemXe.Text = "Tìm kiếm"; this.btnTimKiemXe.UseVisualStyleBackColor = true; this.btnTimKiemXe.Click += new System.EventHandler(this.btnTimKiemXe_Click); this.btnLamMoiXeRa.Location = new Point(460, 83); this.btnLamMoiXeRa.Name = "btnLamMoiXeRa"; this.btnLamMoiXeRa.Size = new Size(100, 34); this.btnLamMoiXeRa.Text = "Làm mới"; this.btnLamMoiXeRa.UseVisualStyleBackColor = true; this.btnLamMoiXeRa.Click += new System.EventHandler(this.btnLamMoiXeRa_Click);
+            this.lblTieuDeLuotGui.AutoSize = true; this.lblTieuDeLuotGui.Font = new Font("Segoe UI", 11F, FontStyle.Bold); this.lblTieuDeLuotGui.Location = new Point(22, 145); this.lblTieuDeLuotGui.Text = "THÔNG TIN LƯỢT GỬI"; this.lblTieuDeLuotGui.Name = "lblTieuDeLuotGui";
+            this.lblBienSo.AutoSize = true; this.lblBienSo.Location = new Point(25, 185); this.lblBienSo.Name = "lblBienSo"; this.lblBienSo.Text = "Biển số:"; this.lblGiaTriBienSo.AutoSize = true; this.lblGiaTriBienSo.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriBienSo.Location = new Point(125, 185); this.lblGiaTriBienSo.Name = "lblGiaTriBienSo"; this.lblGiaTriBienSo.Text = "—";
+            this.lblLoaiXe.AutoSize = true; this.lblLoaiXe.Location = new Point(395, 185); this.lblLoaiXe.Name = "lblLoaiXe"; this.lblLoaiXe.Text = "Loại xe:"; this.lblGiaTriLoaiXe.AutoSize = true; this.lblGiaTriLoaiXe.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriLoaiXe.Location = new Point(495, 185); this.lblGiaTriLoaiXe.Name = "lblGiaTriLoaiXe"; this.lblGiaTriLoaiXe.Text = "—";
+            this.lblMaThe.AutoSize = true; this.lblMaThe.Location = new Point(25, 227); this.lblMaThe.Name = "lblMaThe"; this.lblMaThe.Text = "Mã thẻ:"; this.lblGiaTriMaThe.AutoSize = true; this.lblGiaTriMaThe.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriMaThe.Location = new Point(125, 227); this.lblGiaTriMaThe.Name = "lblGiaTriMaThe"; this.lblGiaTriMaThe.Text = "—";
+            this.lblKhuVuc.AutoSize = true; this.lblKhuVuc.Location = new Point(395, 227); this.lblKhuVuc.Name = "lblKhuVuc"; this.lblKhuVuc.Text = "Khu vực:"; this.lblGiaTriKhuVuc.AutoSize = true; this.lblGiaTriKhuVuc.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriKhuVuc.Location = new Point(495, 227); this.lblGiaTriKhuVuc.Name = "lblGiaTriKhuVuc"; this.lblGiaTriKhuVuc.Text = "—";
+            this.lblThoiGianVao.AutoSize = true; this.lblThoiGianVao.Location = new Point(25, 269); this.lblThoiGianVao.Name = "lblThoiGianVao"; this.lblThoiGianVao.Text = "Thời gian vào:"; this.lblGiaTriThoiGianVao.AutoSize = true; this.lblGiaTriThoiGianVao.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriThoiGianVao.Location = new Point(125, 269); this.lblGiaTriThoiGianVao.Name = "lblGiaTriThoiGianVao"; this.lblGiaTriThoiGianVao.Text = "—";
+            this.lblThoiGianRa.AutoSize = true; this.lblThoiGianRa.Location = new Point(395, 269); this.lblThoiGianRa.Name = "lblThoiGianRa"; this.lblThoiGianRa.Text = "Thời gian ra:"; this.lblGiaTriThoiGianRa.AutoSize = true; this.lblGiaTriThoiGianRa.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriThoiGianRa.Location = new Point(495, 269); this.lblGiaTriThoiGianRa.Name = "lblGiaTriThoiGianRa"; this.lblGiaTriThoiGianRa.Text = "—";
+            this.lblThoiGianGui.AutoSize = true; this.lblThoiGianGui.Location = new Point(25, 311); this.lblThoiGianGui.Name = "lblThoiGianGui"; this.lblThoiGianGui.Text = "Thời gian gửi:"; this.lblGiaTriThoiGianGui.AutoSize = true; this.lblGiaTriThoiGianGui.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriThoiGianGui.Location = new Point(125, 311); this.lblGiaTriThoiGianGui.Name = "lblGiaTriThoiGianGui"; this.lblGiaTriThoiGianGui.Text = "—";
+            this.lblLoaiVe.AutoSize = true; this.lblLoaiVe.Location = new Point(395, 311); this.lblLoaiVe.Name = "lblLoaiVe"; this.lblLoaiVe.Text = "Loại vé:"; this.lblGiaTriLoaiVe.AutoSize = true; this.lblGiaTriLoaiVe.Font = new Font("Segoe UI", 9F, FontStyle.Bold); this.lblGiaTriLoaiVe.Location = new Point(495, 311); this.lblGiaTriLoaiVe.Name = "lblGiaTriLoaiVe"; this.lblGiaTriLoaiVe.Text = "—";
+            this.lblTieuDeThanhToan.AutoSize = true; this.lblTieuDeThanhToan.Font = new Font("Segoe UI", 11F, FontStyle.Bold); this.lblTieuDeThanhToan.Location = new Point(25, 370); this.lblTieuDeThanhToan.Text = "THANH TOÁN"; this.lblTieuDeThanhToan.Name = "lblTieuDeThanhToan"; this.lblSoTienThanhToan.AutoSize = true; this.lblSoTienThanhToan.Location = new Point(25, 410); this.lblSoTienThanhToan.Text = "Số tiền:"; this.lblSoTienThanhToan.Name = "lblSoTienThanhToan"; this.lblGiaTriSoTien.AutoSize = true; this.lblGiaTriSoTien.Font = new Font("Segoe UI", 16F, FontStyle.Bold); this.lblGiaTriSoTien.Location = new Point(90, 400); this.lblGiaTriSoTien.Text = "0 ₫"; this.lblGiaTriSoTien.Name = "lblGiaTriSoTien"; this.lblPhuongThucThanhToan.AutoSize = true; this.lblPhuongThucThanhToan.Location = new Point(300, 410); this.lblPhuongThucThanhToan.Text = "Phương thức:"; this.lblPhuongThucThanhToan.Name = "lblPhuongThucThanhToan"; this.cboPhuongThucThanhToan.DropDownStyle = ComboBoxStyle.DropDownList; this.cboPhuongThucThanhToan.Location = new Point(390, 406); this.cboPhuongThucThanhToan.Name = "cboPhuongThucThanhToan"; this.cboPhuongThucThanhToan.Size = new Size(160, 23); this.lblTrangThaiXuLy.AutoSize = true; this.lblTrangThaiXuLy.Location = new Point(25, 455); this.lblTrangThaiXuLy.Text = "Nhập biển số hoặc mã thẻ để tra cứu"; this.lblTrangThaiXuLy.Name = "lblTrangThaiXuLy";
+            this.btnXacNhanXeRa.Location = new Point(25, 495); this.btnXacNhanXeRa.Name = "btnXacNhanXeRa"; this.btnXacNhanXeRa.Size = new Size(180, 42); this.btnXacNhanXeRa.Text = "XÁC NHẬN XE RA"; this.btnXacNhanXeRa.UseVisualStyleBackColor = true; this.btnXacNhanXeRa.Click += new System.EventHandler(this.btnXacNhanXeRa_Click); this.btnThanhToanXeRa.Location = new Point(220, 495); this.btnThanhToanXeRa.Name = "btnThanhToanXeRa"; this.btnThanhToanXeRa.Size = new Size(150, 42); this.btnThanhToanXeRa.Text = "THANH TOÁN"; this.btnThanhToanXeRa.UseVisualStyleBackColor = true; this.btnThanhToanXeRa.Click += new System.EventHandler(this.btnThanhToanXeRa_Click);
+            this.btnThoat.Location = new Point(385, 495); this.btnThoat.Name = "btnThoat"; this.btnThoat.Size = new Size(110, 42); this.btnThoat.Text = "Thoát / Quay lại"; this.btnThoat.UseVisualStyleBackColor = true; this.btnThoat.Click += new System.EventHandler(this.btnThoat_Click);
+            this.lblDanhSachXeDangGui.AutoSize = true; this.lblDanhSachXeDangGui.Font = new Font("Segoe UI", 11F, FontStyle.Bold); this.lblDanhSachXeDangGui.Location = new Point(25, 570); this.lblDanhSachXeDangGui.Name = "lblDanhSachXeDangGui"; this.lblDanhSachXeDangGui.Text = "DANH SÁCH XE ĐANG GỬI - BẤM MỘT DÒNG ĐỂ CHỌN";
+            this.dgvXeDangGui.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right; this.dgvXeDangGui.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize; this.dgvXeDangGui.Location = new Point(25, 600); this.dgvXeDangGui.Name = "dgvXeDangGui"; this.dgvXeDangGui.Size = new Size(1100, 210); this.dgvXeDangGui.CellClick += new DataGridViewCellEventHandler(this.dgvXeDangGui_CellClick);
+            this.AutoScaleDimensions = new SizeF(7F, 15F); this.AutoScaleMode = AutoScaleMode.Font; this.ClientSize = new Size(1150, 835); this.Controls.Add(this.lblTieuDe); this.Controls.Add(this.lblMoTa); this.Controls.Add(this.txtBienSoHoacMaThe); this.Controls.Add(this.btnTimKiemXe); this.Controls.Add(this.btnLamMoiXeRa); this.Controls.Add(this.lblTieuDeLuotGui); this.Controls.Add(this.lblBienSo); this.Controls.Add(this.lblGiaTriBienSo); this.Controls.Add(this.lblLoaiXe); this.Controls.Add(this.lblGiaTriLoaiXe); this.Controls.Add(this.lblMaThe); this.Controls.Add(this.lblGiaTriMaThe); this.Controls.Add(this.lblKhuVuc); this.Controls.Add(this.lblGiaTriKhuVuc); this.Controls.Add(this.lblThoiGianVao); this.Controls.Add(this.lblGiaTriThoiGianVao); this.Controls.Add(this.lblThoiGianRa); this.Controls.Add(this.lblGiaTriThoiGianRa); this.Controls.Add(this.lblThoiGianGui); this.Controls.Add(this.lblGiaTriThoiGianGui); this.Controls.Add(this.lblLoaiVe); this.Controls.Add(this.lblGiaTriLoaiVe); this.Controls.Add(this.lblTieuDeThanhToan); this.Controls.Add(this.lblSoTienThanhToan); this.Controls.Add(this.lblGiaTriSoTien); this.Controls.Add(this.lblPhuongThucThanhToan); this.Controls.Add(this.cboPhuongThucThanhToan); this.Controls.Add(this.lblTrangThaiXuLy); this.Controls.Add(this.btnXacNhanXeRa); this.Controls.Add(this.btnThanhToanXeRa); this.Controls.Add(this.btnThoat); this.Controls.Add(this.lblDanhSachXeDangGui); this.Controls.Add(this.dgvXeDangGui); this.Font = new Font("Segoe UI", 9F); this.MinimumSize = new Size(1000, 750); this.Name = "frmXeRa"; this.StartPosition = FormStartPosition.CenterParent; this.Text = "Xe ra"; ((System.ComponentModel.ISupportInitialize)(this.dgvXeDangGui)).EndInit(); this.ResumeLayout(false); this.PerformLayout();
+        }
     }
 }

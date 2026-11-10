@@ -1,4 +1,6 @@
 /*
+    FILE 03 - TẠO VIEW VÀ THỦ TỤC NGHIỆP VỤ
+
     QLGuiXe - View cho UI va stored procedure nghiep vu demo
     Chay sau 01 va 02.
 */
@@ -45,7 +47,7 @@ GO
 CREATE OR ALTER VIEW dbo.vw_BangGia
 AS
     SELECT bg.MaBangGia, bg.LoaiXe, lv.KyHieu AS LoaiVe,
-           bg.DonGia, bg.NgayApDung
+           bg.DonGia, bg.DonGiaSau19Gio, bg.DonGiaQuaDem, bg.NgayApDung
     FROM dbo.BANGGIA AS bg
     INNER JOIN dbo.LOAIVE AS lv ON lv.MaLoaiVe = bg.MaLoaiVe;
 GO
@@ -159,7 +161,11 @@ BEGIN
             IF @MaKH IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.KHACHHANG WHERE MaKH = @MaKH)
                 THROW 50101, N'Khách hàng không tồn tại.', 1;
 
-            SET @MaPT = 'PT' + RIGHT(REPLACE(CONVERT(VARCHAR(36), NEWID()), '-', ''), 18);
+            DECLARE @SoThuTuPT INT;
+            SELECT @SoThuTuPT = ISNULL(MAX(TRY_CONVERT(INT, SUBSTRING(MaPT, 3, 18))), 0) + 1
+            FROM dbo.PHUONGTIEN WITH (UPDLOCK, HOLDLOCK);
+
+            SET @MaPT = 'PT' + RIGHT('000' + CONVERT(VARCHAR(18), @SoThuTuPT), 3);
             INSERT dbo.PHUONGTIEN (MaPT, BienSo, LoaiXe, MaKH)
             VALUES (@MaPT, @BienSo, @LoaiXe, @MaKH);
         END
@@ -222,7 +228,11 @@ BEGIN
             SET @LoaiVe = 'LUOT';
         END;
 
-        SET @MaLuotGuiMoi = 'LG' + RIGHT(REPLACE(CONVERT(VARCHAR(36), NEWID()), '-', ''), 18);
+        DECLARE @SoThuTuLuot INT;
+        SELECT @SoThuTuLuot = ISNULL(MAX(TRY_CONVERT(INT, SUBSTRING(MaLuotGui, 3, 18))), 0) + 1
+        FROM dbo.LUOTGUIXE WITH (UPDLOCK, HOLDLOCK);
+
+        SET @MaLuotGuiMoi = 'LG' + RIGHT('000' + CONVERT(VARCHAR(18), @SoThuTuLuot), 3);
 
         INSERT dbo.LUOTGUIXE
             (MaLuotGui, MaPT, MaVe, MaKhuVuc, MaNVVao, LoaiVe, TrangThai)
@@ -257,11 +267,15 @@ BEGIN
         DECLARE @LoaiVe VARCHAR(10);
         DECLARE @LoaiXe NVARCHAR(20);
         DECLARE @NowUtc DATETIME2(0) = SYSUTCDATETIME();
+        DECLARE @ThoiGianVaoUtc DATETIME2(0);
+        DECLARE @ThoiGianVaoVn DATETIME2(0);
+        DECLARE @ThoiGianRaVn DATETIME2(0);
 
         SELECT TOP (1)
             @MaLuotGui = lg.MaLuotGui,
             @LoaiVe = lg.LoaiVe,
-            @LoaiXe = pt.LoaiXe
+            @LoaiXe = pt.LoaiXe,
+            @ThoiGianVaoUtc = lg.ThoiGianVaoUtc
         FROM dbo.LUOTGUIXE AS lg WITH (UPDLOCK, HOLDLOCK)
         INNER JOIN dbo.PHUONGTIEN AS pt ON pt.MaPT = lg.MaPT
         INNER JOIN dbo.VE AS v ON v.MaVe = lg.MaVe
@@ -275,7 +289,19 @@ BEGIN
             SET @TienGui = 0;
         ELSE
         BEGIN
-            SELECT TOP (1) @TienGui = bg.DonGia
+            SET @ThoiGianVaoVn = CONVERT(DATETIME2(0),
+                (@ThoiGianVaoUtc AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time');
+            SET @ThoiGianRaVn = CONVERT(DATETIME2(0),
+                (@NowUtc AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time');
+
+            SELECT TOP (1) @TienGui =
+                CASE
+                    WHEN CONVERT(DATE, @ThoiGianVaoVn) < CONVERT(DATE, @ThoiGianRaVn)
+                        THEN ISNULL(bg.DonGiaQuaDem, bg.DonGia)
+                    WHEN CONVERT(TIME, @ThoiGianRaVn) >= '19:00'
+                        THEN ISNULL(bg.DonGiaSau19Gio, bg.DonGia)
+                    ELSE bg.DonGia
+                END
             FROM dbo.BANGGIA AS bg
             INNER JOIN dbo.LOAIVE AS lv ON lv.MaLoaiVe = bg.MaLoaiVe
             WHERE bg.LoaiXe = @LoaiXe
@@ -336,6 +362,7 @@ BEGIN
         DECLARE @MaVe VARCHAR(20);
         DECLARE @LoaiXe NVARCHAR(20);
         DECLARE @DonGia DECIMAL(18,2);
+        DECLARE @SoDangKyMoi INT;
 
         SELECT @LoaiXe = pt.LoaiXe
         FROM dbo.PHUONGTIEN AS pt WITH (UPDLOCK, HOLDLOCK)
@@ -378,7 +405,17 @@ BEGIN
             THROW 50304, N'Không tìm thấy giá vé tháng đang áp dụng.', 1;
 
         SET @TongTien = @DonGia * @SoThang;
-        SET @MaDangKyMoi = 'DK' + RIGHT(REPLACE(CONVERT(VARCHAR(36), NEWID()), '-', ''), 18);
+
+        /* Sinh mã dễ đọc: DK001, DK002, ... */
+        SELECT @SoDangKyMoi = ISNULL(MAX(SoThuTu), 0) + 1
+        FROM
+        (
+            SELECT TRY_CONVERT(INT, SUBSTRING(MaDangKy, 3, 10)) AS SoThuTu
+            FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
+        ) AS ds
+        WHERE SoThuTu IS NOT NULL;
+
+        SET @MaDangKyMoi = 'DK' + RIGHT('000' + CONVERT(VARCHAR(10), @SoDangKyMoi), 3);
 
         INSERT dbo.DANGKYVETHANG
             (MaDangKy, MaKH, MaPT, MaVe, NgayBatDau, NgayKetThuc,
@@ -414,6 +451,7 @@ BEGIN
     BEGIN TRY
         DECLARE @TongTien DECIMAL(18,2);
         DECLARE @ThanhToan VARCHAR(20);
+        DECLARE @SoThanhToanMoi INT;
 
         SELECT @TongTien = TongTien, @ThanhToan = ThanhToan
         FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
@@ -424,7 +462,16 @@ BEGIN
         IF @ThanhToan = 'DA_THANH_TOAN'
             THROW 50402, N'Đăng ký vé tháng đã được thanh toán.', 1;
 
-        SET @MaThanhToanMoi = 'TT' + RIGHT(REPLACE(CONVERT(VARCHAR(36), NEWID()), '-', ''), 18);
+        /* Sinh mã dễ đọc: TT001, TT002, ... */
+        SELECT @SoThanhToanMoi = ISNULL(MAX(SoThuTu), 0) + 1
+        FROM
+        (
+            SELECT TRY_CONVERT(INT, SUBSTRING(MaThanhToan, 3, 10)) AS SoThuTu
+            FROM dbo.THANHTOAN WITH (UPDLOCK, HOLDLOCK)
+        ) AS ds
+        WHERE SoThuTu IS NOT NULL;
+
+        SET @MaThanhToanMoi = 'TT' + RIGHT('000' + CONVERT(VARCHAR(10), @SoThanhToanMoi), 3);
 
         INSERT dbo.THANHTOAN
             (MaThanhToan, LoaiThanhToan, MaLuotGui, MaDangKy,

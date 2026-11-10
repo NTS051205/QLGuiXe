@@ -1,43 +1,59 @@
-#nullable disable
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
-
-namespace QLGuiXe.Forms;
-partial class frmTaiKhoan
+namespace QLGuiXe.Forms
 {
-    private System.ComponentModel.IContainer components = null;
-    private Panel pnlTieuDe; private Label lblTieuDe; private Label lblMoTa; private Button btnThem;
-    private FlowLayoutPanel flpBoLoc; private TextBox txtTimKiem; private Label lblBoLoc; private ComboBox cboBoLoc; private Label lblBoLocPhu; private ComboBox cboBoLocPhu; private Label lblTuNgay; private DateTimePicker dtpTuNgay; private Label lblDenNgay; private DateTimePicker dtpDenNgay; private Button btnLamMoi;
-    private DataGridView dgvDuLieu; private Panel pnlChanTrang; private Label lblTongSo; private FlowLayoutPanel flpHanhDong; private Button btnXem; private Button btnSua; private Button btnXoa;
-    protected override void Dispose(bool disposing) { if (disposing) components?.Dispose(); base.Dispose(disposing); }
-    private void InitializeComponent()
+    partial class frmTaiKhoan
     {
-        components = new System.ComponentModel.Container();
-        pnlTieuDe = new Panel(); lblTieuDe = new Label(); lblMoTa = new Label(); btnThem = new Button();
-        flpBoLoc = new FlowLayoutPanel(); txtTimKiem = new TextBox(); lblBoLoc = new Label(); cboBoLoc = new ComboBox(); lblBoLocPhu = new Label(); cboBoLocPhu = new ComboBox(); lblTuNgay = new Label(); dtpTuNgay = new DateTimePicker(); lblDenNgay = new Label(); dtpDenNgay = new DateTimePicker(); btnLamMoi = new Button();
-        dgvDuLieu = new DataGridView(); pnlChanTrang = new Panel(); lblTongSo = new Label(); flpHanhDong = new FlowLayoutPanel(); btnXem = new Button(); btnSua = new Button(); btnXoa = new Button();
-        pnlTieuDe.SuspendLayout(); flpBoLoc.SuspendLayout(); ((System.ComponentModel.ISupportInitialize)dgvDuLieu).BeginInit(); pnlChanTrang.SuspendLayout(); flpHanhDong.SuspendLayout(); SuspendLayout();
-        pnlTieuDe.Controls.Add(lblTieuDe); pnlTieuDe.Controls.Add(lblMoTa); pnlTieuDe.Controls.Add(btnThem); pnlTieuDe.Dock = DockStyle.Top; pnlTieuDe.Height = 80; pnlTieuDe.Name = "pnlTieuDe";
-        lblTieuDe.Font = new Font("Segoe UI", 16F, FontStyle.Bold); lblTieuDe.Location = new Point(15, 8); lblTieuDe.Name = "lblTieuDe"; lblTieuDe.Size = new Size(650, 35);
-        lblMoTa.Location = new Point(17, 45); lblMoTa.Name = "lblMoTa"; lblMoTa.Size = new Size(700, 25);
-        btnThem.Anchor = AnchorStyles.Top | AnchorStyles.Right; btnThem.Location = new Point(900, 20); btnThem.Name = "btnThem"; btnThem.Size = new Size(140, 38); btnThem.Text = "Thêm mới";
-        flpBoLoc.Controls.Add(txtTimKiem); flpBoLoc.Controls.Add(lblBoLoc); flpBoLoc.Controls.Add(cboBoLoc); flpBoLoc.Controls.Add(lblBoLocPhu); flpBoLoc.Controls.Add(cboBoLocPhu); flpBoLoc.Controls.Add(lblTuNgay); flpBoLoc.Controls.Add(dtpTuNgay); flpBoLoc.Controls.Add(lblDenNgay); flpBoLoc.Controls.Add(dtpDenNgay); flpBoLoc.Controls.Add(btnLamMoi); flpBoLoc.Dock = DockStyle.Top; flpBoLoc.Height = 60; flpBoLoc.Name = "flpBoLoc"; flpBoLoc.Padding = new Padding(12);
-        txtTimKiem.Name = "txtTimKiem"; txtTimKiem.Size = new Size(230, 27);
-        lblBoLoc.AutoSize = true; lblBoLoc.Name = "lblBoLoc"; lblBoLoc.Text = "Lọc:"; lblBoLoc.Visible = false; cboBoLoc.DropDownStyle = ComboBoxStyle.DropDownList; cboBoLoc.Name = "cboBoLoc"; cboBoLoc.Size = new Size(130, 28); cboBoLoc.Visible = false;
-        lblBoLocPhu.AutoSize = true; lblBoLocPhu.Name = "lblBoLocPhu"; lblBoLocPhu.Text = "Lọc 2:"; lblBoLocPhu.Visible = false; cboBoLocPhu.DropDownStyle = ComboBoxStyle.DropDownList; cboBoLocPhu.Name = "cboBoLocPhu"; cboBoLocPhu.Size = new Size(130, 28); cboBoLocPhu.Visible = false;
-        lblTuNgay.AutoSize = true; lblTuNgay.Name = "lblTuNgay"; lblTuNgay.Text = "Từ ngày:"; lblTuNgay.Visible = false; dtpTuNgay.CustomFormat = "dd/MM/yyyy"; dtpTuNgay.Format = DateTimePickerFormat.Custom; dtpTuNgay.Name = "dtpTuNgay"; dtpTuNgay.Size = new Size(115, 28); dtpTuNgay.Visible = false;
-        lblDenNgay.AutoSize = true; lblDenNgay.Name = "lblDenNgay"; lblDenNgay.Text = "Đến:"; lblDenNgay.Visible = false; dtpDenNgay.CustomFormat = "dd/MM/yyyy"; dtpDenNgay.Format = DateTimePickerFormat.Custom; dtpDenNgay.Name = "dtpDenNgay"; dtpDenNgay.Size = new Size(115, 28); dtpDenNgay.Visible = false;
-        btnLamMoi.Name = "btnLamMoi"; btnLamMoi.Size = new Size(100, 30); btnLamMoi.Text = "Làm mới";
-        dgvDuLieu.Dock = DockStyle.Fill; dgvDuLieu.Name = "dgvTaiKhoan"; dgvDuLieu.ReadOnly = true;
-        pnlChanTrang.Controls.Add(lblTongSo); pnlChanTrang.Controls.Add(flpHanhDong); pnlChanTrang.Dock = DockStyle.Bottom; pnlChanTrang.Height = 58; pnlChanTrang.Name = "pnlChanTrang";
-        lblTongSo.Dock = DockStyle.Left; lblTongSo.Name = "lblTongSo"; lblTongSo.Size = new Size(280, 58); lblTongSo.Text = "Tổng số: 0 bản ghi"; lblTongSo.TextAlign = ContentAlignment.MiddleLeft;
-        flpHanhDong.Controls.Add(btnXem); flpHanhDong.Controls.Add(btnSua); flpHanhDong.Controls.Add(btnXoa); flpHanhDong.Dock = DockStyle.Right; flpHanhDong.Name = "flpHanhDong"; flpHanhDong.Padding = new Padding(0, 10, 8, 0); flpHanhDong.Size = new Size(330, 58);
-        btnXem.Name = "btnXem"; btnXem.Size = new Size(90, 34); btnXem.Text = "Xem"; btnSua.Name = "btnSua"; btnSua.Size = new Size(90, 34); btnSua.Text = "Sửa"; btnXoa.Name = "btnXoa"; btnXoa.Size = new Size(110, 34); btnXoa.Text = "Xóa";
-        AutoScaleDimensions = new SizeF(96F, 96F); AutoScaleMode = AutoScaleMode.Dpi; ClientSize = new Size(1064, 650); Controls.Add(dgvDuLieu); Controls.Add(pnlChanTrang); Controls.Add(flpBoLoc); Controls.Add(pnlTieuDe); Font = new Font("Segoe UI", 9F); Name = "frmTaiKhoan"; Text = "Quản lý tài khoản";
-        pnlTieuDe.ResumeLayout(false); flpBoLoc.ResumeLayout(false); flpBoLoc.PerformLayout(); ((System.ComponentModel.ISupportInitialize)dgvDuLieu).EndInit(); pnlChanTrang.ResumeLayout(false); flpHanhDong.ResumeLayout(false); ResumeLayout(false);
+        private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.Label lblTieuDe, lblMaTK, lblNhanVien, lblTenDangNhap, lblMatKhau, lblXacNhan, lblVaiTro, lblTrangThai, lblTimKiem, lblLocVaiTro, lblLocTrangThai, lblTongSo;
+        private System.Windows.Forms.TextBox txtMaTK, txtTenDangNhap, txtMatKhau, txtXacNhan, txtTimKiem;
+        private System.Windows.Forms.ComboBox cboNhanVien, cboVaiTro, cboTrangThai, cboLocVaiTro, cboLocTrangThai;
+        private System.Windows.Forms.Button btnThem, btnXem, btnSua, btnKhoa, btnLamMoi, btnThoat;
+        private System.Windows.Forms.DataGridView dgvTaiKhoan;
+
+        protected override void Dispose(bool disposing) { if (disposing && (components != null)) components.Dispose(); base.Dispose(disposing); }
+
+        private void InitializeComponent()
+        {
+            this.lblTieuDe = new System.Windows.Forms.Label(); this.lblMaTK = new System.Windows.Forms.Label(); this.txtMaTK = new System.Windows.Forms.TextBox();
+            this.lblNhanVien = new System.Windows.Forms.Label(); this.cboNhanVien = new System.Windows.Forms.ComboBox(); this.lblTenDangNhap = new System.Windows.Forms.Label(); this.txtTenDangNhap = new System.Windows.Forms.TextBox();
+            this.lblMatKhau = new System.Windows.Forms.Label(); this.txtMatKhau = new System.Windows.Forms.TextBox(); this.lblXacNhan = new System.Windows.Forms.Label(); this.txtXacNhan = new System.Windows.Forms.TextBox();
+            this.lblVaiTro = new System.Windows.Forms.Label(); this.cboVaiTro = new System.Windows.Forms.ComboBox(); this.lblTrangThai = new System.Windows.Forms.Label(); this.cboTrangThai = new System.Windows.Forms.ComboBox();
+            this.btnThem = new System.Windows.Forms.Button(); this.btnXem = new System.Windows.Forms.Button(); this.btnSua = new System.Windows.Forms.Button(); this.btnKhoa = new System.Windows.Forms.Button(); this.btnLamMoi = new System.Windows.Forms.Button(); this.btnThoat = new System.Windows.Forms.Button();
+            this.lblTimKiem = new System.Windows.Forms.Label(); this.txtTimKiem = new System.Windows.Forms.TextBox(); this.lblLocVaiTro = new System.Windows.Forms.Label(); this.cboLocVaiTro = new System.Windows.Forms.ComboBox(); this.lblLocTrangThai = new System.Windows.Forms.Label(); this.cboLocTrangThai = new System.Windows.Forms.ComboBox();
+            this.dgvTaiKhoan = new System.Windows.Forms.DataGridView(); this.lblTongSo = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTaiKhoan)).BeginInit(); this.SuspendLayout();
+            this.lblTieuDe.AutoSize = true; this.lblTieuDe.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold); this.lblTieuDe.Location = new System.Drawing.Point(20, 12); this.lblTieuDe.Name = "lblTieuDe"; this.lblTieuDe.Text = "QUẢN LÝ TÀI KHOẢN";
+            this.lblMaTK.AutoSize = true; this.lblMaTK.Location = new System.Drawing.Point(22, 60); this.lblMaTK.Name = "lblMaTK"; this.lblMaTK.Text = "Mã tài khoản:";
+            this.txtMaTK.Location = new System.Drawing.Point(115, 56); this.txtMaTK.Name = "txtMaTK"; this.txtMaTK.ReadOnly = true; this.txtMaTK.Size = new System.Drawing.Size(125, 23);
+            this.lblNhanVien.AutoSize = true; this.lblNhanVien.Location = new System.Drawing.Point(265, 60); this.lblNhanVien.Name = "lblNhanVien"; this.lblNhanVien.Text = "Nhân viên:";
+            this.cboNhanVien.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cboNhanVien.Location = new System.Drawing.Point(335, 56); this.cboNhanVien.Name = "cboNhanVien"; this.cboNhanVien.Size = new System.Drawing.Size(210, 23);
+            this.lblTenDangNhap.AutoSize = true; this.lblTenDangNhap.Location = new System.Drawing.Point(570, 60); this.lblTenDangNhap.Name = "lblTenDangNhap"; this.lblTenDangNhap.Text = "Tên đăng nhập:";
+            this.txtTenDangNhap.Location = new System.Drawing.Point(665, 56); this.txtTenDangNhap.Name = "txtTenDangNhap"; this.txtTenDangNhap.Size = new System.Drawing.Size(165, 23);
+            this.lblVaiTro.AutoSize = true; this.lblVaiTro.Location = new System.Drawing.Point(855, 60); this.lblVaiTro.Name = "lblVaiTro"; this.lblVaiTro.Text = "Vai trò:";
+            this.cboVaiTro.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cboVaiTro.Location = new System.Drawing.Point(910, 56); this.cboVaiTro.Name = "cboVaiTro"; this.cboVaiTro.Size = new System.Drawing.Size(130, 23);
+            this.lblMatKhau.AutoSize = true; this.lblMatKhau.Location = new System.Drawing.Point(22, 97); this.lblMatKhau.Name = "lblMatKhau"; this.lblMatKhau.Text = "Mật khẩu:";
+            this.txtMatKhau.Location = new System.Drawing.Point(115, 93); this.txtMatKhau.Name = "txtMatKhau"; this.txtMatKhau.PasswordChar = '*'; this.txtMatKhau.Size = new System.Drawing.Size(180, 23);
+            this.lblXacNhan.AutoSize = true; this.lblXacNhan.Location = new System.Drawing.Point(325, 97); this.lblXacNhan.Name = "lblXacNhan"; this.lblXacNhan.Text = "Xác nhận mật khẩu:";
+            this.txtXacNhan.Location = new System.Drawing.Point(450, 93); this.txtXacNhan.Name = "txtXacNhan"; this.txtXacNhan.PasswordChar = '*'; this.txtXacNhan.Size = new System.Drawing.Size(180, 23);
+            this.lblTrangThai.AutoSize = true; this.lblTrangThai.Location = new System.Drawing.Point(660, 97); this.lblTrangThai.Name = "lblTrangThai"; this.lblTrangThai.Text = "Trạng thái:";
+            this.cboTrangThai.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cboTrangThai.Location = new System.Drawing.Point(735, 93); this.cboTrangThai.Name = "cboTrangThai"; this.cboTrangThai.Size = new System.Drawing.Size(145, 23);
+            this.btnThem.Location = new System.Drawing.Point(25, 135); this.btnThem.Name = "btnThem"; this.btnThem.Size = new System.Drawing.Size(95, 34); this.btnThem.Text = "Thêm"; this.btnThem.UseVisualStyleBackColor = true; this.btnThem.Click += new System.EventHandler(this.btnThem_Click);
+            this.btnXem.Location = new System.Drawing.Point(130, 135); this.btnXem.Name = "btnXem"; this.btnXem.Size = new System.Drawing.Size(95, 34); this.btnXem.Text = "Xem"; this.btnXem.UseVisualStyleBackColor = true; this.btnXem.Click += new System.EventHandler(this.btnXem_Click);
+            this.btnSua.Location = new System.Drawing.Point(235, 135); this.btnSua.Name = "btnSua"; this.btnSua.Size = new System.Drawing.Size(95, 34); this.btnSua.Text = "Sửa"; this.btnSua.UseVisualStyleBackColor = true; this.btnSua.Click += new System.EventHandler(this.btnSua_Click);
+            this.btnKhoa.Location = new System.Drawing.Point(340, 135); this.btnKhoa.Name = "btnKhoa"; this.btnKhoa.Size = new System.Drawing.Size(95, 34); this.btnKhoa.Text = "Khóa"; this.btnKhoa.UseVisualStyleBackColor = true; this.btnKhoa.Click += new System.EventHandler(this.btnKhoa_Click);
+            this.btnLamMoi.Location = new System.Drawing.Point(445, 135); this.btnLamMoi.Name = "btnLamMoi"; this.btnLamMoi.Size = new System.Drawing.Size(95, 34); this.btnLamMoi.Text = "Làm mới"; this.btnLamMoi.UseVisualStyleBackColor = true; this.btnLamMoi.Click += new System.EventHandler(this.btnLamMoi_Click);
+            this.btnThoat.Location = new System.Drawing.Point(550, 135); this.btnThoat.Name = "btnThoat"; this.btnThoat.Size = new System.Drawing.Size(95, 34); this.btnThoat.Text = "Thoát"; this.btnThoat.UseVisualStyleBackColor = true; this.btnThoat.Click += new System.EventHandler(this.btnThoat_Click);
+            this.lblTimKiem.AutoSize = true; this.lblTimKiem.Location = new System.Drawing.Point(22, 194); this.lblTimKiem.Name = "lblTimKiem"; this.lblTimKiem.Text = "Tìm kiếm:";
+            this.txtTimKiem.Location = new System.Drawing.Point(95, 190); this.txtTimKiem.Name = "txtTimKiem"; this.txtTimKiem.Size = new System.Drawing.Size(260, 23); this.txtTimKiem.TextChanged += new System.EventHandler(this.LocDanhSach);
+            this.lblLocVaiTro.AutoSize = true; this.lblLocVaiTro.Location = new System.Drawing.Point(380, 194); this.lblLocVaiTro.Name = "lblLocVaiTro"; this.lblLocVaiTro.Text = "Vai trò:";
+            this.cboLocVaiTro.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cboLocVaiTro.Location = new System.Drawing.Point(435, 190); this.cboLocVaiTro.Name = "cboLocVaiTro"; this.cboLocVaiTro.Size = new System.Drawing.Size(135, 23); this.cboLocVaiTro.SelectedIndexChanged += new System.EventHandler(this.LocDanhSach);
+            this.lblLocTrangThai.AutoSize = true; this.lblLocTrangThai.Location = new System.Drawing.Point(595, 194); this.lblLocTrangThai.Name = "lblLocTrangThai"; this.lblLocTrangThai.Text = "Trạng thái:";
+            this.cboLocTrangThai.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList; this.cboLocTrangThai.Location = new System.Drawing.Point(670, 190); this.cboLocTrangThai.Name = "cboLocTrangThai"; this.cboLocTrangThai.Size = new System.Drawing.Size(145, 23); this.cboLocTrangThai.SelectedIndexChanged += new System.EventHandler(this.LocDanhSach);
+            this.dgvTaiKhoan.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right))); this.dgvTaiKhoan.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize; this.dgvTaiKhoan.Location = new System.Drawing.Point(25, 230); this.dgvTaiKhoan.Name = "dgvTaiKhoan"; this.dgvTaiKhoan.Size = new System.Drawing.Size(1015, 365); this.dgvTaiKhoan.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvTaiKhoan_CellClick);
+            this.lblTongSo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left))); this.lblTongSo.AutoSize = true; this.lblTongSo.Location = new System.Drawing.Point(22, 612); this.lblTongSo.Name = "lblTongSo"; this.lblTongSo.Text = "Tổng số: 0 bản ghi";
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F); this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font; this.ClientSize = new System.Drawing.Size(1064, 641);
+            this.Controls.Add(this.lblTieuDe); this.Controls.Add(this.lblMaTK); this.Controls.Add(this.txtMaTK); this.Controls.Add(this.lblNhanVien); this.Controls.Add(this.cboNhanVien); this.Controls.Add(this.lblTenDangNhap); this.Controls.Add(this.txtTenDangNhap); this.Controls.Add(this.lblVaiTro); this.Controls.Add(this.cboVaiTro); this.Controls.Add(this.lblMatKhau); this.Controls.Add(this.txtMatKhau); this.Controls.Add(this.lblXacNhan); this.Controls.Add(this.txtXacNhan); this.Controls.Add(this.lblTrangThai); this.Controls.Add(this.cboTrangThai); this.Controls.Add(this.btnThem); this.Controls.Add(this.btnXem); this.Controls.Add(this.btnSua); this.Controls.Add(this.btnKhoa); this.Controls.Add(this.btnLamMoi); this.Controls.Add(this.btnThoat); this.Controls.Add(this.lblTimKiem); this.Controls.Add(this.txtTimKiem); this.Controls.Add(this.lblLocVaiTro); this.Controls.Add(this.cboLocVaiTro); this.Controls.Add(this.lblLocTrangThai); this.Controls.Add(this.cboLocTrangThai); this.Controls.Add(this.dgvTaiKhoan); this.Controls.Add(this.lblTongSo);
+            this.Font = new System.Drawing.Font("Segoe UI", 9F); this.MinimumSize = new System.Drawing.Size(1080, 680); this.Name = "frmTaiKhoan"; this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent; this.Text = "Quản lý tài khoản"; this.Load += new System.EventHandler(this.frmTaiKhoan_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTaiKhoan)).EndInit(); this.ResumeLayout(false); this.PerformLayout();
+        }
     }
 }
-

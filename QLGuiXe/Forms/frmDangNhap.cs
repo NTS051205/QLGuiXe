@@ -1,24 +1,31 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace QLGuiXe.Forms;
 
 public partial class frmDangNhap : Form
 {
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance;
+    private readonly KETNOICSDL kn = new KETNOICSDL();
 
     public frmDangNhap()
     {
         InitializeComponent();
-        var connected = _data.CanConnect(out var connectionMessage);
-        lblTrangThaiKetNoi.Text = connected ? $"● {connectionMessage}" : $"● Chưa kết nối: {connectionMessage}";
-        lblTrangThaiKetNoi.ForeColor = connected ? DinhDang.Success : DinhDang.Danger;
-        btnDangNhap.Enabled = connected;
+        try
+        {
+            DataTable dt = kn.GetData("dbo.sp_KiemTraKetNoi");
+            lblTrangThaiKetNoi.Text = "● Đã kết nối " + Convert.ToString(dt.Rows[0]["TenCSDL"]);
+            lblTrangThaiKetNoi.ForeColor = Color.Green;
+            btnDangNhap.Enabled = true;
+        }
+        catch (Exception ex)
+        {
+            lblTrangThaiKetNoi.Text = "● Chưa kết nối: " + ex.Message;
+            lblTrangThaiKetNoi.ForeColor = Color.Red;
+            btnDangNhap.Enabled = false;
+        }
     }
 
     private void chkHienMatKhau_CheckedChanged(object? sender, EventArgs e) =>
@@ -34,14 +41,23 @@ public partial class frmDangNhap : Form
 
         try
         {
-            var account = _data.Authenticate(txtTenDangNhap.Text, txtMatKhau.Text);
-            if (account is null)
+            DataTable dt = kn.GetData(
+                "dbo.sp_DangNhap",
+                new SqlParameter("@TenDangNhap", txtTenDangNhap.Text.Trim()),
+                new SqlParameter("@MatKhau", txtMatKhau.Text));
+
+            if (dt.Rows.Count == 0)
             {
                 lblLoi.Text = "Tên đăng nhập, mật khẩu hoặc trạng thái tài khoản không hợp lệ.";
                 return;
             }
 
-            PhienDangNhap.SignIn(account.Field<string>("MaNV")!, account.Field<string>("HoTen")!, account.Field<string>("VaiTro")!, account.Field<string>("TenDangNhap")!);
+            DataRow taiKhoan = dt.Rows[0];
+            PhienDangNhap.LuuThongTin(
+                Convert.ToString(taiKhoan["MaNV"]),
+                Convert.ToString(taiKhoan["HoTen"]),
+                Convert.ToString(taiKhoan["VaiTro"]),
+                Convert.ToString(taiKhoan["TenDangNhap"]));
             OpenMainForm();
         }
         catch (Exception ex)
@@ -52,21 +68,40 @@ public partial class frmDangNhap : Form
 
     private void btnDangNhapDemo_Click(object? sender, EventArgs e)
     {
-        if (!_data.CanConnect(out var message))
+        try
         {
-            lblLoi.Text = $"Không thể mở dữ liệu: {message}";
-            return;
+            kn.GetData("dbo.sp_KiemTraKetNoi");
+            PhienDangNhap.LuuThongTin("NV001", "Nguyễn Minh Anh", "ADMIN", "admin-demo");
+            OpenMainForm();
         }
-        PhienDangNhap.SignIn("NV001", "Nguyễn Minh Anh", "ADMIN", "admin-demo");
-        OpenMainForm();
+        catch (Exception ex)
+        {
+            lblLoi.Text = "Không thể mở dữ liệu: " + ex.Message;
+        }
+    }
+
+    private void btnThoat_Click(object? sender, EventArgs e)
+    {
+        Close();
     }
 
     private void OpenMainForm()
     {
         Hide();
         using var main = new frmTrangChu();
-        main.ShowDialog();
-        Close();
+        DialogResult ketQua = main.ShowDialog();
+
+        if (ketQua == DialogResult.Retry)
+        {
+            PhienDangNhap.DangXuat();
+            txtMatKhau.Clear();
+            Show();
+            txtMatKhau.Focus();
+        }
+        else
+        {
+            Close();
+        }
     }
 
     private void txtThongTin_TextChanged(object? sender, EventArgs e) => lblLoi.Text = string.Empty;

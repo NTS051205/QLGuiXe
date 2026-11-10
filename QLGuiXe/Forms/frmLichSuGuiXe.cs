@@ -1,31 +1,115 @@
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmLichSuGuiXe : Form
+namespace QLGuiXe.Forms
 {
-    private QuanLyDanhSach page = null!;
-    public frmLichSuGuiXe()
+    public partial class frmLichSuGuiXe : Form
     {
-        InitializeComponent();
-        page = new QuanLyDanhSach(lblTieuDe, lblMoTa, btnThem, txtTimKiem, lblBoLoc, cboBoLoc, lblBoLocPhu, cboBoLocPhu, lblTuNgay, dtpTuNgay, lblDenNgay, dtpDenNgay, btnLamMoi, dgvDuLieu, lblTongSo, btnXem, btnSua, btnXoa);
-        page.Configure("Lịch sử gửi xe", "Tra cứu toàn bộ lượt xe vào, xe ra và chi phí phát sinh.", "+ Thêm mới", "Tìm theo biển số hoặc mã thẻ...");
-        page.AddButton.Visible = false; page.EditButton.Visible = false; page.DeleteButton.Visible = false; page.ViewButton.Text = "Xem chi tiết";
-        page.ConfigureFilter("Trạng thái:", new[] { "DANG_GUI", "DA_RA" }, "TrangThai"); page.ConfigureSecondFilter("Loại xe:", new[] { "Ô tô", "Xe máy" }, "LoaiXe");
-        page.ShowDateRange(); page.FromDatePicker.Value = DateTime.Today.AddDays(-30); page.ToDatePicker.Value = DateTime.Today;
-        page.Bind(KetNoiCSDL.Instance.GetTable("LUOTGUIXE"), "MaLuotGui", "BienSo", "MaThe", "KhuVuc"); page.FilterChanged += (_, _) => ApplyDateFilter();
-        DuLieuForm.RenameColumns(page.Grid, ("MaLuotGui", "Mã lượt gửi"), ("MaPT", "Mã phương tiện"), ("BienSo", "Biển số"), ("LoaiXe", "Loại xe"), ("MaVe", "Mã vé"), ("MaThe", "Mã thẻ"), ("MaKhuVuc", "Mã khu vực"), ("KhuVuc", "Khu vực"), ("ThoiGianVao", "Thời gian vào"), ("ThoiGianRa", "Thời gian ra"), ("TienGui", "Tiền gửi"), ("NhanVienVao", "Nhân viên vào"), ("NhanVienRa", "Nhân viên ra"), ("TrangThai", "Trạng thái"), ("LoaiVe", "Loại vé"));
-        page.Grid.Columns["ThoiGianVao"]!.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm"; page.Grid.Columns["ThoiGianRa"]!.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm"; page.Grid.Columns["TienGui"]!.DefaultCellStyle.Format = "#,##0 ₫";
-        page.ViewButton.Click += (_, _) => { if (DuLieuForm.RequireSelection(page) is { } row) DuLieuForm.ShowDetails(row, "Chi tiết lượt gửi xe"); };
-        page.RefreshButton.Click += (_, _) => { page.Bind(KetNoiCSDL.Instance.GetTable("LUOTGUIXE"), "MaLuotGui", "BienSo", "MaThe", "KhuVuc"); ApplyDateFilter(); };
-        ApplyDateFilter();
+        private readonly KETNOICSDL kn = new KETNOICSDL();
+        private DataTable dtLichSu = new DataTable();
+
+        public frmLichSuGuiXe()
+        {
+            InitializeComponent();
+        }
+
+        private void frmLichSuGuiXe_Load(object sender, EventArgs e)
+        {
+            cboTrangThai.Items.AddRange(new object[] { "Tất cả", "DANG_GUI", "DA_RA" });
+            cboLoaiXe.Items.AddRange(new object[] { "Tất cả", "Xe máy", "Ô tô" });
+            cboTrangThai.SelectedIndex = 0;
+            cboLoaiXe.SelectedIndex = 0;
+            dtpTuNgay.Value = DateTime.Today.AddDays(-30);
+            dtpDenNgay.Value = DateTime.Today;
+
+            dgvLichSu.ReadOnly = true;
+            dgvLichSu.AllowUserToAddRows = false;
+            dgvLichSu.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvLichSu.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+            dgvLichSu.MultiSelect = false;
+
+            HienThiLichSu();
+        }
+
+        private void HienThiLichSu()
+        {
+            try
+            {
+                dtLichSu = kn.GetData("dbo.sp_LUOTGUIXE_DanhSach");
+                dgvLichSu.DataSource = dtLichSu;
+
+                dgvLichSu.Columns["MaLuotGui"].HeaderText = "Mã lượt gửi";
+                dgvLichSu.Columns["BienSo"].HeaderText = "Biển số";
+                dgvLichSu.Columns["LoaiXe"].HeaderText = "Loại xe";
+                dgvLichSu.Columns["MaThe"].HeaderText = "Mã thẻ";
+                dgvLichSu.Columns["KhuVuc"].HeaderText = "Khu vực";
+                dgvLichSu.Columns["ThoiGianVao"].HeaderText = "Thời gian vào";
+                dgvLichSu.Columns["ThoiGianRa"].HeaderText = "Thời gian ra";
+                dgvLichSu.Columns["TienGui"].HeaderText = "Tiền gửi";
+                dgvLichSu.Columns["NhanVienVao"].HeaderText = "Nhân viên vào";
+                dgvLichSu.Columns["NhanVienRa"].HeaderText = "Nhân viên ra";
+
+                dgvLichSu.Columns["ThoiGianVao"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
+                dgvLichSu.Columns["ThoiGianRa"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
+                dgvLichSu.Columns["TienGui"].DefaultCellStyle.Format = "#,##0 ₫";
+
+                LocDanhSach(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi tải lịch sử: " + ex.Message);
+            }
+        }
+
+        private void LocDanhSach(object sender, EventArgs e)
+        {
+            if (dtLichSu.Columns.Count == 0) return;
+
+            string tuKhoa = txtBienSo.Text.Trim().Replace("'", "''");
+            string tuNgay = dtpTuNgay.Value.Date.ToString("MM/dd/yyyy");
+            string denNgay = dtpDenNgay.Value.Date.AddDays(1).ToString("MM/dd/yyyy");
+            string dieuKien = "(BienSo LIKE '%" + tuKhoa + "%' OR MaThe LIKE '%" + tuKhoa
+                + "%') AND ThoiGianVao >= #" + tuNgay + "# AND ThoiGianVao < #" + denNgay + "#";
+
+            if (cboTrangThai.SelectedIndex > 0)
+                dieuKien += " AND TrangThai='" + cboTrangThai.Text + "'";
+            if (cboLoaiXe.SelectedIndex > 0)
+                dieuKien += " AND LoaiXe='" + cboLoaiXe.Text + "'";
+
+            dtLichSu.DefaultView.RowFilter = dieuKien;
+            lblTongSo.Text = "Tổng số: " + dtLichSu.DefaultView.Count + " bản ghi";
+        }
+
+        private void btnXemChiTiet_Click(object sender, EventArgs e)
+        {
+            if (dgvLichSu.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn lượt gửi cần xem!");
+                return;
+            }
+
+            DataRowView row = (DataRowView)dgvLichSu.CurrentRow.DataBoundItem;
+            string noiDung = string.Empty;
+            foreach (DataColumn cot in row.DataView.Table.Columns)
+                noiDung += cot.ColumnName + ": " + Convert.ToString(row[cot.ColumnName]) + Environment.NewLine;
+
+            MessageBox.Show(noiDung, "Chi tiết lượt gửi");
+        }
+
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            txtBienSo.Clear();
+            cboTrangThai.SelectedIndex = 0;
+            cboLoaiXe.SelectedIndex = 0;
+            dtpTuNgay.Value = DateTime.Today.AddDays(-30);
+            dtpDenNgay.Value = DateTime.Today;
+            HienThiLichSu();
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
-    private void ApplyDateFilter() { var from = page.FromDatePicker.Value.Date.ToString("MM/dd/yyyy"); var to = page.ToDatePicker.Value.Date.AddDays(1).ToString("MM/dd/yyyy"); page.ApplyFilter($"[ThoiGianVao] >= #{from}# AND [ThoiGianVao] < #{to}#"); }
 }
-
-

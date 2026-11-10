@@ -1,4 +1,6 @@
 /*
+    FILE 01 - TẠO DATABASE VÀ CÁC BẢNG
+
     QLGuiXe - Tạo database, bảng, khóa và ràng buộc
     Chạy file này một lần trên database mới.
 
@@ -124,12 +126,16 @@ CREATE TABLE dbo.BANGGIA
     LoaiXe          NVARCHAR(20)   NOT NULL,
     MaLoaiVe        VARCHAR(20)    NOT NULL,
     DonGia          DECIMAL(18,2)  NOT NULL,
+    DonGiaSau19Gio  DECIMAL(18,2)  NULL,
+    DonGiaQuaDem    DECIMAL(18,2)  NULL,
     NgayApDung      DATE           NOT NULL,
     CONSTRAINT PK_BANGGIA PRIMARY KEY (MaBangGia),
     CONSTRAINT UQ_BANGGIA_LoaiXeLoaiVeNgay UNIQUE (LoaiXe, MaLoaiVe, NgayApDung),
     CONSTRAINT FK_BANGGIA_LOAIVE FOREIGN KEY (MaLoaiVe) REFERENCES dbo.LOAIVE(MaLoaiVe),
     CONSTRAINT CK_BANGGIA_LoaiXe CHECK (LoaiXe IN (N'Ô tô', N'Xe máy')),
-    CONSTRAINT CK_BANGGIA_DonGia CHECK (DonGia > 0)
+    CONSTRAINT CK_BANGGIA_DonGia CHECK (DonGia > 0),
+    CONSTRAINT CK_BANGGIA_DonGiaSau19Gio CHECK (DonGiaSau19Gio IS NULL OR DonGiaSau19Gio > 0),
+    CONSTRAINT CK_BANGGIA_DonGiaQuaDem CHECK (DonGiaQuaDem IS NULL OR DonGiaQuaDem > 0)
 );
 
 CREATE TABLE dbo.KHUVUC

@@ -1,38 +1,201 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmCaLam : Form
+namespace QLGuiXe.Forms
 {
-    private QuanLyDanhSach page = null!;
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance; private DataTable _table = null!;
-    public frmCaLam()
+    public partial class frmCaLam : Form
     {
-        InitializeComponent(); page = new QuanLyDanhSach(lblTieuDe, lblMoTa, btnThem, txtTimKiem, lblBoLoc, cboBoLoc, lblBoLocPhu, cboBoLocPhu, lblTuNgay, dtpTuNgay, lblDenNgay, dtpDenNgay, btnLamMoi, dgvDuLieu, lblTongSo, btnXem, btnSua, btnXoa); _table = _data.GetTable("CALAM");
-        page.Configure("Quản lý ca làm", "Thiết lập khung giờ làm việc; hỗ trợ ca kết thúc vào ngày hôm sau.", "+ Thêm ca", "Tìm theo tên ca...");
-        page.Bind(_table, "MaCa", "TenCa");
-        DuLieuForm.RenameColumns(page.Grid, ("MaCa", "Mã ca"), ("TenCa", "Tên ca"), ("GioBatDau", "Giờ bắt đầu"), ("GioKetThuc", "Giờ kết thúc"), ("QuaDem", "Qua đêm"));
-        page.AddButton.Click += Add_Click; page.EditButton.Click += Edit_Click; page.DeleteButton.Text = "Xóa"; page.DeleteButton.Click += Delete_Click;
-        page.RefreshButton.Click += (_, _) => ReloadData();
-        page.ViewButton.Click += (_, _) => { if (DuLieuForm.RequireSelection(page) is { } row) DuLieuForm.ShowDetails(row, "Chi tiết ca làm"); };
+        private readonly KETNOICSDL kn = new KETNOICSDL();
+        private DataTable dtCaLam = new DataTable();
+
+        public frmCaLam()
+        {
+            InitializeComponent();
+        }
+
+        private void frmCaLam_Load(object sender, EventArgs e)
+        {
+            dtpGioBatDau.Format = DateTimePickerFormat.Custom;
+            dtpGioBatDau.CustomFormat = "HH:mm";
+            dtpGioBatDau.ShowUpDown = true;
+            dtpGioKetThuc.Format = DateTimePickerFormat.Custom;
+            dtpGioKetThuc.CustomFormat = "HH:mm";
+            dtpGioKetThuc.ShowUpDown = true;
+
+            dgvCaLam.ReadOnly = true;
+            dgvCaLam.AllowUserToAddRows = false;
+            dgvCaLam.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvCaLam.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvCaLam.MultiSelect = false;
+
+            HienThiCaLam();
+            LamMoiDuLieu();
+        }
+
+        private void HienThiCaLam()
+        {
+            try
+            {
+                dtCaLam = kn.GetData("dbo.sp_CALAM_DanhSach");
+                dgvCaLam.DataSource = dtCaLam;
+                dgvCaLam.Columns["MaCa"].HeaderText = "Mã ca";
+                dgvCaLam.Columns["TenCa"].HeaderText = "Tên ca";
+                dgvCaLam.Columns["GioBatDau"].HeaderText = "Giờ bắt đầu";
+                dgvCaLam.Columns["GioKetThuc"].HeaderText = "Giờ kết thúc";
+                dgvCaLam.Columns["QuaDem"].HeaderText = "Qua đêm";
+                LocDanhSach(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi tải ca làm: " + ex.Message);
+            }
+        }
+
+        private string LayMaMoi()
+        {
+            DataTable dt = kn.GetData("dbo.sp_CALAM_MaMoi");
+            return Convert.ToString(dt.Rows[0]["MaMoi"]);
+        }
+
+        private bool KiemTraDuLieu()
+        {
+            if (string.IsNullOrWhiteSpace(txtTenCa.Text))
+            {
+                MessageBox.Show("Vui lòng nhập tên ca làm!");
+                return false;
+            }
+            if (dtpGioBatDau.Value.TimeOfDay == dtpGioKetThuc.Value.TimeOfDay)
+            {
+                MessageBox.Show("Giờ bắt đầu và giờ kết thúc không được trùng nhau!");
+                return false;
+            }
+            return true;
+        }
+
+        private SqlParameter[] LayThamSo()
+        {
+            return new SqlParameter[]
+            {
+                new SqlParameter("@MaCa", txtMaCa.Text),
+                new SqlParameter("@TenCa", txtTenCa.Text.Trim()),
+                new SqlParameter("@GioBatDau", dtpGioBatDau.Value.TimeOfDay),
+                new SqlParameter("@GioKetThuc", dtpGioKetThuc.Value.TimeOfDay)
+            };
+        }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraDuLieu()) return;
+            try
+            {
+                kn.Execute("dbo.sp_CALAM_Them", LayThamSo());
+                MessageBox.Show("Thêm ca làm thành công!");
+                HienThiCaLam();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi thêm: " + ex.Message); }
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (dgvCaLam.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn ca làm cần sửa!");
+                return;
+            }
+            if (!KiemTraDuLieu()) return;
+            try
+            {
+                kn.Execute("dbo.sp_CALAM_Sua", LayThamSo());
+                MessageBox.Show("Sửa ca làm thành công!");
+                HienThiCaLam();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi sửa: " + ex.Message); }
+        }
+
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            if (dgvCaLam.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn ca làm cần xóa!");
+                return;
+            }
+            if (MessageBox.Show("Xóa ca làm đã chọn?", "Xác nhận",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            try
+            {
+                kn.Execute("dbo.sp_CALAM_Xoa", new SqlParameter("@MaCa", txtMaCa.Text));
+                HienThiCaLam();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi xóa: " + ex.Message); }
+        }
+
+        private void btnXem_Click(object sender, EventArgs e)
+        {
+            if (dgvCaLam.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn ca làm cần xem!");
+                return;
+            }
+            MessageBox.Show(
+                "Mã ca: " + txtMaCa.Text + Environment.NewLine +
+                "Tên ca: " + txtTenCa.Text + Environment.NewLine +
+                "Giờ bắt đầu: " + dtpGioBatDau.Value.ToString("HH:mm") + Environment.NewLine +
+                "Giờ kết thúc: " + dtpGioKetThuc.Value.ToString("HH:mm") + Environment.NewLine +
+                "Qua đêm: " + (chkQuaDem.Checked ? "Có" : "Không"),
+                "Chi tiết ca làm");
+        }
+
+        private void dgvCaLam_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            DataGridViewRow row = dgvCaLam.Rows[e.RowIndex];
+            txtMaCa.Text = Convert.ToString(row.Cells["MaCa"].Value);
+            txtTenCa.Text = Convert.ToString(row.Cells["TenCa"].Value);
+            dtpGioBatDau.Value = DateTime.Today.Add(TimeSpan.Parse(Convert.ToString(row.Cells["GioBatDau"].Value)));
+            dtpGioKetThuc.Value = DateTime.Today.Add(TimeSpan.Parse(Convert.ToString(row.Cells["GioKetThuc"].Value)));
+            CapNhatQuaDem(this, EventArgs.Empty);
+        }
+
+        private void CapNhatQuaDem(object sender, EventArgs e)
+        {
+            chkQuaDem.Checked = dtpGioKetThuc.Value.TimeOfDay <= dtpGioBatDau.Value.TimeOfDay;
+        }
+
+        private void LamMoiDuLieu()
+        {
+            try { txtMaCa.Text = LayMaMoi(); }
+            catch { txtMaCa.Clear(); }
+            txtTenCa.Clear();
+            dtpGioBatDau.Value = DateTime.Today.AddHours(6);
+            dtpGioKetThuc.Value = DateTime.Today.AddHours(14);
+            CapNhatQuaDem(this, EventArgs.Empty);
+            dgvCaLam.ClearSelection();
+            txtTenCa.Focus();
+        }
+
+        private void LocDanhSach(object sender, EventArgs e)
+        {
+            if (dtCaLam.Columns.Count == 0) return;
+            string tuKhoa = txtTimKiem.Text.Trim().Replace("'", "''");
+            dtCaLam.DefaultView.RowFilter = "MaCa LIKE '%" + tuKhoa + "%' OR TenCa LIKE '%" + tuKhoa + "%'";
+            lblTongSo.Text = "Tổng số: " + dtCaLam.DefaultView.Count + " bản ghi";
+        }
+
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            txtTimKiem.Clear();
+            HienThiCaLam();
+            LamMoiDuLieu();
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
-    private static RecordEditorDialog Editor(string title, DataRow? row) => new(title, new[]
-    {
-        new EditorField("TenCa", "Tên ca", row?["TenCa"]?.ToString()),
-        new EditorField("GioBatDau", "Giờ bắt đầu", row?["GioBatDau"]?.ToString(), Kind: EditorKind.Time),
-        new EditorField("GioKetThuc", "Giờ kết thúc", row?["GioKetThuc"]?.ToString(), Kind: EditorKind.Time)
-    });
-    private void Add_Click(object? sender, EventArgs e) { using var d = Editor("Thêm ca làm", null); if (d.ShowDialog(this) != DialogResult.OK) return; try { _data.Execute("INSERT dbo.CALAM(MaCa,TenCa,GioBatDau,GioKetThuc) VALUES(@Ma,@Ten,@BatDau,@KetThuc)", KetNoiCSDL.Param("@Ma", _data.NextCode("CALAM", "MaCa", "CA", 2)), KetNoiCSDL.Param("@Ten", d.Values["TenCa"]), KetNoiCSDL.Param("@BatDau", TimeSpan.Parse(d.Values["GioBatDau"])), KetNoiCSDL.Param("@KetThuc", TimeSpan.Parse(d.Values["GioKetThuc"]))); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void Edit_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null) return; using var d = Editor("Sửa ca làm", row); if (d.ShowDialog(this) != DialogResult.OK) return; try { _data.Execute("UPDATE dbo.CALAM SET TenCa=@Ten,GioBatDau=@BatDau,GioKetThuc=@KetThuc WHERE MaCa=@Ma", KetNoiCSDL.Param("@Ten", d.Values["TenCa"]), KetNoiCSDL.Param("@BatDau", TimeSpan.Parse(d.Values["GioBatDau"])), KetNoiCSDL.Param("@KetThuc", TimeSpan.Parse(d.Values["GioKetThuc"])), KetNoiCSDL.Param("@Ma", row["MaCa"])); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void Delete_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null || !DuLieuForm.Confirm("Xóa ca làm đã chọn?")) return; try { _data.Execute("DELETE dbo.CALAM WHERE MaCa=@Ma", KetNoiCSDL.Param("@Ma", row["MaCa"])); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void ReloadData() { _table = _data.GetTable("CALAM"); page.Bind(_table, "MaCa", "TenCa"); }
-    private void ShowDatabaseError(Exception ex) => MessageBox.Show(ex.Message, "Không thể cập nhật SQL Server", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 }
-
-

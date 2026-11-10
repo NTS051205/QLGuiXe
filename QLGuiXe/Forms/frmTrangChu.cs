@@ -1,192 +1,257 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmTrangChu : Form
+namespace QLGuiXe.Forms
 {
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance;
-    private readonly Dictionary<string, Form> _pages = new(StringComparer.OrdinalIgnoreCase);
-    private Button? _activeButton;
-
-    public frmTrangChu()
+    public partial class frmTrangChu : Form
     {
-        InitializeComponent();
-        ConfigureNavigation();
-        ConfigureDashboard();
-        ShowDashboard(btnDashboard);
-    }
+        private readonly KETNOICSDL kn = new KETNOICSDL();
 
-    private void ConfigureNavigation()
-    {
-        foreach (var button in flpMenu.Controls.OfType<Button>())
+        public frmTrangChu()
         {
-            button.AccessibleName = button.Text;
-            button.Click += NavButton_Click;
-            button.MouseEnter += (_, _) => { if (button != _activeButton) button.BackColor = SystemColors.ControlDark; };
-            button.MouseLeave += (_, _) => { if (button != _activeButton) button.BackColor = SystemColors.Control; };
-        }
-    }
-
-    private void ConfigureDashboard()
-    {
-        foreach (var grid in new[] { dgvKhuVuc, dgvXeGanDay, dgvVeSapHetHan })
-        {
-            grid.AllowUserToAddRows = false;
-            grid.AllowUserToDeleteRows = false;
-            grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.MultiSelect = false;
-            grid.ReadOnly = true;
-            grid.RowHeadersVisible = false;
-            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        }
-        lblCurrentUser.Text = $"{PhienDangNhap.EmployeeName} - {PhienDangNhap.Role}";
-        RefreshDashboard();
-    }
-
-    private void RefreshDashboard()
-    {
-        var parking = _data.GetTable("LUOTGUIXE").AsEnumerable().Where(r => r.Field<string>("TrangThai") == "DANG_GUI").ToArray();
-        var areas = _data.GetTable("KHUVUC");
-        var monthly = _data.GetTable("DANGKYVETHANG").AsEnumerable().Where(r => r.Field<string>("TrangThai") == "HIEU_LUC").ToArray();
-
-        lblTongXeValue.Text = parking.Length.ToString();
-        lblOToValue.Text = parking.Count(r => r.Field<string>("LoaiXe") == "Ô tô").ToString();
-        lblXeMayValue.Text = parking.Count(r => r.Field<string>("LoaiXe") == "Xe máy").ToString();
-        lblConTrongValue.Text = areas.AsEnumerable().Where(r => r.Field<string>("TrangThai") == "HOAT_DONG").Sum(r => r.Field<int>("ConTrong")).ToString();
-        lblVeThangValue.Text = monthly.Length.ToString();
-
-        dgvKhuVuc.DataSource = areas;
-        dgvXeGanDay.DataSource = TopRows(_data.GetTable("LUOTGUIXE"), 10, "ThoiGianVao DESC");
-        var expiring = _data.GetTable("DANGKYVETHANG").Clone();
-        foreach (var row in _data.GetTable("DANGKYVETHANG").AsEnumerable().Where(r => r.Field<DateTime>("NgayKetThuc") <= DateTime.Today.AddDays(30)).OrderBy(r => r.Field<DateTime>("NgayKetThuc")).Take(10))
-            expiring.ImportRow(row);
-        dgvVeSapHetHan.DataSource = expiring;
-        FormatDashboardGrids();
-    }
-
-    private static DataTable TopRows(DataTable source, int count, string sort)
-    {
-        var result = source.Clone();
-        foreach (DataRowView row in new DataView(source) { Sort = sort }.Cast<DataRowView>().Take(count)) result.ImportRow(row.Row);
-        return result;
-    }
-
-    private void FormatDashboardGrids()
-    {
-        HideColumns(dgvKhuVuc, "MaKhuVuc", "TrangThai");
-        HideColumns(dgvXeGanDay, "MaLuotGui", "MaPT", "MaVe", "MaKhuVuc", "ThoiGianRa", "TienGui", "NhanVienRa", "TrangThai");
-        HideColumns(dgvVeSapHetHan, "MaDangKy", "MaKH", "MaPT", "MaVe", "TongTien", "ThanhToan");
-        RenameColumns(dgvKhuVuc, ("TenKhuVuc", "Khu vực"), ("LoaiXe", "Loại xe"), ("SucChua", "Sức chứa"), ("DangGui", "Đang gửi"), ("ConTrong", "Còn trống"));
-        RenameColumns(dgvXeGanDay, ("BienSo", "Biển số"), ("LoaiXe", "Loại xe"), ("MaThe", "Mã thẻ"), ("KhuVuc", "Khu vực"), ("ThoiGianVao", "Thời gian vào"), ("NhanVienVao", "Tiếp nhận"), ("LoaiVe", "Loại vé"));
-        RenameColumns(dgvVeSapHetHan, ("KhachHang", "Khách hàng"), ("BienSo", "Biển số"), ("MaThe", "Mã thẻ"), ("NgayBatDau", "Bắt đầu"), ("NgayKetThuc", "Hết hạn"), ("TrangThai", "Trạng thái"));
-    }
-
-    private static void HideColumns(DataGridView grid, params string[] names)
-    {
-        foreach (var name in names) if (grid.Columns.Contains(name)) grid.Columns[name]!.Visible = false;
-    }
-
-    private static void RenameColumns(DataGridView grid, params (string Name, string Header)[] columns)
-    {
-        foreach (var column in columns) if (grid.Columns.Contains(column.Name)) grid.Columns[column.Name]!.HeaderText = column.Header;
-    }
-
-    private void NavButton_Click(object? sender, EventArgs e)
-    {
-        if (sender is not Button button || button.Tag is not string key) return;
-        Navigate(key, button);
-    }
-
-    private void Navigate(string key, Button? source = null)
-    {
-        if (key == "Dashboard")
-        {
-            ShowDashboard(source ?? btnDashboard);
-            return;
+            InitializeComponent();
         }
 
-        ActivateButton(source ?? flpMenu.Controls.OfType<Button>().FirstOrDefault(x => Equals(x.Tag, key)));
-        pnlDashboard.Visible = false;
-        foreach (Control control in pnlContent.Controls) if (control != pnlDashboard) control.Visible = false;
-
-        if (!_pages.TryGetValue(key, out var page))
+        private void frmTrangChu_Load(object sender, EventArgs e)
         {
-            page = CreatePage(key);
-            DinhDang.ConfigurePage(page);
-            _pages[key] = page;
-            pnlContent.Controls.Add(page);
+            lblNguoiDung.Text = "Người dùng: " + PhienDangNhap.HoTen
+                + " - " + PhienDangNhap.VaiTro;
+            ApDungPhanQuyen();
+            HienThiTongQuan();
         }
 
-        lblPageTitle.Text = source?.AccessibleName?.Trim() ?? key;
-        page.Visible = true;
-        page.BringToFront();
-        page.Show();
-    }
-
-    private Form CreatePage(string key) => key switch
-    {
-        "XeVao" => new frmXeVao(),
-        "XeRa" => new frmXeRa(),
-        "LichSu" => new frmLichSuGuiXe(),
-        "DangKyVeThang" => new frmDangKyVeThang(),
-        "KhachHang" => new frmKhachHang(),
-        "PhuongTien" => new frmPhuongTien(),
-        "LoaiVe" => new frmLoaiVe(),
-        "BangGia" => new frmBangGia(),
-        "KhuVuc" => new frmKhuVuc(),
-        "NhanVien" => new frmNhanVien(),
-        "TaiKhoan" => new frmTaiKhoan(),
-        "CaLam" => new frmCaLam(),
-        "PhanCongCa" => new frmPhanCongCa(),
-        _ => throw new ArgumentOutOfRangeException(nameof(key), key, "Trang chưa được khai báo.")
-    };
-
-    private void ShowDashboard(Button button)
-    {
-        ActivateButton(button);
-        foreach (Control control in pnlContent.Controls) control.Visible = control == pnlDashboard;
-        pnlDashboard.Visible = true;
-        pnlDashboard.BringToFront();
-        lblPageTitle.Text = "Trang chủ";
-        RefreshDashboard();
-    }
-
-    private void ActivateButton(Button? button)
-    {
-        if (_activeButton is not null)
+        private void ApDungPhanQuyen()
         {
-            _activeButton.BackColor = SystemColors.Control;
-            _activeButton.ForeColor = SystemColors.ControlText;
+            bool laAdmin = PhienDangNhap.LaAdmin;
+
+            // Nhân viên chỉ thực hiện các nghiệp vụ gửi xe.
+            mnuDanhMuc.Enabled = laAdmin;
+            mnuNhanSu.Enabled = laAdmin;
+            mnuBaoCaoMenu.Enabled = laAdmin;
+
+            if (!laAdmin)
+            {
+                mnuDanhMuc.ToolTipText = "Chỉ tài khoản ADMIN được sử dụng";
+                mnuNhanSu.ToolTipText = "Chỉ tài khoản ADMIN được sử dụng";
+                mnuBaoCaoMenu.ToolTipText = "Chỉ tài khoản ADMIN được sử dụng";
+                lblNguoiDung.Text += " - Quyền nghiệp vụ gửi xe";
+            }
         }
-        _activeButton = button;
-        if (button is not null)
+
+        private bool KiemTraQuyenAdmin()
         {
-            button.BackColor = SystemColors.ActiveCaption;
-            button.ForeColor = SystemColors.ControlText;
+            if (PhienDangNhap.LaAdmin)
+                return true;
+
+            MessageBox.Show(
+                "Chức năng này chỉ dành cho tài khoản ADMIN.",
+                "Không có quyền truy cập",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return false;
         }
-    }
 
-    private void btnQuickXeVao_Click(object? sender, EventArgs e) => Navigate("XeVao", btnXeVao);
-    private void btnQuickXeRa_Click(object? sender, EventArgs e) => Navigate("XeRa", btnXeRa);
-    private void btnQuickVeThang_Click(object? sender, EventArgs e) => Navigate("DangKyVeThang", btnDangKyVeThang);
-    private void btnDangXuat_Click(object? sender, EventArgs e) => Close();
+        private void HienThiTongQuan()
+        {
+            try
+            {
+                DataTable dtThongKe = kn.GetData("dbo.sp_TrangChu_ThongKe");
+                DataRow thongKe = dtThongKe.Rows[0];
 
-    protected override void OnFormClosed(FormClosedEventArgs e)
-    {
-        foreach (var page in _pages.Values) page.Dispose();
-        base.OnFormClosed(e);
-    }
+                lblXeDangGuiValue.Text = Convert.ToString(thongKe["XeDangGui"]);
+                lblChoTrongValue.Text = Convert.ToString(thongKe["ChoTrong"]);
+                lblVeThangValue.Text = Convert.ToString(thongKe["VeThangHieuLuc"]);
+                lblDoanhThuValue.Text = Convert.ToDecimal(thongKe["DoanhThuHomNay"]).ToString("#,##0 ₫");
 
-    private void btnDashboard_Click(object sender, EventArgs e)
-    {
+                dgvTongQuan.DataSource = kn.GetData("dbo.sp_TrangChu_KhuVuc");
+                dgvTongQuan.ReadOnly = true;
+                dgvTongQuan.AllowUserToAddRows = false;
+                dgvTongQuan.AllowUserToDeleteRows = false;
+                dgvTongQuan.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+                dgvTongQuan.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                dgvTongQuan.RowHeadersVisible = false;
 
+                dgvTongQuan.Columns["MaKhuVuc"].HeaderText = "Mã khu vực";
+                dgvTongQuan.Columns["TenKhuVuc"].HeaderText = "Tên khu vực";
+                dgvTongQuan.Columns["LoaiXe"].HeaderText = "Loại xe";
+                dgvTongQuan.Columns["SucChua"].HeaderText = "Sức chứa";
+                dgvTongQuan.Columns["DangGui"].HeaderText = "Đang gửi";
+                dgvTongQuan.Columns["ConTrong"].HeaderText = "Còn trống";
+                dgvTongQuan.Columns["TrangThai"].HeaderText = "Trạng thái";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Không thể tải dữ liệu tổng quan: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnLamMoiTongQuan_Click(object sender, EventArgs e)
+        {
+            HienThiTongQuan();
+        }
+
+        private void mnuXeVao_Click(object sender, EventArgs e)
+        {
+            using (frmXeVao frm = new frmXeVao())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuXeRa_Click(object sender, EventArgs e)
+        {
+            using (frmXeRa frm = new frmXeRa())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuLichSu_Click(object sender, EventArgs e)
+        {
+            using (frmLichSuGuiXe frm = new frmLichSuGuiXe())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuDangKyVeThang_Click(object sender, EventArgs e)
+        {
+            using (frmDangKyVeThang frm = new frmDangKyVeThang())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuKhachHang_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmKhachHang frm = new frmKhachHang())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuPhuongTien_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmPhuongTien frm = new frmPhuongTien())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuLoaiVe_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmLoaiVe frm = new frmLoaiVe())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuBangGia_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmBangGia frm = new frmBangGia())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuKhuVuc_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmKhuVuc frm = new frmKhuVuc())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuNhanVien_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmNhanVien frm = new frmNhanVien())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuTaiKhoan_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmTaiKhoan frm = new frmTaiKhoan())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuCaLam_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmCaLam frm = new frmCaLam())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuPhanCongCa_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            using (frmPhanCongCa frm = new frmPhanCongCa())
+            {
+                frm.ShowDialog(this);
+            }
+        }
+
+        private void mnuBaoCao_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraQuyenAdmin()) return;
+            try
+            {
+                using (frmBaoCao frm = new frmBaoCao())
+                {
+                    frm.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Không thể mở Form báo cáo: " + ex.Message,
+                    "Lỗi báo cáo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
+
+        private void mnuDangXuat_Click(object sender, EventArgs e)
+        {
+            DialogResult ketQua = MessageBox.Show(
+                "Bạn có chắc chắn muốn đăng xuất?",
+                "Xác nhận",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (ketQua == DialogResult.Yes)
+            {
+                DialogResult = DialogResult.Retry;
+                Close();
+            }
+        }
+
+        private void mnuThoat_Click(object sender, EventArgs e)
+        {
+            DialogResult ketQua = MessageBox.Show(
+                "Bạn có chắc chắn muốn thoát chương trình?",
+                "Xác nhận",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (ketQua == DialogResult.Yes)
+            {
+                Application.Exit();
+            }
+        }
     }
 }
-
-

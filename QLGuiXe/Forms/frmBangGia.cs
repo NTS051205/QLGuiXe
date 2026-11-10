@@ -1,43 +1,219 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
+using System.Data.SqlClient;
+using System.Globalization;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmBangGia : Form
+namespace QLGuiXe.Forms
 {
-    private QuanLyDanhSach page = null!;
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance;
-    private DataTable _table = null!;
-    public frmBangGia()
+    public partial class frmBangGia : Form
     {
-        InitializeComponent();
-        page = new QuanLyDanhSach(lblTieuDe, lblMoTa, btnThem, txtTimKiem, lblBoLoc, cboBoLoc, lblBoLocPhu, cboBoLocPhu, lblTuNgay, dtpTuNgay, lblDenNgay, dtpDenNgay, btnLamMoi, dgvDuLieu, lblTongSo, btnXem, btnSua, btnXoa);
-        _table = _data.GetTable("BANGGIA");
-        page.Configure("Bảng giá", "Quản lý giá vé lượt và vé tháng theo từng loại phương tiện.", "+ Thêm mức giá", "Tìm mã bảng giá...");
-        page.ConfigureFilter("Loại xe:", new[] { "Ô tô", "Xe máy" }, "LoaiXe"); page.ConfigureSecondFilter("Loại vé:", new[] { "LUOT", "THANG" }, "LoaiVe");
-        page.Bind(_table, "MaBangGia", "LoaiXe", "LoaiVe");
-        DuLieuForm.RenameColumns(page.Grid, ("MaBangGia", "Mã bảng giá"), ("LoaiXe", "Loại xe"), ("LoaiVe", "Loại vé"), ("DonGia", "Đơn giá"), ("NgayApDung", "Ngày áp dụng"));
-        page.Grid.Columns["DonGia"]!.DefaultCellStyle.Format = "#,##0 ₫"; page.Grid.Columns["NgayApDung"]!.DefaultCellStyle.Format = "dd/MM/yyyy";
-        page.AddButton.Click += Add_Click; page.EditButton.Click += Edit_Click; page.DeleteButton.Visible = false;
-        page.RefreshButton.Click += (_, _) => ReloadData();
-        page.ViewButton.Click += (_, _) => { if (DuLieuForm.RequireSelection(page) is { } row) DuLieuForm.ShowDetails(row, "Chi tiết bảng giá"); };
+        private readonly KETNOICSDL kn = new KETNOICSDL();
+        private DataTable dtBangGia = new DataTable();
+
+        public frmBangGia()
+        {
+            InitializeComponent();
+        }
+
+        private void frmBangGia_Load(object sender, EventArgs e)
+        {
+            cboLoaiXe.Items.AddRange(new object[] { "Xe máy", "Ô tô" });
+            cboLoaiVe.Items.AddRange(new object[] { "LUOT", "THANG" });
+            cboLocLoaiXe.Items.AddRange(new object[] { "Tất cả", "Xe máy", "Ô tô" });
+            cboLocLoaiVe.Items.AddRange(new object[] { "Tất cả", "LUOT", "THANG" });
+            cboLoaiXe.SelectedIndex = 0;
+            cboLoaiVe.SelectedIndex = 0;
+            cboLocLoaiXe.SelectedIndex = 0;
+            cboLocLoaiVe.SelectedIndex = 0;
+
+            dgvBangGia.ReadOnly = true;
+            dgvBangGia.AllowUserToAddRows = false;
+            dgvBangGia.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvBangGia.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvBangGia.MultiSelect = false;
+
+            HienThiBangGia();
+            LamMoiDuLieu();
+        }
+
+        private void HienThiBangGia()
+        {
+            try
+            {
+                dtBangGia = kn.GetData("dbo.sp_BANGGIA_DanhSach");
+                dgvBangGia.DataSource = dtBangGia;
+                dgvBangGia.Columns["MaBangGia"].HeaderText = "Mã bảng giá";
+                dgvBangGia.Columns["LoaiXe"].HeaderText = "Loại xe";
+                dgvBangGia.Columns["LoaiVe"].HeaderText = "Loại vé";
+                dgvBangGia.Columns["DonGia"].HeaderText = "Giá thường";
+                dgvBangGia.Columns["DonGiaSau19Gio"].HeaderText = "Giá sau 19 giờ";
+                dgvBangGia.Columns["DonGiaQuaDem"].HeaderText = "Giá qua đêm";
+                dgvBangGia.Columns["NgayApDung"].HeaderText = "Ngày áp dụng";
+                dgvBangGia.Columns["DonGia"].DefaultCellStyle.Format = "#,##0 ₫";
+                dgvBangGia.Columns["DonGiaSau19Gio"].DefaultCellStyle.Format = "#,##0 ₫";
+                dgvBangGia.Columns["DonGiaQuaDem"].DefaultCellStyle.Format = "#,##0 ₫";
+                dgvBangGia.Columns["NgayApDung"].DefaultCellStyle.Format = "dd/MM/yyyy";
+                LocDanhSach(this, EventArgs.Empty);
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi tải bảng giá: " + ex.Message); }
+        }
+
+        private string LayMaMoi()
+        {
+            DataTable dt = kn.GetData("dbo.sp_BANGGIA_MaMoi");
+            return Convert.ToString(dt.Rows[0]["MaMoi"]);
+        }
+
+        private bool KiemTraDuLieu()
+        {
+            if (nudDonGia.Value <= 0)
+            {
+                MessageBox.Show("Đơn giá phải lớn hơn 0!");
+                return false;
+            }
+            if (cboLoaiVe.Text == "LUOT" &&
+                (nudGiaSau19Gio.Value <= 0 || nudGiaQuaDem.Value <= 0))
+            {
+                MessageBox.Show("Vé lượt phải có giá sau 19 giờ và giá qua đêm!");
+                return false;
+            }
+            return true;
+        }
+
+        private SqlParameter[] LayThamSo()
+        {
+            object giaSau19Gio = cboLoaiVe.Text == "LUOT" ? (object)nudGiaSau19Gio.Value : DBNull.Value;
+            object giaQuaDem = cboLoaiVe.Text == "LUOT" ? (object)nudGiaQuaDem.Value : DBNull.Value;
+
+            return new SqlParameter[]
+            {
+                new SqlParameter("@MaBangGia", txtMaBangGia.Text),
+                new SqlParameter("@LoaiXe", cboLoaiXe.Text),
+                new SqlParameter("@LoaiVe", cboLoaiVe.Text),
+                new SqlParameter("@DonGia", nudDonGia.Value),
+                new SqlParameter("@DonGiaSau19Gio", giaSau19Gio),
+                new SqlParameter("@DonGiaQuaDem", giaQuaDem),
+                new SqlParameter("@NgayApDung", dtpNgayApDung.Value.Date)
+            };
+        }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraDuLieu()) return;
+            try
+            {
+                kn.Execute("dbo.sp_BANGGIA_Them", LayThamSo());
+                MessageBox.Show("Thêm bảng giá thành công!");
+                HienThiBangGia();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi thêm: " + ex.Message); }
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (dgvBangGia.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn mức giá cần sửa!");
+                return;
+            }
+            if (!KiemTraDuLieu()) return;
+            try
+            {
+                kn.Execute("dbo.sp_BANGGIA_Sua", LayThamSo());
+                MessageBox.Show("Sửa bảng giá thành công!");
+                HienThiBangGia();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi sửa: " + ex.Message); }
+        }
+
+        private void btnXem_Click(object sender, EventArgs e)
+        {
+            if (dgvBangGia.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn mức giá cần xem!");
+                return;
+            }
+
+            string giaSau19 = cboLoaiVe.Text == "LUOT" ? DinhDangTien(nudGiaSau19Gio.Value) : "Không áp dụng";
+            string giaQuaDem = cboLoaiVe.Text == "LUOT" ? DinhDangTien(nudGiaQuaDem.Value) : "Không áp dụng";
+            MessageBox.Show(
+                "Mã bảng giá: " + txtMaBangGia.Text + Environment.NewLine +
+                "Loại xe: " + cboLoaiXe.Text + Environment.NewLine +
+                "Loại vé: " + cboLoaiVe.Text + Environment.NewLine +
+                "Giá thường: " + DinhDangTien(nudDonGia.Value) + Environment.NewLine +
+                "Giá sau 19 giờ: " + giaSau19 + Environment.NewLine +
+                "Giá qua đêm: " + giaQuaDem,
+                "Chi tiết bảng giá");
+        }
+
+        private void dgvBangGia_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            DataGridViewRow row = dgvBangGia.Rows[e.RowIndex];
+            txtMaBangGia.Text = Convert.ToString(row.Cells["MaBangGia"].Value);
+            cboLoaiXe.Text = Convert.ToString(row.Cells["LoaiXe"].Value);
+            cboLoaiVe.Text = Convert.ToString(row.Cells["LoaiVe"].Value);
+            nudDonGia.Value = Convert.ToDecimal(row.Cells["DonGia"].Value);
+            nudGiaSau19Gio.Value = row.Cells["DonGiaSau19Gio"].Value == DBNull.Value ? 0 : Convert.ToDecimal(row.Cells["DonGiaSau19Gio"].Value);
+            nudGiaQuaDem.Value = row.Cells["DonGiaQuaDem"].Value == DBNull.Value ? 0 : Convert.ToDecimal(row.Cells["DonGiaQuaDem"].Value);
+            dtpNgayApDung.Value = Convert.ToDateTime(row.Cells["NgayApDung"].Value);
+            CapNhatLoaiGia(this, EventArgs.Empty);
+        }
+
+        private void CapNhatLoaiGia(object sender, EventArgs e)
+        {
+            bool laVeLuot = cboLoaiVe.Text == "LUOT";
+            nudGiaSau19Gio.Enabled = laVeLuot;
+            nudGiaQuaDem.Enabled = laVeLuot;
+            lblGiaSau19Gio.Enabled = laVeLuot;
+            lblGiaQuaDem.Enabled = laVeLuot;
+        }
+
+        private void LamMoiDuLieu()
+        {
+            try { txtMaBangGia.Text = LayMaMoi(); }
+            catch { txtMaBangGia.Clear(); }
+            cboLoaiXe.SelectedIndex = 0;
+            cboLoaiVe.SelectedIndex = 0;
+            nudDonGia.Value = 5000;
+            nudGiaSau19Gio.Value = 10000;
+            nudGiaQuaDem.Value = 20000;
+            dtpNgayApDung.Value = DateTime.Today;
+            CapNhatLoaiGia(this, EventArgs.Empty);
+            dgvBangGia.ClearSelection();
+        }
+
+        private void LocDanhSach(object sender, EventArgs e)
+        {
+            if (dtBangGia.Columns.Count == 0) return;
+            string tuKhoa = txtTimKiem.Text.Trim().Replace("'", "''");
+            string dieuKien = "MaBangGia LIKE '%" + tuKhoa + "%'";
+            if (cboLocLoaiXe.SelectedIndex > 0) dieuKien += " AND LoaiXe='" + cboLocLoaiXe.Text + "'";
+            if (cboLocLoaiVe.SelectedIndex > 0) dieuKien += " AND LoaiVe='" + cboLocLoaiVe.Text + "'";
+            dtBangGia.DefaultView.RowFilter = dieuKien;
+            lblTongSo.Text = "Tổng số: " + dtBangGia.DefaultView.Count + " bản ghi";
+        }
+
+        private string DinhDangTien(decimal soTien)
+        {
+            return string.Format(CultureInfo.GetCultureInfo("vi-VN"), "{0:N0} ₫", soTien);
+        }
+
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            txtTimKiem.Clear();
+            cboLocLoaiXe.SelectedIndex = 0;
+            cboLocLoaiVe.SelectedIndex = 0;
+            HienThiBangGia();
+            LamMoiDuLieu();
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
-    private static RecordEditorDialog Editor(string title, DataRow? row) => new(title, new[]
-    {
-        new EditorField("LoaiXe", "Loại xe", row?["LoaiXe"]?.ToString() ?? "Xe máy", Options: new[] { "Xe máy", "Ô tô" }),
-        new EditorField("LoaiVe", "Loại vé", row?["LoaiVe"]?.ToString() ?? "LUOT", Options: new[] { "LUOT", "THANG" }),
-        new EditorField("DonGia", "Đơn giá (VNĐ)", row?["DonGia"]?.ToString()),
-        new EditorField("NgayApDung", "Ngày áp dụng", row?["NgayApDung"]?.ToString(), Kind: EditorKind.Date)
-    });
-    private void Add_Click(object? sender, EventArgs e) { using var d = Editor("Thêm mức giá", null); if (d.ShowDialog(this) != DialogResult.OK) return; if (!decimal.TryParse(d.Values["DonGia"], out var price) || price <= 0) { MessageBox.Show("Đơn giá phải là số dương."); return; } SavePrice(null, d, price); }
-    private void Edit_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null) return; using var d = Editor("Sửa mức giá", row); if (d.ShowDialog(this) != DialogResult.OK) return; if (!decimal.TryParse(d.Values["DonGia"], out var price) || price <= 0) { MessageBox.Show("Đơn giá phải là số dương."); return; } SavePrice(row["MaBangGia"].ToString(), d, price); }
-    private void SavePrice(string? id, RecordEditorDialog d, decimal price) { try { if (id is null) _data.Execute("INSERT dbo.BANGGIA(MaBangGia,LoaiXe,MaLoaiVe,DonGia,NgayApDung) VALUES(@Id,@LoaiXe,(SELECT MaLoaiVe FROM dbo.LOAIVE WHERE KyHieu=@LoaiVe),@DonGia,@Ngay)", KetNoiCSDL.Param("@Id", _data.NextCode("BANGGIA", "MaBangGia", "BG")), KetNoiCSDL.Param("@LoaiXe", d.Values["LoaiXe"]), KetNoiCSDL.Param("@LoaiVe", d.Values["LoaiVe"]), KetNoiCSDL.Param("@DonGia", price), KetNoiCSDL.Param("@Ngay", DateTime.Parse(d.Values["NgayApDung"]).Date)); else _data.Execute("UPDATE dbo.BANGGIA SET LoaiXe=@LoaiXe,MaLoaiVe=(SELECT MaLoaiVe FROM dbo.LOAIVE WHERE KyHieu=@LoaiVe),DonGia=@DonGia,NgayApDung=@Ngay WHERE MaBangGia=@Id", KetNoiCSDL.Param("@LoaiXe", d.Values["LoaiXe"]), KetNoiCSDL.Param("@LoaiVe", d.Values["LoaiVe"]), KetNoiCSDL.Param("@DonGia", price), KetNoiCSDL.Param("@Ngay", DateTime.Parse(d.Values["NgayApDung"]).Date), KetNoiCSDL.Param("@Id", id)); ReloadData(); } catch (Exception ex) { MessageBox.Show(ex.Message, "Không thể cập nhật SQL Server", MessageBoxButtons.OK, MessageBoxIcon.Warning); } }
-    private void ReloadData() { _table = _data.GetTable("BANGGIA"); page.Bind(_table, "MaBangGia", "LoaiXe", "LoaiVe"); }
 }
-
-

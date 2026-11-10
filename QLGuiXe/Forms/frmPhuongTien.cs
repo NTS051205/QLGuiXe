@@ -1,39 +1,230 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmPhuongTien : Form
+namespace QLGuiXe.Forms
 {
-    private QuanLyDanhSach page = null!;
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance; private DataTable _table = null!;
-    public frmPhuongTien()
+    public partial class frmPhuongTien : Form
     {
-        InitializeComponent(); page = new QuanLyDanhSach(lblTieuDe, lblMoTa, btnThem, txtTimKiem, lblBoLoc, cboBoLoc, lblBoLocPhu, cboBoLocPhu, lblTuNgay, dtpTuNgay, lblDenNgay, dtpDenNgay, btnLamMoi, dgvDuLieu, lblTongSo, btnXem, btnSua, btnXoa); _table = _data.GetTable("PHUONGTIEN");
-        page.Configure("Quản lý phương tiện", "Quản lý biển số, loại xe và chủ sở hữu; khách vãng lai có thể để trống khách hàng.", "+ Thêm phương tiện", "Tìm theo biển số...");
-        page.ConfigureFilter("Loại xe:", new[] { "Ô tô", "Xe máy" }, "LoaiXe");
-        page.Bind(_table, "MaPT", "BienSo", "KhachHang");
-        DuLieuForm.RenameColumns(page.Grid, ("MaPT", "Mã phương tiện"), ("BienSo", "Biển số"), ("LoaiXe", "Loại xe"), ("KhachHang", "Khách hàng sở hữu"));
-        page.AddButton.Click += Add_Click; page.EditButton.Click += Edit_Click; page.DeleteButton.Visible = false; page.ViewButton.Text = "Lịch sử"; page.ViewButton.Click += History_Click;
-        page.RefreshButton.Click += (_, _) => ReloadData();
+        private readonly KETNOICSDL kn = new KETNOICSDL();
+        private DataTable dtPhuongTien = new DataTable();
+
+        public frmPhuongTien() { InitializeComponent(); }
+
+        private void frmPhuongTien_Load(object sender, EventArgs e)
+        {
+            cboLoaiXe.Items.AddRange(new object[] { "Xe máy", "Ô tô" });
+            cboLocLoaiXe.Items.AddRange(new object[] { "Tất cả", "Xe máy", "Ô tô" });
+            LoadKhachHang();
+            cboLoaiXe.SelectedIndex = 0;
+            cboLocLoaiXe.SelectedIndex = 0;
+            CauHinhLuoi();
+            LoadDanhSach();
+            LamMoiNhapLieu();
+        }
+
+        private void LoadKhachHang()
+        {
+            DataTable dt = kn.GetData("dbo.sp_PHUONGTIEN_KhachHang");
+            DataRow khachVangLai = dt.NewRow();
+            khachVangLai["MaKH"] = DBNull.Value;
+            khachVangLai["HoTen"] = "— Khách vãng lai —";
+            dt.Rows.InsertAt(khachVangLai, 0);
+            cboKhachHang.DisplayMember = "HoTen";
+            cboKhachHang.ValueMember = "MaKH";
+            cboKhachHang.DataSource = dt;
+        }
+
+        private void CauHinhLuoi()
+        {
+            dgvPhuongTien.ReadOnly = true;
+            dgvPhuongTien.AllowUserToAddRows = false;
+            dgvPhuongTien.AllowUserToDeleteRows = false;
+            dgvPhuongTien.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvPhuongTien.MultiSelect = false;
+            dgvPhuongTien.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvPhuongTien.RowHeadersVisible = false;
+        }
+
+        private void LoadDanhSach()
+        {
+            try
+            {
+                dtPhuongTien = kn.GetData("dbo.sp_PHUONGTIEN_DanhSach");
+                dgvPhuongTien.DataSource = dtPhuongTien;
+                dgvPhuongTien.Columns["MaPT"].HeaderText = "Mã phương tiện";
+                dgvPhuongTien.Columns["BienSo"].HeaderText = "Biển số";
+                dgvPhuongTien.Columns["LoaiXe"].HeaderText = "Loại xe";
+                dgvPhuongTien.Columns["KhachHang"].HeaderText = "Khách hàng sở hữu";
+                dgvPhuongTien.Columns["MaKH"].Visible = false;
+                LocDanhSach(this, EventArgs.Empty);
+            }
+            catch (Exception ex) { BaoLoi(ex); }
+        }
+
+        private void LamMoiNhapLieu()
+        {
+            try { txtMaPT.Text = Convert.ToString(kn.GetData("dbo.sp_PHUONGTIEN_MaMoi").Rows[0]["MaMoi"]); }
+            catch { txtMaPT.Clear(); }
+            txtBienSo.Clear();
+            cboLoaiXe.SelectedIndex = 0;
+            cboKhachHang.SelectedIndex = 0;
+            dgvPhuongTien.ClearSelection();
+            txtBienSo.Focus();
+        }
+
+        private bool KiemTraNhapLieu()
+        {
+            if (string.IsNullOrWhiteSpace(txtBienSo.Text))
+            {
+                MessageBox.Show("Vui lòng nhập biển số.");
+                return false;
+            }
+            return true;
+        }
+
+        private object? MaKhachHangDaChon()
+        {
+            if (cboKhachHang.SelectedValue == null || cboKhachHang.SelectedValue == DBNull.Value)
+                return null;
+            return cboKhachHang.SelectedValue;
+        }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraNhapLieu()) return;
+            try
+            {
+                kn.Execute("dbo.sp_PHUONGTIEN_Them", LayThamSo());
+                MessageBox.Show("Thêm phương tiện thành công.");
+                LoadDanhSach();
+                LamMoiNhapLieu();
+            }
+            catch (Exception ex) { BaoLoi(ex); }
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (dgvPhuongTien.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn phương tiện cần sửa.");
+                return;
+            }
+            if (!KiemTraNhapLieu()) return;
+            try
+            {
+                kn.Execute("dbo.sp_PHUONGTIEN_Sua", LayThamSo());
+                MessageBox.Show("Cập nhật phương tiện thành công.");
+                LoadDanhSach();
+                LamMoiNhapLieu();
+            }
+            catch (Exception ex) { BaoLoi(ex); }
+        }
+
+        private void btnLichSu_Click(object sender, EventArgs e)
+        {
+            if (dgvPhuongTien.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn phương tiện cần xem lịch sử.");
+                return;
+            }
+            try
+            {
+                DataTable dt = kn.GetData("dbo.sp_PHUONGTIEN_LichSu",
+                    new SqlParameter("@MaPT", txtMaPT.Text));
+
+                if (dt.Rows.Count == 0)
+                {
+                    MessageBox.Show("Phương tiện chưa có lịch sử gửi xe.");
+                    return;
+                }
+
+                string noiDung = string.Empty;
+                foreach (DataRow row in dt.Rows)
+                {
+                    noiDung += Convert.ToDateTime(row["ThoiGianVao"]).ToString("dd/MM/yyyy HH:mm")
+                        + " - " + Convert.ToString(row["TrangThai"])
+                        + " - " + Convert.ToDecimal(row["TienGui"]).ToString("#,##0 ₫")
+                        + Environment.NewLine;
+                }
+                MessageBox.Show(noiDung, "Lịch sử " + txtBienSo.Text);
+            }
+            catch (Exception ex) { BaoLoi(ex); }
+        }
+
+        private void dgvPhuongTien_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            try
+            {
+                DataRowView? dongDuLieu =
+                    dgvPhuongTien.Rows[e.RowIndex].DataBoundItem as DataRowView;
+
+                if (dongDuLieu == null) return;
+
+                txtMaPT.Text = Convert.ToString(dongDuLieu["MaPT"]);
+                txtBienSo.Text = Convert.ToString(dongDuLieu["BienSo"]);
+                cboLoaiXe.Text = Convert.ToString(dongDuLieu["LoaiXe"]);
+
+                object maKhachHang = dongDuLieu["MaKH"];
+                if (maKhachHang == DBNull.Value ||
+                    string.IsNullOrWhiteSpace(Convert.ToString(maKhachHang)))
+                {
+                    cboKhachHang.SelectedIndex = 0;
+                }
+                else
+                {
+                    cboKhachHang.SelectedValue = Convert.ToString(maKhachHang);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Không thể hiển thị thông tin phương tiện: " + ex.Message,
+                    "Lỗi chọn dữ liệu",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
+
+        private void LocDanhSach(object sender, EventArgs e)
+        {
+            if (dtPhuongTien.Columns.Count == 0) return;
+            string tuKhoa = txtTimKiem.Text.Trim().Replace("'", "''");
+            string dieuKien = "(MaPT LIKE '%" + tuKhoa + "%' OR BienSo LIKE '%" + tuKhoa + "%')";
+            if (cboLocLoaiXe.SelectedIndex > 0)
+                dieuKien += " AND LoaiXe='" + cboLocLoaiXe.Text + "'";
+            dtPhuongTien.DefaultView.RowFilter = dieuKien;
+            lblTongSo.Text = "Tổng số: " + dtPhuongTien.DefaultView.Count + " bản ghi";
+        }
+
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            txtTimKiem.Clear();
+            cboLocLoaiXe.SelectedIndex = 0;
+            LoadDanhSach();
+            LamMoiNhapLieu();
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e) { Close(); }
+
+        private SqlParameter[] LayThamSo()
+        {
+            return new SqlParameter[]
+            {
+                new SqlParameter("@MaPT", txtMaPT.Text),
+                new SqlParameter("@BienSo", txtBienSo.Text.Trim()),
+                new SqlParameter("@LoaiXe", cboLoaiXe.Text),
+                new SqlParameter("@MaKH", MaKhachHangDaChon() ?? DBNull.Value)
+            };
+        }
+
+        private void BaoLoi(Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Không thể cập nhật SQL Server",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
-    private IReadOnlyList<string> Customers => new[] { "— Khách vãng lai —" }.Concat(_data.GetTable("KHACHHANG").AsEnumerable().Select(r => r.Field<string>("HoTen")!)).ToArray();
-    private RecordEditorDialog Editor(string title, DataRow? row) => new(title, new[]
-    {
-        new EditorField("BienSo", "Biển số", row?["BienSo"]?.ToString(), Placeholder: "Ví dụ: 51H-123.45"),
-        new EditorField("LoaiXe", "Loại xe", row?["LoaiXe"]?.ToString() ?? "Xe máy", Options: new[] { "Xe máy", "Ô tô" }),
-        new EditorField("KhachHang", "Khách hàng sở hữu", row is null || row["KhachHang"] == DBNull.Value ? "— Khách vãng lai —" : row["KhachHang"].ToString(), false, Customers)
-    });
-    private void Add_Click(object? sender, EventArgs e) { using var d = Editor("Thêm phương tiện", null); if (d.ShowDialog(this) != DialogResult.OK) return; var customer = d.Values["KhachHang"].StartsWith("—") ? null : d.Values["KhachHang"]; try { _data.Execute("INSERT dbo.PHUONGTIEN(MaPT,BienSo,LoaiXe,MaKH) VALUES(@MaPT,UPPER(@BienSo),@LoaiXe,(SELECT MaKH FROM dbo.KHACHHANG WHERE HoTen=@KhachHang))", KetNoiCSDL.Param("@MaPT", _data.NextCode("PHUONGTIEN", "MaPT", "PT")), KetNoiCSDL.Param("@BienSo", d.Values["BienSo"]), KetNoiCSDL.Param("@LoaiXe", d.Values["LoaiXe"]), KetNoiCSDL.Param("@KhachHang", customer)); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void Edit_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null) return; using var d = Editor("Sửa phương tiện", row); if (d.ShowDialog(this) != DialogResult.OK) return; var customer = d.Values["KhachHang"].StartsWith("—") ? null : d.Values["KhachHang"]; try { _data.Execute("UPDATE dbo.PHUONGTIEN SET BienSo=UPPER(@BienSo),LoaiXe=@LoaiXe,MaKH=(SELECT MaKH FROM dbo.KHACHHANG WHERE HoTen=@KhachHang) WHERE MaPT=@MaPT", KetNoiCSDL.Param("@BienSo", d.Values["BienSo"]), KetNoiCSDL.Param("@LoaiXe", d.Values["LoaiXe"]), KetNoiCSDL.Param("@KhachHang", customer), KetNoiCSDL.Param("@MaPT", row["MaPT"])); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void History_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null) return; var history = _data.GetTable("LUOTGUIXE").AsEnumerable().Where(r => r.Field<string>("BienSo") == row.Field<string>("BienSo")).OrderByDescending(r => r.Field<DateTime>("ThoiGianVao")).Select(r => $"{r.Field<DateTime>("ThoiGianVao"):dd/MM/yyyy HH:mm} • {r.Field<string>("TrangThai")} • {DinhDang.Money(r.Field<decimal>("TienGui"))}").ToArray(); MessageBox.Show(history.Length == 0 ? "Phương tiện chưa có lịch sử gửi xe." : string.Join(Environment.NewLine, history), $"Lịch sử {row["BienSo"]}", MessageBoxButtons.OK, MessageBoxIcon.Information); }
-    private void ReloadData() { _table = _data.GetTable("PHUONGTIEN"); page.Bind(_table, "MaPT", "BienSo", "KhachHang"); }
-    private void ShowDatabaseError(Exception ex) => MessageBox.Show(ex.Message, "Không thể cập nhật SQL Server", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 }
-
-

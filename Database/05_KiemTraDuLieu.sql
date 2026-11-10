@@ -1,5 +1,7 @@
 /*
-    Kiểm tra dữ liệu sau khi đã chạy các file 01, 02 và 03.
+    FILE 05 - KIỂM TRA DỮ LIỆU
+
+    Kiểm tra dữ liệu sau khi đã chạy các file 01, 02, 03 và 04.
 */
 
 USE QLGuiXe;

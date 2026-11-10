@@ -1,44 +1,233 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmPhanCongCa : Form
+namespace QLGuiXe.Forms
 {
-    private QuanLyDanhSach page = null!;
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance; private DataTable _table = null!;
-    public frmPhanCongCa()
+    public partial class frmPhanCongCa : Form
     {
-        InitializeComponent(); page = new QuanLyDanhSach(lblTieuDe, lblMoTa, btnThem, txtTimKiem, lblBoLoc, cboBoLoc, lblBoLocPhu, cboBoLocPhu, lblTuNgay, dtpTuNgay, lblDenNgay, dtpDenNgay, btnLamMoi, dgvDuLieu, lblTongSo, btnXem, btnSua, btnXoa); _table = _data.GetTable("PHANCONGCA");
-        page.Configure("Phân công ca", "Sắp xếp nhân viên theo ca và ngày làm việc.", "+ Phân công", "Tìm nhân viên hoặc mã phân công...");
-        page.ConfigureFilter("Nhân viên:", _data.GetTable("NHANVIEN").AsEnumerable().Select(r => r.Field<string>("HoTen")!).ToArray(), "NhanVien");
-        page.ConfigureSecondFilter("Ca làm:", _data.GetTable("CALAM").AsEnumerable().Select(r => r.Field<string>("TenCa")!).ToArray(), "CaLam");
-        page.ShowDateRange(); page.FromDatePicker.Value = DateTime.Today.AddDays(-7); page.ToDatePicker.Value = DateTime.Today.AddDays(7);
-        page.Bind(_table, "MaPhanCong", "NhanVien", "CaLam"); page.FilterChanged += (_, _) => ApplyFilter();
-        DuLieuForm.RenameColumns(page.Grid, ("MaPhanCong", "Mã phân công"), ("NhanVien", "Nhân viên"), ("CaLam", "Ca làm"), ("NgayLam", "Ngày làm"));
-        page.Grid.Columns["NgayLam"]!.DefaultCellStyle.Format = "dd/MM/yyyy";
-        page.AddButton.Click += Add_Click; page.EditButton.Click += Edit_Click; page.DeleteButton.Text = "Xóa"; page.DeleteButton.Click += Delete_Click;
-        page.RefreshButton.Click += (_, _) => ReloadData();
-        page.ViewButton.Click += (_, _) => { if (DuLieuForm.RequireSelection(page) is { } row) DuLieuForm.ShowDetails(row, "Chi tiết phân công"); };
-        ApplyFilter();
+        private readonly KETNOICSDL kn = new KETNOICSDL();
+        private DataTable dtPhanCong = new DataTable();
+
+        public frmPhanCongCa()
+        {
+            InitializeComponent();
+        }
+
+        private void frmPhanCongCa_Load(object sender, EventArgs e)
+        {
+            dtpNgayLam.Value = DateTime.Today;
+            dtpTuNgay.Value = DateTime.Today.AddDays(-7);
+            dtpDenNgay.Value = DateTime.Today.AddDays(7);
+
+            dgvPhanCong.ReadOnly = true;
+            dgvPhanCong.AllowUserToAddRows = false;
+            dgvPhanCong.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvPhanCong.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvPhanCong.MultiSelect = false;
+
+            TaiComboBox();
+            HienThiPhanCong();
+            LamMoiDuLieu();
+        }
+
+        private void TaiComboBox()
+        {
+            DataTable dtNhanVien = kn.GetData("dbo.sp_PHANCONGCA_NhanVien");
+            cboNhanVien.DataSource = dtNhanVien;
+            cboNhanVien.DisplayMember = "HoTen";
+            cboNhanVien.ValueMember = "MaNV";
+
+            DataTable dtCaLam = kn.GetData("dbo.sp_PHANCONGCA_CaLam");
+            cboCaLam.DataSource = dtCaLam;
+            cboCaLam.DisplayMember = "TenCa";
+            cboCaLam.ValueMember = "MaCa";
+
+            cboLocNhanVien.Items.Clear();
+            cboLocNhanVien.Items.Add("Tất cả");
+            foreach (DataRow row in dtNhanVien.Rows)
+                cboLocNhanVien.Items.Add(Convert.ToString(row["HoTen"]));
+            cboLocNhanVien.SelectedIndex = 0;
+
+            cboLocCaLam.Items.Clear();
+            cboLocCaLam.Items.Add("Tất cả");
+            foreach (DataRow row in dtCaLam.Rows)
+                cboLocCaLam.Items.Add(Convert.ToString(row["TenCa"]));
+            cboLocCaLam.SelectedIndex = 0;
+        }
+
+        private void HienThiPhanCong()
+        {
+            try
+            {
+                dtPhanCong = kn.GetData("dbo.sp_PHANCONGCA_DanhSach");
+                dgvPhanCong.DataSource = dtPhanCong;
+
+                dgvPhanCong.Columns["MaPhanCong"].HeaderText = "Mã phân công";
+                dgvPhanCong.Columns["NhanVien"].HeaderText = "Nhân viên";
+                dgvPhanCong.Columns["CaLam"].HeaderText = "Ca làm";
+                dgvPhanCong.Columns["NgayLam"].HeaderText = "Ngày làm";
+                dgvPhanCong.Columns["NgayLam"].DefaultCellStyle.Format = "dd/MM/yyyy";
+                dgvPhanCong.Columns["MaNV"].Visible = false;
+                dgvPhanCong.Columns["MaCa"].Visible = false;
+
+                LocDanhSach(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi tải phân công: " + ex.Message);
+            }
+        }
+
+        private string LayMaMoi()
+        {
+            DataTable dt = kn.GetData("dbo.sp_PHANCONGCA_MaMoi");
+            return Convert.ToString(dt.Rows[0]["MaMoi"]);
+        }
+
+        private SqlParameter[] LayThamSo()
+        {
+            return new SqlParameter[]
+            {
+                new SqlParameter("@MaPhanCong", txtMaPhanCong.Text),
+                new SqlParameter("@MaNV", cboNhanVien.SelectedValue),
+                new SqlParameter("@MaCa", cboCaLam.SelectedValue),
+                new SqlParameter("@NgayLam", dtpNgayLam.Value.Date)
+            };
+        }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                kn.Execute("dbo.sp_PHANCONGCA_Them", LayThamSo());
+                MessageBox.Show("Thêm phân công thành công!");
+                HienThiPhanCong();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi thêm: " + ex.Message);
+            }
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (dgvPhanCong.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn phân công cần sửa!");
+                return;
+            }
+
+            try
+            {
+                kn.Execute("dbo.sp_PHANCONGCA_Sua", LayThamSo());
+                MessageBox.Show("Sửa phân công thành công!");
+                HienThiPhanCong();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi sửa: " + ex.Message);
+            }
+        }
+
+        private void btnXoa_Click(object sender, EventArgs e)
+        {
+            if (dgvPhanCong.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn phân công cần xóa!");
+                return;
+            }
+
+            if (MessageBox.Show("Xóa phân công đã chọn?", "Xác nhận",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+
+            try
+            {
+                kn.Execute("dbo.sp_PHANCONGCA_Xoa",
+                    new SqlParameter("@MaPhanCong", txtMaPhanCong.Text));
+                HienThiPhanCong();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi xóa: " + ex.Message);
+            }
+        }
+
+        private void btnXem_Click(object sender, EventArgs e)
+        {
+            if (dgvPhanCong.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn phân công cần xem!");
+                return;
+            }
+
+            MessageBox.Show(
+                "Mã phân công: " + txtMaPhanCong.Text + Environment.NewLine +
+                "Nhân viên: " + cboNhanVien.Text + Environment.NewLine +
+                "Ca làm: " + cboCaLam.Text + Environment.NewLine +
+                "Ngày làm: " + dtpNgayLam.Value.ToString("dd/MM/yyyy"),
+                "Chi tiết phân công");
+        }
+
+        private void dgvPhanCong_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            DataGridViewRow row = dgvPhanCong.Rows[e.RowIndex];
+            txtMaPhanCong.Text = Convert.ToString(row.Cells["MaPhanCong"].Value);
+            cboNhanVien.SelectedValue = Convert.ToString(row.Cells["MaNV"].Value);
+            cboCaLam.SelectedValue = Convert.ToString(row.Cells["MaCa"].Value);
+            dtpNgayLam.Value = Convert.ToDateTime(row.Cells["NgayLam"].Value);
+        }
+
+        private void LamMoiDuLieu()
+        {
+            try { txtMaPhanCong.Text = LayMaMoi(); }
+            catch { txtMaPhanCong.Clear(); }
+
+            if (cboNhanVien.Items.Count > 0) cboNhanVien.SelectedIndex = 0;
+            if (cboCaLam.Items.Count > 0) cboCaLam.SelectedIndex = 0;
+            dtpNgayLam.Value = DateTime.Today;
+            dgvPhanCong.ClearSelection();
+        }
+
+        private void LocDanhSach(object sender, EventArgs e)
+        {
+            if (dtPhanCong.Columns.Count == 0) return;
+
+            string tuKhoa = txtTimKiem.Text.Trim().Replace("'", "''");
+            string tuNgay = dtpTuNgay.Value.Date.ToString("MM/dd/yyyy");
+            string denNgay = dtpDenNgay.Value.Date.AddDays(1).ToString("MM/dd/yyyy");
+            string dieuKien = "(MaPhanCong LIKE '%" + tuKhoa + "%' OR NhanVien LIKE '%" + tuKhoa
+                + "%') AND NgayLam >= #" + tuNgay + "# AND NgayLam < #" + denNgay + "#";
+
+            if (cboLocNhanVien.SelectedIndex > 0)
+                dieuKien += " AND NhanVien='" + cboLocNhanVien.Text.Replace("'", "''") + "'";
+            if (cboLocCaLam.SelectedIndex > 0)
+                dieuKien += " AND CaLam='" + cboLocCaLam.Text.Replace("'", "''") + "'";
+
+            dtPhanCong.DefaultView.RowFilter = dieuKien;
+            lblTongSo.Text = "Tổng số: " + dtPhanCong.DefaultView.Count + " bản ghi";
+        }
+
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            txtTimKiem.Clear();
+            cboLocNhanVien.SelectedIndex = 0;
+            cboLocCaLam.SelectedIndex = 0;
+            dtpTuNgay.Value = DateTime.Today.AddDays(-7);
+            dtpDenNgay.Value = DateTime.Today.AddDays(7);
+            HienThiPhanCong();
+            LamMoiDuLieu();
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
-    private void ApplyFilter() { var from = page.FromDatePicker.Value.Date.ToString("MM/dd/yyyy"); var to = page.ToDatePicker.Value.Date.AddDays(1).ToString("MM/dd/yyyy"); page.ApplyFilter($"[NgayLam] >= #{from}# AND [NgayLam] < #{to}#"); }
-    private RecordEditorDialog Editor(string title, DataRow? row) => new(title, new[]
-    {
-        new EditorField("NhanVien", "Nhân viên", row?["NhanVien"]?.ToString(), Options: _data.GetTable("NHANVIEN").AsEnumerable().Where(r => r.Field<string>("TrangThai") == "HOAT_DONG").Select(r => r.Field<string>("HoTen")!).ToArray()),
-        new EditorField("CaLam", "Ca làm", row?["CaLam"]?.ToString(), Options: _data.GetTable("CALAM").AsEnumerable().Select(r => r.Field<string>("TenCa")!).ToArray()),
-        new EditorField("NgayLam", "Ngày làm", row?["NgayLam"]?.ToString(), Kind: EditorKind.Date)
-    });
-    private void Add_Click(object? sender, EventArgs e) { using var d = Editor("Thêm phân công", null); if (d.ShowDialog(this) != DialogResult.OK) return; try { _data.Execute("INSERT dbo.PHANCONGCA(MaPhanCong,MaNV,MaCa,NgayLam) VALUES(@Ma,(SELECT MaNV FROM dbo.NHANVIEN WHERE HoTen=@NhanVien),(SELECT MaCa FROM dbo.CALAM WHERE TenCa=@Ca),@Ngay)", KetNoiCSDL.Param("@Ma", _data.NextCode("PHANCONGCA", "MaPhanCong", "PC")), KetNoiCSDL.Param("@NhanVien", d.Values["NhanVien"]), KetNoiCSDL.Param("@Ca", d.Values["CaLam"]), KetNoiCSDL.Param("@Ngay", DateTime.Parse(d.Values["NgayLam"]).Date)); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void Edit_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null) return; using var d = Editor("Sửa phân công", row); if (d.ShowDialog(this) != DialogResult.OK) return; try { _data.Execute("UPDATE dbo.PHANCONGCA SET MaNV=(SELECT MaNV FROM dbo.NHANVIEN WHERE HoTen=@NhanVien),MaCa=(SELECT MaCa FROM dbo.CALAM WHERE TenCa=@Ca),NgayLam=@Ngay WHERE MaPhanCong=@Ma", KetNoiCSDL.Param("@NhanVien", d.Values["NhanVien"]), KetNoiCSDL.Param("@Ca", d.Values["CaLam"]), KetNoiCSDL.Param("@Ngay", DateTime.Parse(d.Values["NgayLam"]).Date), KetNoiCSDL.Param("@Ma", row["MaPhanCong"])); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void Delete_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null || !DuLieuForm.Confirm("Xóa phân công đã chọn?")) return; try { _data.Execute("DELETE dbo.PHANCONGCA WHERE MaPhanCong=@Ma", KetNoiCSDL.Param("@Ma", row["MaPhanCong"])); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void ReloadData() { _table = _data.GetTable("PHANCONGCA"); page.Bind(_table, "MaPhanCong", "NhanVien", "CaLam"); ApplyFilter(); }
-    private void ShowDatabaseError(Exception ex) => MessageBox.Show(ex.Message, "Không thể cập nhật SQL Server", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 }
-
-

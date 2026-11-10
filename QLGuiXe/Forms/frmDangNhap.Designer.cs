@@ -20,6 +20,7 @@ partial class frmDangNhap
     private Label lblLoi;
     private Button btnDangNhap;
     private Button btnDangNhapDemo;
+    private Button btnThoat;
     private Label lblTrangThaiKetNoi;
     private Label lblPhienBan;
 
@@ -41,13 +42,14 @@ partial class frmDangNhap
         lblLoi = new Label();
         btnDangNhap = new Button();
         btnDangNhapDemo = new Button();
+        btnThoat = new Button();
         lblTrangThaiKetNoi = new Label();
         lblPhienBan = new Label();
         grpDangNhap.SuspendLayout();
         SuspendLayout();
-        // 
+        //
         // grpDangNhap
-        // 
+        //
         grpDangNhap.Controls.Add(lblTieuDe);
         grpDangNhap.Controls.Add(lblTenDangNhap);
         grpDangNhap.Controls.Add(txtTenDangNhap);
@@ -57,10 +59,11 @@ partial class frmDangNhap
         grpDangNhap.Controls.Add(lblLoi);
         grpDangNhap.Controls.Add(btnDangNhap);
         grpDangNhap.Controls.Add(btnDangNhapDemo);
+        grpDangNhap.Controls.Add(btnThoat);
         grpDangNhap.Controls.Add(lblTrangThaiKetNoi);
         grpDangNhap.Location = new Point(35, 25);
         grpDangNhap.Name = "grpDangNhap";
-        grpDangNhap.Size = new Size(510, 345);
+        grpDangNhap.Size = new Size(510, 390);
         grpDangNhap.TabIndex = 0;
         grpDangNhap.TabStop = false;
         grpDangNhap.Text = "Đăng nhập";
@@ -148,19 +151,29 @@ partial class frmDangNhap
         btnDangNhapDemo.Text = "Đăng nhập thử";
         btnDangNhapDemo.UseVisualStyleBackColor = true;
         btnDangNhapDemo.Click += btnDangNhapDemo_Click;
-        // 
+        //
+        // btnThoat
+        //
+        btnThoat.Location = new Point(183, 280);
+        btnThoat.Name = "btnThoat";
+        btnThoat.Size = new Size(140, 38);
+        btnThoat.TabIndex = 9;
+        btnThoat.Text = "Thoát";
+        btnThoat.UseVisualStyleBackColor = true;
+        btnThoat.Click += btnThoat_Click;
+        //
         // lblTrangThaiKetNoi
-        // 
-        lblTrangThaiKetNoi.Location = new Point(30, 288);
+        //
+        lblTrangThaiKetNoi.Location = new Point(30, 330);
         lblTrangThaiKetNoi.Name = "lblTrangThaiKetNoi";
         lblTrangThaiKetNoi.Size = new Size(450, 36);
-        lblTrangThaiKetNoi.TabIndex = 9;
+        lblTrangThaiKetNoi.TabIndex = 10;
         lblTrangThaiKetNoi.Text = "Đang kiểm tra kết nối SQL Server...";
         lblTrangThaiKetNoi.TextAlign = ContentAlignment.MiddleCenter;
         // 
         // lblPhienBan
         // 
-        lblPhienBan.Location = new Point(360, 383);
+        lblPhienBan.Location = new Point(360, 430);
         lblPhienBan.Name = "lblPhienBan";
         lblPhienBan.Size = new Size(185, 25);
         lblPhienBan.TabIndex = 1;
@@ -172,7 +185,7 @@ partial class frmDangNhap
         AcceptButton = btnDangNhap;
         AutoScaleDimensions = new SizeF(120F, 120F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(580, 420);
+        ClientSize = new Size(580, 470);
         Controls.Add(grpDangNhap);
         Controls.Add(lblPhienBan);
         Font = new Font("Segoe UI", 10F);

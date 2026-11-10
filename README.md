@@ -1,67 +1,204 @@
-# QLGuiXe — Parking Management System
+# QLGuiXe — Hệ thống quản lý gửi xe
 
-Ứng dụng desktop C# WinForms phục vụ đồ án Lập trình .NET. Bản hiện tại đã kết nối SQL Server, đọc/ghi dữ liệu thật và dùng stored procedure cho các luồng xe vào, xe ra, đăng ký và thanh toán vé tháng.
+Đồ án môn Lập trình .NET xây dựng bằng C# Windows Forms và Microsoft SQL Server. Ứng dụng quản lý xe vào, xe ra, khách hàng, phương tiện, vé lượt, vé tháng, bảng giá, khu vực đỗ xe, nhân sự và báo cáo Crystal Reports.
+
+## Công nghệ sử dụng
+
+- C# Windows Forms.
+- .NET Framework 4.8.
+- Microsoft SQL Server/SQL Server Express.
+- ADO.NET với `System.Data.SqlClient`.
+- Stored Procedure và View.
+- SAP Crystal Reports for Visual Studio, thư viện `CrystalDecisions` 13.0.4000.0.
+- Cấu hình chạy `x64` để tương thích Crystal Reports 64-bit.
+
+Không sử dụng WPF, ASP.NET hoặc thư viện giao diện thương mại.
+
+## Chức năng chính
+
+- Đăng nhập và phân quyền `ADMIN`/`NHANVIEN`.
+- Tổng quan số xe đang gửi, chỗ còn trống, vé tháng và doanh thu.
+- Tiếp nhận xe vào, kiểm tra biển số, thẻ xe, khu vực và vé tháng.
+- Xe ra, tính thời gian gửi, tính phí vé lượt và ghi nhận thanh toán.
+- Đăng ký, thanh toán và gia hạn vé tháng.
+- Quản lý khách hàng, phương tiện, loại vé, thẻ xe, bảng giá và khu vực.
+- Quản lý nhân viên, tài khoản, ca làm và phân công ca.
+- Tra cứu lịch sử gửi xe.
+- Báo cáo nhân viên, phương tiện và doanh thu bằng Crystal Reports.
+
+## Phân quyền
+
+| Chức năng | ADMIN | NHANVIEN |
+|---|:---:|:---:|
+| Xe vào, xe ra | Có | Có |
+| Lịch sử gửi xe | Có | Có |
+| Đăng ký/thanh toán vé tháng | Có | Có |
+| Quản lý danh mục | Có | Không |
+| Quản lý nhân sự, tài khoản | Có | Không |
+| Báo cáo | Có | Không |
+
+Vai trò được đọc từ bảng `TAIKHOAN` khi đăng nhập. Nhân viên xử lý xe vào, xe ra và thanh toán được lấy từ phiên đăng nhập hiện tại.
 
 ## Yêu cầu môi trường
 
-- Windows 10/11.
-- Visual Studio có workload **.NET Desktop Development**.
-- .NET Framework 4.8 Developer Pack (đã có sẵn khi cài workload .NET Desktop Development).
-- SQL Server Express tại `.\SQLEXPRESS`, database `QLGuiXe` (có thể đổi trong `App.config`).
+1. Windows 10 hoặc Windows 11 64-bit.
+2. Visual Studio với workload **.NET Desktop Development**.
+3. .NET Framework 4.8 Developer Pack.
+4. SQL Server hoặc SQL Server Express.
+5. SQL Server Management Studio (SSMS).
+6. SAP Crystal Reports for Visual Studio và Crystal Reports Runtime 64-bit tương ứng phiên bản 13.0.4000.0.
 
-Thư mục `Database/` chứa schema SQL Server, dữ liệu mẫu, view và stored procedure nghiệp vụ. Trong SSMS, chạy lần lượt `01_TaoBang_RangBuoc.sql`, `02_ThemDuLieuMau.sql`, `03_View_ThuTucNghiepVu.sql`, sau đó có thể chạy `04_KiemTraDuLieu.sql` để xem dữ liệu. File `01` được viết theo kiểu bài thực hành và chỉ chạy một lần khi database `QLGuiXe` chưa tồn tại.
+Nếu chưa cài Crystal Reports, project có thể báo thiếu `CrystalDecisions.*` khi build hoặc chạy Form báo cáo.
 
-## Chạy bằng Visual Studio
+## Tạo cơ sở dữ liệu
 
-1. Mở `QLGuiXe.sln`.
-2. Đặt project `QLGuiXe` làm Startup Project.
-3. Build Solution (`Ctrl+Shift+B`).
-4. Nhấn `F5`.
-5. Đăng nhập bằng `admin / Admin@123` hoặc `quocbao / NhanVien@123`.
+Trong SSMS, mở và chạy lần lượt đúng thứ tự:
 
-Kết nối mặc định:
+1. [`01_TaoDatabase_VaBang.sql`](Database/01_TaoDatabase_VaBang.sql) — tạo database, bảng, khóa và ràng buộc.
+2. [`02_ThemDuLieuMau.sql`](Database/02_ThemDuLieuMau.sql) — thêm toàn bộ dữ liệu mẫu.
+3. [`03_TaoView_VaThuTucNghiepVu.sql`](Database/03_TaoView_VaThuTucNghiepVu.sql) — tạo View và thủ tục nghiệp vụ.
+4. [`04_ThuTucCRUDChoForm.sql`](Database/04_ThuTucCRUDChoForm.sql) — tạo thủ tục đăng nhập, CRUD và báo cáo.
+5. [`05_KiemTraDuLieu.sql`](Database/05_KiemTraDuLieu.sql) — truy vấn kiểm tra sau khi cài đặt.
+
+File `01` chỉ chạy khi database `QLGuiXe` chưa tồn tại. Muốn làm lại hoàn toàn, xóa database cũ trong SSMS rồi chạy lại từ `01` đến `05`. Không chạy lặp riêng file `02` vì dữ liệu mẫu sử dụng khóa chính cố định.
+
+Chi tiết schema và quy tắc nghiệp vụ xem tại [`Database/README.md`](Database/README.md).
+
+## Cấu hình kết nối SQL Server
+
+Kết nối mặc định trong `QLGuiXe/App.config`:
 
 ```text
 Server=.\SQLEXPRESS;Database=QLGuiXe;Integrated Security=True;MultipleActiveResultSets=True
 ```
 
-Nếu máy khác dùng tên instance khác, sửa mục `connectionStrings` trong `QLGuiXe/App.config` hoặc đặt biến môi trường `QLGUIXE_CONNECTION_STRING`. Không cần sửa Designer hay code Form.
+Nếu máy thành viên dùng instance khác, chỉ sửa giá trị `Server`, ví dụ:
 
-## Sử dụng Windows Forms Designer
+```text
+Server=TENMAY\SQLEXPRESS;Database=QLGuiXe;Integrated Security=True;MultipleActiveResultSets=True
+```
 
-- Nhấp phải `frmTenForm.cs` và chọn **View Designer**, hoặc nhấn `Shift+F7`.
-- Nhấp một lần vào control chỉ để chọn control và hiện Properties; thao tác này không tự nhảy sang file `.cs`.
-- Nhấp đúp control để mở/tạo event mặc định. Muốn chọn event cụ thể, mở Properties, bấm biểu tượng tia sét và chọn `Click`, `TextChanged` hoặc `SelectedIndexChanged`.
-- Các trang CRUD khai báo trực tiếp `TextBox`, `ComboBox`, `Button` và `DataGridView` trong `.Designer.cs` của từng Form. Mở Form bằng **View Designer** là có thể chọn và chỉnh từng control.
-- `frmDangNhap` và Dashboard chỉ dùng control WinForms chuẩn như `GroupBox`, `Label`, `Button`, `TableLayoutPanel` và `DataGridView`; có thể chọn, kéo và chỉnh trực tiếp trong Designer.
-- `F7` mở code-behind; `Shift+F7` quay lại Designer.
+Không cần sửa Designer hoặc code của từng Form.
 
-Build bằng Developer PowerShell for Visual Studio:
+## Chạy ứng dụng
+
+1. Clone repository:
+
+   ```powershell
+   git clone https://github.com/NTS051205/QLGuiXe.git
+   ```
+
+2. Tạo database theo năm file SQL ở trên.
+3. Mở `QLGuiXe.sln` bằng Visual Studio.
+4. Chọn project `QLGuiXe` làm **Startup Project**.
+5. Kiểm tra **Platform target** là `x64`.
+6. Chọn **Build > Rebuild Solution**.
+7. Nhấn `F5` để chạy.
+
+Có thể build bằng Developer PowerShell for Visual Studio:
 
 ```powershell
 msbuild QLGuiXe.sln /t:Rebuild /p:Configuration=Debug
 ```
 
-## Cấu trúc
+## Tài khoản dữ liệu mẫu
 
-- `Forms/`: các form nghiệp vụ/chức năng, mỗi form có `.cs`, `.Designer.cs`, `.resx`.
-- `KetNoiCSDL.cs`: chuỗi kết nối, `SqlConnection`, truy vấn tham số hóa và các hàm thao tác SQL dùng chung. Các Form gọi trực tiếp file này.
-- `App.config`: chuỗi kết nối SQL Server theo cách thường dùng trong bài thực hành .NET Framework.
-- `Database/`: script tạo database, insert dữ liệu mẫu, view, procedure và truy vấn kiểm tra.
+| Tên đăng nhập | Mật khẩu | Vai trò | Trạng thái |
+|---|---|---|---|
+| `admin` | `Admin@123` | ADMIN | Hoạt động |
+| `quocbao` | `NhanVien@123` | NHANVIEN | Hoạt động |
+| `duclong` | `NhanVien@123` | NHANVIEN | Hoạt động |
+| `thuha` | `NhanVien@123` | NHANVIEN | Khóa |
 
-## Đã hoạt động với SQL Server
+Nút **Đăng nhập thử** dùng để trình diễn giao diện. Muốn kiểm tra đúng phân quyền, hãy đăng nhập bằng tài khoản trong bảng trên.
 
-- Đăng nhập từ bảng `TAIKHOAN`, dashboard, sidebar và điều hướng form nhúng.
-- Dashboard cơ bản: số xe đang gửi, chỗ trống, tình trạng khu vực, xe vào gần nhất và vé tháng sắp hết hạn.
-- Tìm kiếm/lọc, thêm/sửa/xóa/khóa và tải lại dữ liệu trên các trang CRUD.
-- Xe vào: kiểm tra xe đang ở bãi, thẻ đang dùng, vé tháng hợp lệ, chỗ trống.
-- Xe ra: tra biển số/mã thẻ, tính phí, miễn phí vé tháng và ghi thanh toán.
-- Đăng ký/gia hạn/thanh toán vé tháng; ngày kết thúc dùng cận trên không bao gồm.
-- Lịch sử gửi xe và báo cáo theo khoảng ngày.
-- Tiền hiển thị dạng VNĐ; thời gian hiển thị theo giờ địa phương Việt Nam.
+## Windows Forms Designer
 
-## Chưa tích hợp
+Mỗi Form được tổ chức theo đúng cấu trúc Designer:
 
-- Trang báo cáo doanh thu đã được bỏ khỏi project để giao diện và source gọn hơn.
-- Xuất Excel (nút đã đặt sẵn và có thông báo giai đoạn tiếp theo).
-- Phân trang, in hóa đơn, camera/nhận diện biển số và đọc thẻ vật lý.
+```text
+frmTenForm.cs           — xử lý sự kiện và gọi SQL
+frmTenForm.Designer.cs  — khai báo, khởi tạo và bố trí control
+frmTenForm.resx         — tài nguyên của Form
+```
+
+- Nhấp phải `frmTenForm.cs` rồi chọn **View Designer**, hoặc nhấn `Shift+F7`.
+- Nhấn `F7` để mở code xử lý.
+- Nhấp một lần vào control để chỉnh trong cửa sổ Properties.
+- Nhấp đúp control để mở event mặc định.
+- Tên control sử dụng tiền tố dễ đọc như `btn`, `txt`, `cbo`, `dgv`, `lbl`, `chk`, `dtp`, `pnl`.
+- Các control chính được đặt trực tiếp trong `.Designer.cs`, không dựng toàn bộ Form bằng code động.
+
+## Crystal Reports
+
+Thư mục `QLGuiXe/Reports` chứa ba báo cáo:
+
+```text
+BaoCaoNhanVien.rpt
+BaoCaoPhuongTien.rpt
+BaoCaoDoanhThu.rpt
+```
+
+Các file `.rpt` được thêm vào project dưới dạng `EmbeddedResource` và có lớp báo cáo tương ứng. `frmBaoCao` lấy dữ liệu từ Stored Procedure, gọi `SetDataSource()` rồi hiển thị trong `CrystalReportViewer`.
+
+Để sửa giao diện báo cáo, mở file `.rpt` trực tiếp trong Visual Studio có cài Crystal Reports. Form báo cáo chỉ gồm vùng điều kiện ở phía trên và viewer ở phía dưới, không chiếm toàn bộ luồng điều hướng của ứng dụng.
+
+## Cấu trúc source code
+
+```text
+QLGuiXe/
+├── Forms/              Các Form và file Designer
+├── Reports/            File Crystal Reports và lớp báo cáo
+├── KetNoiCSDL.cs       Kết nối và hàm ADO.NET dùng chung
+├── App.config          Chuỗi kết nối SQL Server
+├── Program.cs          Điểm khởi chạy ứng dụng
+└── QLGuiXe.csproj      Cấu hình project .NET Framework 4.8 x64
+
+Database/
+├── 01_TaoDatabase_VaBang.sql
+├── 02_ThemDuLieuMau.sql
+├── 03_TaoView_VaThuTucNghiepVu.sql
+├── 04_ThuTucCRUDChoForm.sql
+├── 05_KiemTraDuLieu.sql
+└── README.md
+```
+
+## Quy tắc nghiệp vụ đã mô phỏng
+
+- Khách vãng lai có thể có phương tiện với `MaKH = NULL`.
+- Một xe không có hai lượt gửi đang mở.
+- Một thẻ không dùng cho hai lượt gửi chưa hoàn thành.
+- Vé tháng chỉ hợp lệ khi đã thanh toán và còn trong thời hạn.
+- Ngày kết thúc vé tháng là cận trên không bao gồm.
+- Vé tháng hợp lệ có phí lượt bằng `0 ₫`.
+- Vé lượt áp dụng giá thường, giá sau 19 giờ hoặc giá qua đêm.
+- Doanh thu chỉ tính thanh toán có trạng thái `THANH_CONG`.
+- Dữ liệu thời gian nghiệp vụ lưu UTC và hiển thị theo giờ Việt Nam.
+
+## Chức năng chưa triển khai
+
+- Xuất Excel hoàn chỉnh.
+- Camera và nhận diện biển số.
+- Đọc thẻ xe vật lý.
+- In hóa đơn.
+- Phân trang dữ liệu lớn.
+
+Các vị trí giao diện dành cho chức năng giai đoạn sau sẽ hiển thị thông báo thay vì ghi dữ liệu ngoài dự kiến.
+
+## Làm việc nhóm với Git
+
+Trước khi bắt đầu làm:
+
+```powershell
+git pull origin main
+```
+
+Sau khi hoàn thành một phần chức năng:
+
+```powershell
+git add .
+git commit -m "Mô tả phần đã làm"
+git push origin main
+```
+
+Không commit thư mục `.vs`, `bin`, `obj` hoặc file cấu hình cá nhân. Các thư mục này đã được loại trừ trong `.gitignore`.

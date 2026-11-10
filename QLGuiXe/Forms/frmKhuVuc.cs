@@ -1,43 +1,215 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmKhuVuc : Form
+namespace QLGuiXe.Forms
 {
-    private QuanLyDanhSach page = null!;
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance;
-    private DataTable _table;
-    public frmKhuVuc()
+    public partial class frmKhuVuc : Form
     {
-        InitializeComponent();
-        page = new QuanLyDanhSach(lblTieuDe, lblMoTa, btnThem, txtTimKiem, lblBoLoc, cboBoLoc, lblBoLocPhu, cboBoLocPhu, lblTuNgay, dtpTuNgay, lblDenNgay, dtpDenNgay, btnLamMoi, dgvDuLieu, lblTongSo, btnXem, btnSua, btnXoa);
-        _table = _data.GetTable("KHUVUC");
-        page.Configure("Khu vực đỗ xe", "Theo dõi sức chứa, số xe đang gửi và tình trạng từng khu vực.", "+ Thêm khu vực", "Tìm tên hoặc mã khu vực...");
-        page.ConfigureFilter("Loại xe:", new[] { "Ô tô", "Xe máy" }, "LoaiXe"); page.ConfigureSecondFilter("Trạng thái:", new[] { "HOAT_DONG", "BAO_TRI", "TAM_DONG" }, "TrangThai");
-        page.Bind(_table, "MaKhuVuc", "TenKhuVuc");
-        DuLieuForm.RenameColumns(page.Grid, ("MaKhuVuc", "Mã khu vực"), ("TenKhuVuc", "Tên khu vực"), ("LoaiXe", "Loại xe"), ("SucChua", "Sức chứa"), ("DangGui", "Đang gửi"), ("ConTrong", "Còn trống"), ("TrangThai", "Trạng thái"));
-        page.AddButton.Click += Add_Click; page.EditButton.Click += Edit_Click; page.DeleteButton.Visible = false;
-        page.RefreshButton.Click += (_, _) => ReloadData();
-        page.ViewButton.Click += (_, _) => { if (DuLieuForm.RequireSelection(page) is { } row) DuLieuForm.ShowDetails(row, "Chi tiết khu vực"); };
+        private readonly KETNOICSDL kn = new KETNOICSDL();
+        private DataTable dtKhuVuc = new DataTable();
+
+        public frmKhuVuc()
+        {
+            InitializeComponent();
+        }
+
+        private void frmKhuVuc_Load(object sender, EventArgs e)
+        {
+            cboLoaiXe.Items.AddRange(new object[] { "Xe máy", "Ô tô" });
+            cboTrangThai.Items.AddRange(new object[] { "HOAT_DONG", "BAO_TRI", "TAM_DONG" });
+            cboLocLoaiXe.Items.AddRange(new object[] { "Tất cả", "Xe máy", "Ô tô" });
+            cboLocTrangThai.Items.AddRange(new object[] { "Tất cả", "HOAT_DONG", "BAO_TRI", "TAM_DONG" });
+
+            cboLoaiXe.SelectedIndex = 0;
+            cboTrangThai.SelectedIndex = 0;
+            cboLocLoaiXe.SelectedIndex = 0;
+            cboLocTrangThai.SelectedIndex = 0;
+
+            dgvKhuVuc.ReadOnly = true;
+            dgvKhuVuc.AllowUserToAddRows = false;
+            dgvKhuVuc.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvKhuVuc.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvKhuVuc.MultiSelect = false;
+
+            HienThiKhuVuc();
+            LamMoiDuLieu();
+        }
+
+        private void HienThiKhuVuc()
+        {
+            try
+            {
+                dtKhuVuc = kn.GetData("dbo.sp_KHUVUC_DanhSach");
+                dgvKhuVuc.DataSource = dtKhuVuc;
+
+                dgvKhuVuc.Columns["MaKhuVuc"].HeaderText = "Mã khu vực";
+                dgvKhuVuc.Columns["TenKhuVuc"].HeaderText = "Tên khu vực";
+                dgvKhuVuc.Columns["LoaiXe"].HeaderText = "Loại xe";
+                dgvKhuVuc.Columns["SucChua"].HeaderText = "Sức chứa";
+                dgvKhuVuc.Columns["DangGui"].HeaderText = "Đang gửi";
+                dgvKhuVuc.Columns["ConTrong"].HeaderText = "Còn trống";
+                dgvKhuVuc.Columns["TrangThai"].HeaderText = "Trạng thái";
+
+                LocDanhSach(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi tải khu vực: " + ex.Message);
+            }
+        }
+
+        private bool KiemTraDuLieu()
+        {
+            if (string.IsNullOrWhiteSpace(txtMaKhuVuc.Text) ||
+                string.IsNullOrWhiteSpace(txtTenKhuVuc.Text))
+            {
+                MessageBox.Show("Vui lòng nhập mã và tên khu vực!");
+                return false;
+            }
+
+            if (nudSucChua.Value <= 0)
+            {
+                MessageBox.Show("Sức chứa phải lớn hơn 0!");
+                return false;
+            }
+
+            return true;
+        }
+
+        private SqlParameter[] LayThamSo()
+        {
+            return new SqlParameter[]
+            {
+                new SqlParameter("@MaKhuVuc", txtMaKhuVuc.Text.Trim()),
+                new SqlParameter("@TenKhuVuc", txtTenKhuVuc.Text.Trim()),
+                new SqlParameter("@LoaiXe", cboLoaiXe.Text),
+                new SqlParameter("@SucChua", Convert.ToInt32(nudSucChua.Value)),
+                new SqlParameter("@TrangThai", cboTrangThai.Text)
+            };
+        }
+
+        private void btnThem_Click(object sender, EventArgs e)
+        {
+            if (!KiemTraDuLieu()) return;
+
+            try
+            {
+                kn.Execute("dbo.sp_KHUVUC_Them", LayThamSo());
+                MessageBox.Show("Thêm khu vực thành công!");
+                HienThiKhuVuc();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi thêm: " + ex.Message);
+            }
+        }
+
+        private void btnSua_Click(object sender, EventArgs e)
+        {
+            if (dgvKhuVuc.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn khu vực cần sửa!");
+                return;
+            }
+            if (!KiemTraDuLieu()) return;
+
+            if (nudSucChua.Value < Convert.ToInt32(lblDangGuiValue.Text))
+            {
+                MessageBox.Show("Sức chứa không được nhỏ hơn số xe đang gửi!");
+                return;
+            }
+
+            try
+            {
+                kn.Execute("dbo.sp_KHUVUC_Sua", LayThamSo());
+                MessageBox.Show("Sửa khu vực thành công!");
+                HienThiKhuVuc();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi sửa: " + ex.Message);
+            }
+        }
+
+        private void btnXem_Click(object sender, EventArgs e)
+        {
+            if (dgvKhuVuc.CurrentRow == null)
+            {
+                MessageBox.Show("Vui lòng chọn khu vực cần xem!");
+                return;
+            }
+
+            MessageBox.Show(
+                "Mã khu vực: " + txtMaKhuVuc.Text + Environment.NewLine +
+                "Tên khu vực: " + txtTenKhuVuc.Text + Environment.NewLine +
+                "Loại xe: " + cboLoaiXe.Text + Environment.NewLine +
+                "Sức chứa: " + nudSucChua.Value + Environment.NewLine +
+                "Đang gửi: " + lblDangGuiValue.Text + Environment.NewLine +
+                "Còn trống: " + lblConTrongValue.Text + Environment.NewLine +
+                "Trạng thái: " + cboTrangThai.Text,
+                "Chi tiết khu vực");
+        }
+
+        private void dgvKhuVuc_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            DataGridViewRow row = dgvKhuVuc.Rows[e.RowIndex];
+            txtMaKhuVuc.Text = Convert.ToString(row.Cells["MaKhuVuc"].Value);
+            txtMaKhuVuc.ReadOnly = true;
+            txtTenKhuVuc.Text = Convert.ToString(row.Cells["TenKhuVuc"].Value);
+            cboLoaiXe.Text = Convert.ToString(row.Cells["LoaiXe"].Value);
+            nudSucChua.Value = Convert.ToDecimal(row.Cells["SucChua"].Value);
+            lblDangGuiValue.Text = Convert.ToString(row.Cells["DangGui"].Value);
+            lblConTrongValue.Text = Convert.ToString(row.Cells["ConTrong"].Value);
+            cboTrangThai.Text = Convert.ToString(row.Cells["TrangThai"].Value);
+        }
+
+        private void LamMoiDuLieu()
+        {
+            txtMaKhuVuc.Clear();
+            txtTenKhuVuc.Clear();
+            cboLoaiXe.SelectedIndex = 0;
+            nudSucChua.Value = 1;
+            cboTrangThai.SelectedIndex = 0;
+            lblDangGuiValue.Text = "0";
+            lblConTrongValue.Text = "0";
+            txtMaKhuVuc.ReadOnly = false;
+            dgvKhuVuc.ClearSelection();
+        }
+
+        private void LocDanhSach(object sender, EventArgs e)
+        {
+            if (dtKhuVuc.Columns.Count == 0) return;
+
+            string tuKhoa = txtTimKiem.Text.Trim().Replace("'", "''");
+            string dieuKien = "(MaKhuVuc LIKE '%" + tuKhoa + "%' OR TenKhuVuc LIKE '%" + tuKhoa + "%')";
+
+            if (cboLocLoaiXe.SelectedIndex > 0)
+                dieuKien += " AND LoaiXe='" + cboLocLoaiXe.Text + "'";
+            if (cboLocTrangThai.SelectedIndex > 0)
+                dieuKien += " AND TrangThai='" + cboLocTrangThai.Text + "'";
+
+            dtKhuVuc.DefaultView.RowFilter = dieuKien;
+            lblTongSo.Text = "Tổng số: " + dtKhuVuc.DefaultView.Count + " bản ghi";
+        }
+
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            txtTimKiem.Clear();
+            cboLocLoaiXe.SelectedIndex = 0;
+            cboLocTrangThai.SelectedIndex = 0;
+            HienThiKhuVuc();
+            LamMoiDuLieu();
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
-    private static RecordEditorDialog Editor(string title, DataRow? row) => new(title, new[]
-    {
-        new EditorField("MaKhuVuc", "Mã khu vực", row?["MaKhuVuc"]?.ToString()),
-        new EditorField("TenKhuVuc", "Tên khu vực", row?["TenKhuVuc"]?.ToString()),
-        new EditorField("LoaiXe", "Loại xe", row?["LoaiXe"]?.ToString() ?? "Xe máy", Options: new[] { "Xe máy", "Ô tô" }),
-        new EditorField("SucChua", "Sức chứa", row?["SucChua"]?.ToString()),
-        new EditorField("TrangThai", "Trạng thái", row?["TrangThai"]?.ToString() ?? "HOAT_DONG", Options: new[] { "HOAT_DONG", "BAO_TRI", "TAM_DONG" })
-    });
-    private void Add_Click(object? sender, EventArgs e) { using var d = Editor("Thêm khu vực", null); if (d.ShowDialog(this) != DialogResult.OK) return; if (!int.TryParse(d.Values["SucChua"], out var capacity) || capacity <= 0) { MessageBox.Show("Sức chứa phải là số nguyên dương."); return; } try { _data.Execute("INSERT dbo.KHUVUC(MaKhuVuc,TenKhuVuc,LoaiXe,SucChua,TrangThai) VALUES(UPPER(@Ma),@Ten,@Loai,@SucChua,@TrangThai)", KetNoiCSDL.Param("@Ma", d.Values["MaKhuVuc"]), KetNoiCSDL.Param("@Ten", d.Values["TenKhuVuc"]), KetNoiCSDL.Param("@Loai", d.Values["LoaiXe"]), KetNoiCSDL.Param("@SucChua", capacity), KetNoiCSDL.Param("@TrangThai", d.Values["TrangThai"])); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void Edit_Click(object? sender, EventArgs e) { var row = DuLieuForm.RequireSelection(page); if (row is null) return; using var d = Editor("Sửa khu vực", row); if (d.ShowDialog(this) != DialogResult.OK) return; if (!int.TryParse(d.Values["SucChua"], out var capacity) || capacity < row.Field<int>("DangGui")) { MessageBox.Show("Sức chứa không được nhỏ hơn số xe đang gửi."); return; } try { _data.Execute("UPDATE dbo.KHUVUC SET TenKhuVuc=@Ten,LoaiXe=@Loai,SucChua=@SucChua,TrangThai=@TrangThai WHERE MaKhuVuc=@Ma", KetNoiCSDL.Param("@Ten", d.Values["TenKhuVuc"]), KetNoiCSDL.Param("@Loai", d.Values["LoaiXe"]), KetNoiCSDL.Param("@SucChua", capacity), KetNoiCSDL.Param("@TrangThai", d.Values["TrangThai"]), KetNoiCSDL.Param("@Ma", row["MaKhuVuc"])); ReloadData(); } catch (Exception ex) { ShowDatabaseError(ex); } }
-    private void ReloadData() { _table = _data.GetTable("KHUVUC"); page.Bind(_table, "MaKhuVuc", "TenKhuVuc"); }
-    private void ShowDatabaseError(Exception ex) => MessageBox.Show(ex.Message, "Không thể cập nhật SQL Server", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 }
-
-

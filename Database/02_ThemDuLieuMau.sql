@@ -1,10 +1,11 @@
 /*
     QLGuiXe - Dữ liệu mẫu
-    Chạy sau file 01_TaoBang_RangBuoc.sql.
+    Chạy sau file 01_TaoDatabase_VaBang.sql.
 
     Tài khoản demo:
       admin    / Admin@123
       quocbao  / NhanVien@123
+      duclong   / NhanVien@123
 */
 
 USE QLGuiXe;
@@ -31,7 +32,10 @@ VALUES
      'NV002', 'NHANVIEN', 'HOAT_DONG'),
     ('TK003', 'thuha',
      CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', N'Demo@123'), 2),
-     'NV003', 'NHANVIEN', 'KHOA');
+     'NV003', 'NHANVIEN', 'KHOA'),
+    ('TK004', 'duclong',
+     CONVERT(VARCHAR(64), HASHBYTES('SHA2_256', N'NhanVien@123'), 2),
+     'NV004', 'NHANVIEN', 'HOAT_DONG');
 
 INSERT INTO dbo.CALAM (MaCa, TenCa, GioBatDau, GioKetThuc)
 VALUES
@@ -41,17 +45,38 @@ VALUES
 
 INSERT INTO dbo.PHANCONGCA (MaPhanCong, MaNV, MaCa, NgayLam, GhiChu)
 VALUES
-    ('PC001', 'NV001', 'CA01', @TodayVn,                  N'Trực cổng chính'),
-    ('PC002', 'NV002', 'CA02', @TodayVn,                  N'Trực thu phí'),
-    ('PC003', 'NV004', 'CA03', @TodayVn,                  N'Ca qua đêm'),
-    ('PC004', 'NV001', 'CA01', DATEADD(DAY, 1, @TodayVn), NULL);
+    ('PC001', 'NV001', 'CA01', DATEADD(DAY, 0, @TodayVn), N'Trực cổng chính'),
+    ('PC002', 'NV002', 'CA02', DATEADD(DAY, 0, @TodayVn), N'Trực thu phí'),
+    ('PC003', 'NV004', 'CA03', DATEADD(DAY, 0, @TodayVn), N'Ca qua đêm'),
+    ('PC004', 'NV002', 'CA01', DATEADD(DAY, 1, @TodayVn), N'Trực cổng chính'),
+    ('PC005', 'NV004', 'CA02', DATEADD(DAY, 1, @TodayVn), N'Trực thu phí'),
+    ('PC006', 'NV001', 'CA03', DATEADD(DAY, 1, @TodayVn), N'Ca qua đêm'),
+    ('PC007', 'NV004', 'CA01', DATEADD(DAY, 2, @TodayVn), N'Trực cổng chính'),
+    ('PC008', 'NV001', 'CA02', DATEADD(DAY, 2, @TodayVn), N'Trực thu phí'),
+    ('PC009', 'NV002', 'CA03', DATEADD(DAY, 2, @TodayVn), N'Ca qua đêm'),
+    ('PC010', 'NV001', 'CA01', DATEADD(DAY, 3, @TodayVn), N'Trực cổng chính'),
+    ('PC011', 'NV002', 'CA02', DATEADD(DAY, 3, @TodayVn), N'Trực thu phí'),
+    ('PC012', 'NV004', 'CA03', DATEADD(DAY, 3, @TodayVn), N'Ca qua đêm'),
+    ('PC013', 'NV002', 'CA01', DATEADD(DAY, 4, @TodayVn), N'Trực cổng chính'),
+    ('PC014', 'NV004', 'CA02', DATEADD(DAY, 4, @TodayVn), N'Trực thu phí'),
+    ('PC015', 'NV001', 'CA03', DATEADD(DAY, 4, @TodayVn), N'Ca qua đêm'),
+    ('PC016', 'NV004', 'CA01', DATEADD(DAY, 5, @TodayVn), N'Trực cổng chính'),
+    ('PC017', 'NV001', 'CA02', DATEADD(DAY, 5, @TodayVn), N'Trực thu phí'),
+    ('PC018', 'NV002', 'CA03', DATEADD(DAY, 5, @TodayVn), N'Ca qua đêm'),
+    ('PC019', 'NV001', 'CA01', DATEADD(DAY, 6, @TodayVn), N'Trực cổng chính'),
+    ('PC020', 'NV002', 'CA02', DATEADD(DAY, 6, @TodayVn), N'Trực thu phí'),
+    ('PC021', 'NV004', 'CA03', DATEADD(DAY, 6, @TodayVn), N'Ca qua đêm');
 
 INSERT INTO dbo.KHACHHANG (MaKH, HoTen, SoDienThoai)
 VALUES
     ('KH001', N'Võ Hoàng Nam',   '0909123456'),
     ('KH002', N'Đặng Ngọc Lan',  '0918111222'),
     ('KH003', N'Bùi Thanh Tùng', '0933555777'),
-    ('KH004', N'Nguyễn Hải Yến', '0977666555');
+    ('KH004', N'Nguyễn Hải Yến', '0977666555'),
+    ('KH005', N'Phan Gia Hân',    '0903444555'),
+    ('KH006', N'Đỗ Quốc Huy',     '0915666777'),
+    ('KH007', N'Trương Mỹ Linh',  '0937888999'),
+    ('KH008', N'Hoàng Anh Tuấn',  '0963111222');
 
 INSERT INTO dbo.PHUONGTIEN (MaPT, BienSo, LoaiXe, MaKH)
 VALUES
@@ -60,13 +85,13 @@ VALUES
     ('PT003', '51K-888.99',   N'Ô tô',   'KH003'),
     ('PT004', '59P2-135.79',  N'Xe máy', NULL),
     ('PT005', '50F-246.80',   N'Ô tô',   'KH004'),
-    ('PT006', '59A1-222.33',  N'Xe máy', NULL),
-    ('PT007', '59M1-126.45',  N'Xe máy', NULL),
-    ('PT008', '51A-707.88',   N'Ô tô',   NULL),
+    ('PT006', '59A1-222.33',  N'Xe máy', 'KH005'),
+    ('PT007', '59M1-126.45',  N'Xe máy', 'KH006'),
+    ('PT008', '51A-707.88',   N'Ô tô',   'KH007'),
     ('PT009', '59M1-128.45',  N'Xe máy', NULL),
-    ('PT010', '51A-709.88',   N'Ô tô',   NULL),
-    ('PT011', '59M1-130.45',  N'Xe máy', NULL),
-    ('PT012', '51A-711.88',   N'Ô tô',   NULL),
+    ('PT010', '51A-709.88',   N'Ô tô',   'KH008'),
+    ('PT011', '59M1-130.45',  N'Xe máy', 'KH005'),
+    ('PT012', '51A-711.88',   N'Ô tô',   'KH006'),
     ('PT013', '59M1-132.45',  N'Xe máy', NULL),
     ('PT014', '51A-713.88',   N'Ô tô',   NULL),
     ('PT015', '59M1-134.45',  N'Xe máy', NULL);
@@ -96,12 +121,13 @@ VALUES
     ('VE016', 'THE-L012', 'LV01', DATEADD(MONTH, -3, @TodayVn), 'HOAT_DONG'),
     ('VE017', 'THE-L013', 'LV01', DATEADD(MONTH, -3, @TodayVn), 'HOAT_DONG');
 
-INSERT INTO dbo.BANGGIA (MaBangGia, LoaiXe, MaLoaiVe, DonGia, NgayApDung)
+INSERT INTO dbo.BANGGIA
+    (MaBangGia, LoaiXe, MaLoaiVe, DonGia, DonGiaSau19Gio, DonGiaQuaDem, NgayApDung)
 VALUES
-    ('BG001', N'Xe máy', 'LV01',    5000, DATEADD(MONTH, -6, @TodayVn)),
-    ('BG002', N'Ô tô',   'LV01',   30000, DATEADD(MONTH, -6, @TodayVn)),
-    ('BG003', N'Xe máy', 'LV02',  150000, DATEADD(MONTH, -6, @TodayVn)),
-    ('BG004', N'Ô tô',   'LV02', 1200000, DATEADD(MONTH, -6, @TodayVn));
+    ('BG001', N'Xe máy', 'LV01',    5000, 10000, 20000, DATEADD(MONTH, -6, @TodayVn)),
+    ('BG002', N'Ô tô',   'LV01',   30000, 40000, 50000, DATEADD(MONTH, -6, @TodayVn)),
+    ('BG003', N'Xe máy', 'LV02',  150000,  NULL,  NULL, DATEADD(MONTH, -6, @TodayVn)),
+    ('BG004', N'Ô tô',   'LV02', 1200000,  NULL,  NULL, DATEADD(MONTH, -6, @TodayVn));
 
 INSERT INTO dbo.KHUVUC (MaKhuVuc, TenKhuVuc, LoaiXe, SucChua, TrangThai)
 VALUES

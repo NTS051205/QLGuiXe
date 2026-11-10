@@ -1,71 +1,353 @@
-using System.Data;
-
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using System.Data;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
-namespace QLGuiXe.Forms;
-
-public partial class frmDangKyVeThang : Form
+namespace QLGuiXe.Forms
 {
-    private readonly KetNoiCSDL _data = KetNoiCSDL.Instance; private DataTable _table = null!;
-    public frmDangKyVeThang()
+    public partial class frmDangKyVeThang : Form
     {
-        InitializeComponent(); _table = _data.GetTable("DANGKYVETHANG");
-        dgvDangKy.AllowUserToAddRows = false; dgvDangKy.AllowUserToDeleteRows = false; dgvDangKy.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; dgvDangKy.ReadOnly = true; dgvDangKy.RowHeadersVisible = false; dgvDangKy.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        cboKhachHang.Items.AddRange(_data.GetTable("KHACHHANG").AsEnumerable().Select(r => r.Field<string>("HoTen")!).Cast<object>().ToArray()); if (cboKhachHang.Items.Count > 0) cboKhachHang.SelectedIndex = 0;
-        cboPhuongThuc.Items.AddRange(new object[] { "TIEN_MAT", "CHUYEN_KHOAN", "THE" }); cboPhuongThuc.SelectedIndex = 0; nudSoThang.Value = 1; dtpBatDau.Value = DateTime.Today;
-        BindGrid(); RefreshCustomer(); LoadAvailableCards(); Calculate();
-    }
-    private void BindGrid()
-    {
-        dgvDangKy.DataSource = _table; DuLieuForm.RenameColumns(dgvDangKy, ("MaDangKy", "Mã đăng ký"), ("MaKH", "Mã KH"), ("KhachHang", "Khách hàng"), ("MaPT", "Mã PT"), ("BienSo", "Biển số"), ("MaVe", "Mã vé"), ("MaThe", "Mã thẻ tháng"), ("NgayBatDau", "Bắt đầu"), ("NgayKetThuc", "Kết thúc (không gồm)"), ("TongTien", "Tổng tiền"), ("ThanhToan", "Thanh toán"), ("TrangThai", "Trạng thái")); dgvDangKy.Columns["NgayBatDau"]!.DefaultCellStyle.Format = "dd/MM/yyyy"; dgvDangKy.Columns["NgayKetThuc"]!.DefaultCellStyle.Format = "dd/MM/yyyy"; dgvDangKy.Columns["TongTien"]!.DefaultCellStyle.Format = "#,##0 ₫";
-    }
-    private void cboKhachHang_SelectedIndexChanged(object? sender, EventArgs e) => RefreshCustomer();
-    private void RefreshCustomer()
-    {
-        var customer = _data.GetTable("KHACHHANG").AsEnumerable().FirstOrDefault(r => r.Field<string>("HoTen") == cboKhachHang.Text); txtHoTen.Text = customer?.Field<string>("HoTen") ?? string.Empty; txtSoDienThoai.Text = customer?.Field<string>("SoDienThoai") ?? string.Empty;
-        cboPhuongTien.Items.Clear(); foreach (var vehicle in _data.GetTable("PHUONGTIEN").AsEnumerable().Where(r => r["KhachHang"] != DBNull.Value && r.Field<string>("KhachHang") == cboKhachHang.Text)) cboPhuongTien.Items.Add(vehicle.Field<string>("BienSo")!); if (cboPhuongTien.Items.Count > 0) cboPhuongTien.SelectedIndex = 0; else { txtBienSo.Clear(); txtLoaiXe.Clear(); } Calculate();
-    }
-    private void cboPhuongTien_SelectedIndexChanged(object? sender, EventArgs e)
-    {
-        var vehicle = _data.GetTable("PHUONGTIEN").AsEnumerable().FirstOrDefault(r => r.Field<string>("BienSo") == cboPhuongTien.Text); txtBienSo.Text = vehicle?.Field<string>("BienSo") ?? string.Empty; txtLoaiXe.Text = vehicle?.Field<string>("LoaiXe") ?? string.Empty; Calculate();
-    }
-    private void Value_Changed(object? sender, EventArgs e) => Calculate();
-    private void Calculate()
-    {
-        if (txtLoaiXe is null) return; var price = _data.CurrentPrice(txtLoaiXe.Text, "THANG"); var end = dtpBatDau.Value.Date.AddMonths((int)nudSoThang.Value); lblKetThucValue.Text = end.ToString("dd/MM/yyyy"); lblDonGiaValue.Text = DinhDang.Money(price); lblTongTienValue.Text = DinhDang.Money(price * nudSoThang.Value);
-    }
-    private void LoadAvailableCards()
-    {
-        var activeCards = new HashSet<string?>(_table.AsEnumerable().Where(r => r.Field<string>("TrangThai") == "HIEU_LUC" && DateTime.Today < r.Field<DateTime>("NgayKetThuc")).Select(r => r.Field<string>("MaThe"))); cboTheThang.Items.Clear(); foreach (var card in _data.GetTable("VE").AsEnumerable().Where(r => r.Field<string>("LoaiVe") == "THANG" && r.Field<string>("TrangThai") == "HOAT_DONG" && !activeCards.Contains(r.Field<string>("MaThe")))) cboTheThang.Items.Add(card.Field<string>("MaThe")!); if (cboTheThang.Items.Count > 0) cboTheThang.SelectedIndex = 0;
-    }
-    private void btnDangKy_Click(object? sender, EventArgs e)
-    {
-        if (cboKhachHang.SelectedItem is null || cboPhuongTien.SelectedItem is null || cboTheThang.SelectedItem is null) { MessageBox.Show("Vui lòng chọn khách hàng, phương tiện và thẻ tháng còn trống."); return; }
-        try
+        private readonly KETNOICSDL kn = new KETNOICSDL();
+        private DataTable dtDangKy = new DataTable();
+        private bool dangTaiKhachHang;
+        private bool dangTaiPhuongTien;
+
+        public frmDangKyVeThang()
         {
-            var result = _data.RegisterMonthlyPass(cboKhachHang.Text, cboPhuongTien.Text, cboTheThang.Text, dtpBatDau.Value.Date, (int)nudSoThang.Value);
-            ReloadData(); LoadAvailableCards();
-            MessageBox.Show($"Đã tạo đăng ký {result.RegistrationId}, hạn đến {result.EndDate:dd/MM/yyyy}, tổng tiền {DinhDang.Money(result.Total)}. Hãy chọn dòng và thanh toán để kích hoạt.", "Đã đăng ký", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            InitializeComponent();
         }
-        catch (Exception ex) { MessageBox.Show(ex.Message, "Không thể đăng ký vé tháng", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+
+        private void frmDangKyVeThang_Load(object sender, EventArgs e)
+        {
+            dgvDangKy.ReadOnly = true;
+            dgvDangKy.AllowUserToAddRows = false;
+            dgvDangKy.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvDangKy.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvDangKy.MultiSelect = false;
+
+            cboPhuongThuc.Items.AddRange(new object[] { "TIEN_MAT", "CHUYEN_KHOAN", "THE" });
+            cboPhuongThuc.SelectedIndex = 0;
+            dtpBatDau.Value = DateTime.Today;
+            nudSoThang.Value = 1;
+
+            try
+            {
+                TaiKhachHang();
+                TaiTheThang();
+                HienThiDangKy();
+                TinhTien();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi tải dữ liệu: " + ex.Message);
+            }
+        }
+
+        private void HienThiDangKy()
+        {
+            dtDangKy = kn.GetData("dbo.sp_DANGKYVETHANG_DanhSach");
+            dgvDangKy.DataSource = dtDangKy;
+
+            dgvDangKy.Columns["MaDangKy"].HeaderText = "Mã đăng ký";
+            dgvDangKy.Columns["MaKH"].HeaderText = "Mã KH";
+            dgvDangKy.Columns["KhachHang"].HeaderText = "Khách hàng";
+            dgvDangKy.Columns["MaPT"].HeaderText = "Mã PT";
+            dgvDangKy.Columns["BienSo"].HeaderText = "Biển số";
+            dgvDangKy.Columns["MaThe"].HeaderText = "Mã thẻ tháng";
+            dgvDangKy.Columns["NgayBatDau"].HeaderText = "Ngày bắt đầu";
+            dgvDangKy.Columns["NgayKetThuc"].HeaderText = "Ngày kết thúc";
+            dgvDangKy.Columns["TongTien"].HeaderText = "Tổng tiền";
+            dgvDangKy.Columns["ThanhToan"].HeaderText = "Thanh toán";
+            dgvDangKy.Columns["TrangThai"].HeaderText = "Trạng thái";
+
+            dgvDangKy.Columns["NgayBatDau"].DefaultCellStyle.Format = "dd/MM/yyyy";
+            dgvDangKy.Columns["NgayKetThuc"].DefaultCellStyle.Format = "dd/MM/yyyy";
+            dgvDangKy.Columns["TongTien"].DefaultCellStyle.Format = "#,##0 ₫";
+            dgvDangKy.ClearSelection();
+        }
+
+        private void TaiKhachHang()
+        {
+            DataTable dt = kn.GetData("dbo.sp_DANGKYVETHANG_KhachHang");
+
+            dangTaiKhachHang = true;
+            cboKhachHang.DisplayMember = "HoTen";
+            cboKhachHang.ValueMember = "MaKH";
+            cboKhachHang.DataSource = dt;
+            dangTaiKhachHang = false;
+
+            HienThiKhachHangDangChon();
+        }
+
+        private void TaiPhuongTien(string maKhachHang)
+        {
+            DataTable dt = kn.GetData(
+                "dbo.sp_DANGKYVETHANG_PhuongTien",
+                new SqlParameter("@MaKH", maKhachHang));
+
+            dangTaiPhuongTien = true;
+            cboPhuongTien.DisplayMember = "BienSo";
+            cboPhuongTien.ValueMember = "MaPT";
+            cboPhuongTien.DataSource = dt;
+            dangTaiPhuongTien = false;
+
+            if (dt.Rows.Count == 0)
+            {
+                txtBienSo.Clear();
+                txtLoaiXe.Clear();
+            }
+            else
+            {
+                HienThiPhuongTienDangChon();
+            }
+        }
+
+        private void TaiTheThang()
+        {
+            DataTable dt = kn.GetData("dbo.sp_DANGKYVETHANG_TheThang");
+            cboTheThang.DisplayMember = "MaThe";
+            cboTheThang.ValueMember = "MaThe";
+            cboTheThang.DataSource = dt;
+        }
+
+        private void cboKhachHang_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (dangTaiKhachHang) return;
+            HienThiKhachHangDangChon();
+        }
+
+        private void HienThiKhachHangDangChon()
+        {
+            DataRowView? row = cboKhachHang.SelectedItem as DataRowView;
+            if (row == null)
+            {
+                txtHoTen.Clear();
+                txtSoDienThoai.Clear();
+                cboPhuongTien.DataSource = null;
+                txtBienSo.Clear();
+                txtLoaiXe.Clear();
+                return;
+            }
+
+            txtHoTen.Text = Convert.ToString(row["HoTen"]);
+            txtSoDienThoai.Text = Convert.ToString(row["SoDienThoai"]);
+            TaiPhuongTien(Convert.ToString(row["MaKH"]));
+        }
+
+        private void cboPhuongTien_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (dangTaiPhuongTien) return;
+            HienThiPhuongTienDangChon();
+        }
+
+        private void HienThiPhuongTienDangChon()
+        {
+            DataRowView? row = cboPhuongTien.SelectedItem as DataRowView;
+            if (row == null)
+            {
+                txtBienSo.Clear();
+                txtLoaiXe.Clear();
+                TinhTien();
+                return;
+            }
+
+            txtBienSo.Text = Convert.ToString(row["BienSo"]);
+            txtLoaiXe.Text = Convert.ToString(row["LoaiXe"]);
+            TinhTien();
+        }
+
+        private void TinhTien()
+        {
+            DateTime ngayKetThuc = dtpBatDau.Value.Date.AddMonths(Convert.ToInt32(nudSoThang.Value));
+            lblNgayKetThucValue.Text = ngayKetThuc.ToString("dd/MM/yyyy");
+
+            if (string.IsNullOrWhiteSpace(txtLoaiXe.Text))
+            {
+                lblDonGiaValue.Text = "0 ₫";
+                lblTongTienValue.Text = "0 ₫";
+                return;
+            }
+
+            DataTable dt = kn.GetData(
+                "dbo.sp_BANGGIA_GiaHienTai",
+                new SqlParameter("@LoaiXe", txtLoaiXe.Text),
+                new SqlParameter("@LoaiVe", "THANG"));
+
+            decimal donGia = dt.Rows.Count == 0 ? 0 : Convert.ToDecimal(dt.Rows[0]["DonGia"]);
+            decimal tongTien = donGia * nudSoThang.Value;
+            lblDonGiaValue.Text = donGia.ToString("#,##0 ₫");
+            lblTongTienValue.Text = tongTien.ToString("#,##0 ₫");
+        }
+
+        private void dtpBatDau_ValueChanged(object sender, EventArgs e)
+        {
+            TinhTien();
+        }
+
+        private void nudSoThang_ValueChanged(object sender, EventArgs e)
+        {
+            TinhTien();
+        }
+
+        private void btnDangKy_Click(object sender, EventArgs e)
+        {
+            if (cboKhachHang.SelectedValue == null ||
+                cboPhuongTien.SelectedValue == null ||
+                cboTheThang.SelectedValue == null)
+            {
+                MessageBox.Show("Vui lòng chọn khách hàng, phương tiện và thẻ tháng!");
+                return;
+            }
+
+            TaoDangKy(
+                Convert.ToString(cboKhachHang.SelectedValue),
+                Convert.ToString(cboPhuongTien.SelectedValue),
+                Convert.ToString(cboTheThang.SelectedValue),
+                dtpBatDau.Value.Date);
+        }
+
+        private void TaoDangKy(string maKH, string maPT, string maThe, DateTime ngayBatDau)
+        {
+            SqlParameter maDangKy = new SqlParameter("@MaDangKyMoi", SqlDbType.VarChar, 20);
+            maDangKy.Direction = ParameterDirection.Output;
+
+            SqlParameter ngayKetThuc = new SqlParameter("@NgayKetThuc", SqlDbType.Date);
+            ngayKetThuc.Direction = ParameterDirection.Output;
+
+            SqlParameter tongTien = new SqlParameter("@TongTien", SqlDbType.Decimal);
+            tongTien.Precision = 18;
+            tongTien.Scale = 2;
+            tongTien.Direction = ParameterDirection.Output;
+
+            try
+            {
+                kn.Execute(
+                    "dbo.sp_DangKyVeThang",
+                    new SqlParameter("@MaKH", maKH),
+                    new SqlParameter("@MaPT", maPT),
+                    new SqlParameter("@MaThe", maThe),
+                    new SqlParameter("@NgayBatDau", ngayBatDau),
+                    new SqlParameter("@SoThang", Convert.ToInt32(nudSoThang.Value)),
+                    maDangKy,
+                    ngayKetThuc,
+                    tongTien);
+
+                MessageBox.Show(
+                    "Đăng ký thành công! Mã đăng ký: " + Convert.ToString(maDangKy.Value) +
+                    Environment.NewLine + "Tổng tiền: " + Convert.ToDecimal(tongTien.Value).ToString("#,##0 ₫"));
+
+                HienThiDangKy();
+                TaiTheThang();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi đăng ký: " + ex.Message);
+            }
+        }
+
+        private void btnThanhToan_Click(object sender, EventArgs e)
+        {
+            DataRow? row = LayDongDangChon();
+            if (row == null) return;
+
+            if (Convert.ToString(row["ThanhToan"]) == "DA_THANH_TOAN")
+            {
+                MessageBox.Show("Đăng ký này đã được thanh toán!");
+                return;
+            }
+
+            SqlParameter maThanhToan = new SqlParameter("@MaThanhToanMoi", SqlDbType.VarChar, 20);
+            maThanhToan.Direction = ParameterDirection.Output;
+
+            try
+            {
+                kn.Execute(
+                    "dbo.sp_ThanhToanVeThang",
+                    new SqlParameter("@MaDangKy", row["MaDangKy"]),
+                    new SqlParameter("@MaNV", PhienDangNhap.MaNhanVien),
+                    new SqlParameter("@PhuongThuc", cboPhuongThuc.Text),
+                    new SqlParameter("@MaThamChieu", DBNull.Value),
+                    maThanhToan);
+
+                MessageBox.Show("Thanh toán thành công! Mã thanh toán: " + Convert.ToString(maThanhToan.Value));
+                HienThiDangKy();
+                TaiTheThang();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi thanh toán: " + ex.Message);
+            }
+        }
+
+        private void btnGiaHan_Click(object sender, EventArgs e)
+        {
+            DataRow? row = LayDongDangChon();
+            if (row == null) return;
+
+            if (Convert.ToString(row["ThanhToan"]) != "DA_THANH_TOAN")
+            {
+                MessageBox.Show("Chỉ gia hạn đăng ký đã thanh toán!");
+                return;
+            }
+
+            DateTime ngayBatDau = Convert.ToDateTime(row["NgayKetThuc"]);
+            if (ngayBatDau < DateTime.Today) ngayBatDau = DateTime.Today;
+
+            TaoDangKy(
+                Convert.ToString(row["MaKH"]),
+                Convert.ToString(row["MaPT"]),
+                Convert.ToString(row["MaThe"]),
+                ngayBatDau);
+        }
+
+        private DataRow? LayDongDangChon()
+        {
+            if (dgvDangKy.SelectedRows.Count == 0 ||
+                !(dgvDangKy.SelectedRows[0].DataBoundItem is DataRowView))
+            {
+                MessageBox.Show("Vui lòng chọn một đăng ký trong danh sách!");
+                return null;
+            }
+
+            return ((DataRowView)dgvDangKy.SelectedRows[0].DataBoundItem).Row;
+        }
+
+        private void dgvDangKy_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            DataGridViewRow row = dgvDangKy.Rows[e.RowIndex];
+            cboKhachHang.SelectedValue = Convert.ToString(row.Cells["MaKH"].Value);
+            cboPhuongTien.SelectedValue = Convert.ToString(row.Cells["MaPT"].Value);
+            cboTheThang.SelectedValue = Convert.ToString(row.Cells["MaThe"].Value);
+
+            DateTime ngayBatDau = Convert.ToDateTime(row.Cells["NgayBatDau"].Value);
+            int soThang = Convert.ToInt32(row.Cells["SoThang"].Value);
+            dtpBatDau.Value = ngayBatDau;
+            nudSoThang.Value = Math.Min(nudSoThang.Maximum, Math.Max(nudSoThang.Minimum, soThang));
+            TinhTien();
+        }
+
+        private void btnLamMoi_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                HienThiDangKy();
+                TaiKhachHang();
+                TaiTheThang();
+                dtpBatDau.Value = DateTime.Today;
+                nudSoThang.Value = 1;
+                TinhTien();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi làm mới dữ liệu: " + ex.Message);
+            }
+        }
+
+        private void btnThoat_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
-    private void btnThanhToan_Click(object? sender, EventArgs e)
-    {
-        var row = Selected(); if (row is null) return; if (row.Field<string>("ThanhToan") == "DA_THANH_TOAN") { MessageBox.Show("Đăng ký này đã được thanh toán."); return; }
-        try { var paymentId = _data.PayMonthlyPass(row.Field<string>("MaDangKy")!, PhienDangNhap.EmployeeId, cboPhuongThuc.Text); var amount = row.Field<decimal>("TongTien"); ReloadData(); MessageBox.Show($"Thanh toán {paymentId} thành công {DinhDang.Money(amount)}. Vé tháng đã được kích hoạt."); } catch (Exception ex) { MessageBox.Show(ex.Message, "Không thể thanh toán", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
-    }
-    private void btnGiaHan_Click(object? sender, EventArgs e)
-    {
-        var row = Selected(); if (row is null) return; var start = row.Field<DateTime>("NgayKetThuc") > DateTime.Today ? row.Field<DateTime>("NgayKetThuc") : DateTime.Today;
-        try { var result = _data.RegisterMonthlyPass(row.Field<string>("KhachHang")!, row.Field<string>("BienSo")!, row.Field<string>("MaThe")!, start, (int)nudSoThang.Value); ReloadData(); MessageBox.Show($"Đã lập kỳ gia hạn {result.RegistrationId}. Vui lòng thanh toán để kích hoạt."); } catch (Exception ex) { MessageBox.Show(ex.Message, "Không thể gia hạn", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
-    }
-    private DataRow? Selected() { var row = dgvDangKy.CurrentRow?.DataBoundItem is DataRowView view ? view.Row : null; if (row is null) MessageBox.Show("Vui lòng chọn một đăng ký trong danh sách."); return row; }
-    private void btnLamMoi_Click(object? sender, EventArgs e) { ReloadData(); LoadAvailableCards(); Calculate(); }
-    private void ReloadData() { _table = _data.GetTable("DANGKYVETHANG"); BindGrid(); }
 }
-
-
