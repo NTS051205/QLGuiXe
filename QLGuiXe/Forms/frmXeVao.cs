@@ -8,13 +8,12 @@ namespace QLGuiXe.Forms
 {
     public partial class frmXeVao : Form
     {
-        private readonly KETNOICSDL kn = new KETNOICSDL();
-        private readonly Timer dongHo = new Timer();
+        KETNOICSDL kn = new KETNOICSDL();
+        Timer dongHo = new Timer();
 
         public frmXeVao()
         {
             InitializeComponent();
-            this.Load += frmXeVao_Load;
         }
 
         private void TaiNhanVien()
@@ -318,17 +317,6 @@ namespace QLGuiXe.Forms
             Close();
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                dongHo.Dispose();
-                if (components != null) components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
-
         private void frmXeVao_Load(object sender, EventArgs e)
         {
             dgvXeDangGui.ReadOnly = true;
@@ -354,6 +342,5 @@ namespace QLGuiXe.Forms
 
             CapNhatDongHo(this, EventArgs.Empty);
         }
-
     }
 }
