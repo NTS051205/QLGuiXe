@@ -79,6 +79,8 @@ namespace QLGuiXe.Forms
             );
             this.lblTieuDe.Location = new System.Drawing.Point(20, 15);
             this.lblTieuDe.Name = "lblTieuDe";
+            this.lblTieuDe.Size = new System.Drawing.Size(195, 30);
+            this.lblTieuDe.TabIndex = 0;
             this.lblTieuDe.Text = "XÁC NHẬN XE RA";
 
             // 
@@ -87,6 +89,8 @@ namespace QLGuiXe.Forms
             this.lblMoTa.AutoSize = true;
             this.lblMoTa.Location = new System.Drawing.Point(22, 50);
             this.lblMoTa.Name = "lblMoTa";
+            this.lblMoTa.Size = new System.Drawing.Size(329, 15);
+            this.lblMoTa.TabIndex = 1;
             this.lblMoTa.Text =
                 "Tìm theo biển số hoặc mã thẻ, kiểm tra phí và xác nhận xe ra.";
 
@@ -103,6 +107,7 @@ namespace QLGuiXe.Forms
             this.txtBienSoHoacMaThe.Name = "txtBienSoHoacMaThe";
             this.txtBienSoHoacMaThe.Size =
                 new System.Drawing.Size(300, 29);
+            this.txtBienSoHoacMaThe.TabIndex = 2;
 
             // 
             // btnTimKiemXe
@@ -112,6 +117,7 @@ namespace QLGuiXe.Forms
             this.btnTimKiemXe.Name = "btnTimKiemXe";
             this.btnTimKiemXe.Size =
                 new System.Drawing.Size(110, 34);
+            this.btnTimKiemXe.TabIndex = 3;
             this.btnTimKiemXe.Text = "Tìm kiếm";
             this.btnTimKiemXe.UseVisualStyleBackColor = true;
             this.btnTimKiemXe.Click +=
@@ -125,6 +131,7 @@ namespace QLGuiXe.Forms
             this.btnLamMoiXeRa.Name = "btnLamMoiXeRa";
             this.btnLamMoiXeRa.Size =
                 new System.Drawing.Size(100, 34);
+            this.btnLamMoiXeRa.TabIndex = 4;
             this.btnLamMoiXeRa.Text = "Làm mới";
             this.btnLamMoiXeRa.UseVisualStyleBackColor = true;
             this.btnLamMoiXeRa.Click +=
@@ -142,6 +149,9 @@ namespace QLGuiXe.Forms
             this.lblTieuDeLuotGui.Location =
                 new System.Drawing.Point(22, 145);
             this.lblTieuDeLuotGui.Name = "lblTieuDeLuotGui";
+            this.lblTieuDeLuotGui.Size =
+                new System.Drawing.Size(170, 20);
+            this.lblTieuDeLuotGui.TabIndex = 5;
             this.lblTieuDeLuotGui.Text = "THÔNG TIN LƯỢT GỬI";
 
             // 
@@ -151,6 +161,9 @@ namespace QLGuiXe.Forms
             this.lblBienSo.Location =
                 new System.Drawing.Point(25, 185);
             this.lblBienSo.Name = "lblBienSo";
+            this.lblBienSo.Size =
+                new System.Drawing.Size(48, 15);
+            this.lblBienSo.TabIndex = 6;
             this.lblBienSo.Text = "Biển số:";
 
             // 
@@ -165,6 +178,9 @@ namespace QLGuiXe.Forms
             this.lblGiaTriBienSo.Location =
                 new System.Drawing.Point(125, 185);
             this.lblGiaTriBienSo.Name = "lblGiaTriBienSo";
+            this.lblGiaTriBienSo.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriBienSo.TabIndex = 7;
             this.lblGiaTriBienSo.Text = "—";
 
             // 
@@ -174,6 +190,9 @@ namespace QLGuiXe.Forms
             this.lblLoaiXe.Location =
                 new System.Drawing.Point(395, 185);
             this.lblLoaiXe.Name = "lblLoaiXe";
+            this.lblLoaiXe.Size =
+                new System.Drawing.Size(46, 15);
+            this.lblLoaiXe.TabIndex = 8;
             this.lblLoaiXe.Text = "Loại xe:";
 
             // 
@@ -188,6 +207,9 @@ namespace QLGuiXe.Forms
             this.lblGiaTriLoaiXe.Location =
                 new System.Drawing.Point(495, 185);
             this.lblGiaTriLoaiXe.Name = "lblGiaTriLoaiXe";
+            this.lblGiaTriLoaiXe.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriLoaiXe.TabIndex = 9;
             this.lblGiaTriLoaiXe.Text = "—";
 
             // 
@@ -197,6 +219,9 @@ namespace QLGuiXe.Forms
             this.lblMaThe.Location =
                 new System.Drawing.Point(25, 227);
             this.lblMaThe.Name = "lblMaThe";
+            this.lblMaThe.Size =
+                new System.Drawing.Size(47, 15);
+            this.lblMaThe.TabIndex = 10;
             this.lblMaThe.Text = "Mã thẻ:";
 
             // 
@@ -211,6 +236,9 @@ namespace QLGuiXe.Forms
             this.lblGiaTriMaThe.Location =
                 new System.Drawing.Point(125, 227);
             this.lblGiaTriMaThe.Name = "lblGiaTriMaThe";
+            this.lblGiaTriMaThe.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriMaThe.TabIndex = 11;
             this.lblGiaTriMaThe.Text = "—";
 
             // 
@@ -220,6 +248,9 @@ namespace QLGuiXe.Forms
             this.lblKhuVuc.Location =
                 new System.Drawing.Point(395, 227);
             this.lblKhuVuc.Name = "lblKhuVuc";
+            this.lblKhuVuc.Size =
+                new System.Drawing.Size(53, 15);
+            this.lblKhuVuc.TabIndex = 12;
             this.lblKhuVuc.Text = "Khu vực:";
 
             // 
@@ -234,6 +265,9 @@ namespace QLGuiXe.Forms
             this.lblGiaTriKhuVuc.Location =
                 new System.Drawing.Point(495, 227);
             this.lblGiaTriKhuVuc.Name = "lblGiaTriKhuVuc";
+            this.lblGiaTriKhuVuc.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriKhuVuc.TabIndex = 13;
             this.lblGiaTriKhuVuc.Text = "—";
 
             // 
@@ -243,6 +277,9 @@ namespace QLGuiXe.Forms
             this.lblThoiGianVao.Location =
                 new System.Drawing.Point(25, 269);
             this.lblThoiGianVao.Name = "lblThoiGianVao";
+            this.lblThoiGianVao.Size =
+                new System.Drawing.Size(82, 15);
+            this.lblThoiGianVao.TabIndex = 14;
             this.lblThoiGianVao.Text = "Thời gian vào:";
 
             // 
@@ -256,7 +293,11 @@ namespace QLGuiXe.Forms
             );
             this.lblGiaTriThoiGianVao.Location =
                 new System.Drawing.Point(125, 269);
-            this.lblGiaTriThoiGianVao.Name = "lblGiaTriThoiGianVao";
+            this.lblGiaTriThoiGianVao.Name =
+                "lblGiaTriThoiGianVao";
+            this.lblGiaTriThoiGianVao.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriThoiGianVao.TabIndex = 15;
             this.lblGiaTriThoiGianVao.Text = "—";
 
             // 
@@ -266,6 +307,9 @@ namespace QLGuiXe.Forms
             this.lblThoiGianRa.Location =
                 new System.Drawing.Point(395, 269);
             this.lblThoiGianRa.Name = "lblThoiGianRa";
+            this.lblThoiGianRa.Size =
+                new System.Drawing.Size(73, 15);
+            this.lblThoiGianRa.TabIndex = 16;
             this.lblThoiGianRa.Text = "Thời gian ra:";
 
             // 
@@ -279,7 +323,11 @@ namespace QLGuiXe.Forms
             );
             this.lblGiaTriThoiGianRa.Location =
                 new System.Drawing.Point(495, 269);
-            this.lblGiaTriThoiGianRa.Name = "lblGiaTriThoiGianRa";
+            this.lblGiaTriThoiGianRa.Name =
+                "lblGiaTriThoiGianRa";
+            this.lblGiaTriThoiGianRa.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriThoiGianRa.TabIndex = 17;
             this.lblGiaTriThoiGianRa.Text = "—";
 
             // 
@@ -289,6 +337,9 @@ namespace QLGuiXe.Forms
             this.lblThoiGianGui.Location =
                 new System.Drawing.Point(25, 311);
             this.lblThoiGianGui.Name = "lblThoiGianGui";
+            this.lblThoiGianGui.Size =
+                new System.Drawing.Size(80, 15);
+            this.lblThoiGianGui.TabIndex = 18;
             this.lblThoiGianGui.Text = "Thời gian gửi:";
 
             // 
@@ -302,7 +353,11 @@ namespace QLGuiXe.Forms
             );
             this.lblGiaTriThoiGianGui.Location =
                 new System.Drawing.Point(125, 311);
-            this.lblGiaTriThoiGianGui.Name = "lblGiaTriThoiGianGui";
+            this.lblGiaTriThoiGianGui.Name =
+                "lblGiaTriThoiGianGui";
+            this.lblGiaTriThoiGianGui.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriThoiGianGui.TabIndex = 19;
             this.lblGiaTriThoiGianGui.Text = "—";
 
             // 
@@ -312,6 +367,9 @@ namespace QLGuiXe.Forms
             this.lblLoaiVe.Location =
                 new System.Drawing.Point(395, 311);
             this.lblLoaiVe.Name = "lblLoaiVe";
+            this.lblLoaiVe.Size =
+                new System.Drawing.Size(47, 15);
+            this.lblLoaiVe.TabIndex = 20;
             this.lblLoaiVe.Text = "Loại vé:";
 
             // 
@@ -326,6 +384,9 @@ namespace QLGuiXe.Forms
             this.lblGiaTriLoaiVe.Location =
                 new System.Drawing.Point(495, 311);
             this.lblGiaTriLoaiVe.Name = "lblGiaTriLoaiVe";
+            this.lblGiaTriLoaiVe.Size =
+                new System.Drawing.Size(19, 15);
+            this.lblGiaTriLoaiVe.TabIndex = 21;
             this.lblGiaTriLoaiVe.Text = "—";
 
             // 
@@ -339,7 +400,11 @@ namespace QLGuiXe.Forms
             );
             this.lblTieuDeThanhToan.Location =
                 new System.Drawing.Point(25, 370);
-            this.lblTieuDeThanhToan.Name = "lblTieuDeThanhToan";
+            this.lblTieuDeThanhToan.Name =
+                "lblTieuDeThanhToan";
+            this.lblTieuDeThanhToan.Size =
+                new System.Drawing.Size(109, 20);
+            this.lblTieuDeThanhToan.TabIndex = 22;
             this.lblTieuDeThanhToan.Text = "THANH TOÁN";
 
             // 
@@ -348,7 +413,11 @@ namespace QLGuiXe.Forms
             this.lblSoTienThanhToan.AutoSize = true;
             this.lblSoTienThanhToan.Location =
                 new System.Drawing.Point(25, 410);
-            this.lblSoTienThanhToan.Name = "lblSoTienThanhToan";
+            this.lblSoTienThanhToan.Name =
+                "lblSoTienThanhToan";
+            this.lblSoTienThanhToan.Size =
+                new System.Drawing.Size(46, 15);
+            this.lblSoTienThanhToan.TabIndex = 23;
             this.lblSoTienThanhToan.Text = "Số tiền:";
 
             // 
@@ -363,6 +432,9 @@ namespace QLGuiXe.Forms
             this.lblGiaTriSoTien.Location =
                 new System.Drawing.Point(90, 400);
             this.lblGiaTriSoTien.Name = "lblGiaTriSoTien";
+            this.lblGiaTriSoTien.Size =
+                new System.Drawing.Size(46, 30);
+            this.lblGiaTriSoTien.TabIndex = 24;
             this.lblGiaTriSoTien.Text = "0 ₫";
 
             // 
@@ -373,6 +445,9 @@ namespace QLGuiXe.Forms
                 new System.Drawing.Point(300, 410);
             this.lblPhuongThucThanhToan.Name =
                 "lblPhuongThucThanhToan";
+            this.lblPhuongThucThanhToan.Size =
+                new System.Drawing.Size(79, 15);
+            this.lblPhuongThucThanhToan.TabIndex = 25;
             this.lblPhuongThucThanhToan.Text = "Phương thức:";
 
             // 
@@ -386,6 +461,7 @@ namespace QLGuiXe.Forms
                 "cboPhuongThucThanhToan";
             this.cboPhuongThucThanhToan.Size =
                 new System.Drawing.Size(160, 23);
+            this.cboPhuongThucThanhToan.TabIndex = 26;
 
             // 
             // lblTrangThaiXuLy
@@ -394,6 +470,9 @@ namespace QLGuiXe.Forms
             this.lblTrangThaiXuLy.Location =
                 new System.Drawing.Point(25, 455);
             this.lblTrangThaiXuLy.Name = "lblTrangThaiXuLy";
+            this.lblTrangThaiXuLy.Size =
+                new System.Drawing.Size(202, 15);
+            this.lblTrangThaiXuLy.TabIndex = 27;
             this.lblTrangThaiXuLy.Text =
                 "Nhập biển số hoặc mã thẻ để tra cứu";
 
@@ -405,6 +484,7 @@ namespace QLGuiXe.Forms
             this.btnXacNhanXeRa.Name = "btnXacNhanXeRa";
             this.btnXacNhanXeRa.Size =
                 new System.Drawing.Size(180, 42);
+            this.btnXacNhanXeRa.TabIndex = 28;
             this.btnXacNhanXeRa.Text = "XÁC NHẬN XE RA";
             this.btnXacNhanXeRa.UseVisualStyleBackColor = true;
             this.btnXacNhanXeRa.Click +=
@@ -418,6 +498,7 @@ namespace QLGuiXe.Forms
             this.btnThanhToanXeRa.Name = "btnThanhToanXeRa";
             this.btnThanhToanXeRa.Size =
                 new System.Drawing.Size(150, 42);
+            this.btnThanhToanXeRa.TabIndex = 29;
             this.btnThanhToanXeRa.Text = "THANH TOÁN";
             this.btnThanhToanXeRa.UseVisualStyleBackColor = true;
             this.btnThanhToanXeRa.Click +=
@@ -431,6 +512,7 @@ namespace QLGuiXe.Forms
             this.btnThoat.Name = "btnThoat";
             this.btnThoat.Size =
                 new System.Drawing.Size(110, 42);
+            this.btnThoat.TabIndex = 30;
             this.btnThoat.Text = "Thoát / Quay lại";
             this.btnThoat.UseVisualStyleBackColor = true;
             this.btnThoat.Click +=
@@ -449,6 +531,9 @@ namespace QLGuiXe.Forms
                 new System.Drawing.Point(25, 570);
             this.lblDanhSachXeDangGui.Name =
                 "lblDanhSachXeDangGui";
+            this.lblDanhSachXeDangGui.Size =
+                new System.Drawing.Size(406, 20);
+            this.lblDanhSachXeDangGui.TabIndex = 31;
             this.lblDanhSachXeDangGui.Text =
                 "DANH SÁCH XE ĐANG GỬI - BẤM MỘT DÒNG ĐỂ CHỌN";
 
@@ -456,17 +541,25 @@ namespace QLGuiXe.Forms
             // dgvXeDangGui
             // 
             this.dgvXeDangGui.Anchor =
-                System.Windows.Forms.AnchorStyles.Top |
-                System.Windows.Forms.AnchorStyles.Bottom |
-                System.Windows.Forms.AnchorStyles.Left |
-                System.Windows.Forms.AnchorStyles.Right;
+                ((System.Windows.Forms.AnchorStyles)
+                ((((System.Windows.Forms.AnchorStyles.Top |
+                    System.Windows.Forms.AnchorStyles.Bottom)
+                    | System.Windows.Forms.AnchorStyles.Left)
+                    | System.Windows.Forms.AnchorStyles.Right)));
+
             this.dgvXeDangGui.ColumnHeadersHeightSizeMode =
                 System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+
             this.dgvXeDangGui.Location =
                 new System.Drawing.Point(25, 600);
+
             this.dgvXeDangGui.Name = "dgvXeDangGui";
+
             this.dgvXeDangGui.Size =
                 new System.Drawing.Size(1100, 210);
+
+            this.dgvXeDangGui.TabIndex = 32;
+
             this.dgvXeDangGui.CellClick +=
                 new System.Windows.Forms.DataGridViewCellEventHandler(
                     this.dgvXeDangGui_CellClick
@@ -477,10 +570,12 @@ namespace QLGuiXe.Forms
             // 
             this.AutoScaleDimensions =
                 new System.Drawing.SizeF(7F, 15F);
+
             this.AutoScaleMode =
                 System.Windows.Forms.AutoScaleMode.Font;
+
             this.ClientSize =
-                new System.Drawing.Size(1150, 835);
+                new System.Drawing.Size(1150, 781);
 
             this.Controls.Add(this.lblTieuDe);
             this.Controls.Add(this.lblMoTa);
@@ -516,17 +611,24 @@ namespace QLGuiXe.Forms
             this.Controls.Add(this.lblDanhSachXeDangGui);
             this.Controls.Add(this.dgvXeDangGui);
 
-            this.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.Font =
+                new System.Drawing.Font("Segoe UI", 9F);
+
             this.MinimumSize =
                 new System.Drawing.Size(1000, 750);
+
             this.Name = "frmXeRa";
+
             this.StartPosition =
                 System.Windows.Forms.FormStartPosition.CenterParent;
+
             this.Text = "Xe ra";
+
             this.Load +=
                 new System.EventHandler(this.frmXeRa_Load);
 
             ((System.ComponentModel.ISupportInitialize)(this.dgvXeDangGui)).EndInit();
+
             this.ResumeLayout(false);
             this.PerformLayout();
         }

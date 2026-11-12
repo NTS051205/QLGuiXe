@@ -26,8 +26,10 @@ namespace QLGuiXe.Forms
 
             dgvXeDangGui.ReadOnly = true;
             dgvXeDangGui.AllowUserToAddRows = false;
-            dgvXeDangGui.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvXeDangGui.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvXeDangGui.SelectionMode =
+                DataGridViewSelectionMode.FullRowSelect;
+            dgvXeDangGui.AutoSizeColumnsMode =
+                DataGridViewAutoSizeColumnsMode.Fill;
             dgvXeDangGui.MultiSelect = false;
 
             HienThiXeDangGui();
@@ -36,19 +38,37 @@ namespace QLGuiXe.Forms
 
         private void HienThiXeDangGui()
         {
-            DataTable dt = kn.GetData("dbo.sp_XeDangGui_DanhSach");
+            DataTable dt =
+                kn.GetData("dbo.sp_XeDangGui_DanhSach");
+
             dgvXeDangGui.DataSource = dt;
 
-            dgvXeDangGui.Columns["MaLuotGui"].HeaderText = "Mã lượt";
-            dgvXeDangGui.Columns["BienSo"].HeaderText = "Biển số";
-            dgvXeDangGui.Columns["LoaiXe"].HeaderText = "Loại xe";
-            dgvXeDangGui.Columns["MaThe"].HeaderText = "Mã thẻ";
-            dgvXeDangGui.Columns["KhuVuc"].HeaderText = "Khu vực";
-            dgvXeDangGui.Columns["ThoiGianVao"].HeaderText = "Thời gian vào";
-            dgvXeDangGui.Columns["NhanVienVao"].HeaderText = "Nhân viên vào";
-            dgvXeDangGui.Columns["LoaiVe"].HeaderText = "Loại vé";
+            dgvXeDangGui.Columns["MaLuotGui"].HeaderText =
+                "Mã lượt";
 
-            dgvXeDangGui.Columns["ThoiGianVao"].DefaultCellStyle.Format =
+            dgvXeDangGui.Columns["BienSo"].HeaderText =
+                "Biển số";
+
+            dgvXeDangGui.Columns["LoaiXe"].HeaderText =
+                "Loại xe";
+
+            dgvXeDangGui.Columns["MaThe"].HeaderText =
+                "Mã thẻ";
+
+            dgvXeDangGui.Columns["KhuVuc"].HeaderText =
+                "Khu vực";
+
+            dgvXeDangGui.Columns["ThoiGianVao"].HeaderText =
+                "Thời gian vào";
+
+            dgvXeDangGui.Columns["NhanVienVao"].HeaderText =
+                "Nhân viên vào";
+
+            dgvXeDangGui.Columns["LoaiVe"].HeaderText =
+                "Loại vé";
+
+            dgvXeDangGui.Columns["ThoiGianVao"]
+                .DefaultCellStyle.Format =
                 "dd/MM/yyyy HH:mm";
 
             dgvXeDangGui.Columns["MaPT"].Visible = false;
@@ -64,12 +84,17 @@ namespace QLGuiXe.Forms
         {
             DataTable dt = kn.GetData(
                 "dbo.sp_XeRa_TimKiem",
-                new SqlParameter("@TuKhoa", tuKhoa.Trim()));
+                new SqlParameter(
+                    "@TuKhoa",
+                    tuKhoa.Trim()
+                )
+            );
 
             if (dt.Rows.Count == 0)
             {
                 MessageBox.Show(
-                    "Không tìm thấy lượt gửi đang mở theo biển số hoặc mã thẻ!");
+                    "Không tìm thấy lượt gửi đang mở theo biển số hoặc mã thẻ!"
+                );
 
                 LamMoiDuLieu(false);
                 return;
@@ -88,7 +113,9 @@ namespace QLGuiXe.Forms
             }
 
             DateTime thoiGianVao =
-                Convert.ToDateTime(luotGuiDangChon["ThoiGianVao"]);
+                Convert.ToDateTime(
+                    luotGuiDangChon["ThoiGianVao"]
+                );
 
             DateTime thoiGianRa = DateTime.Now;
 
@@ -96,25 +123,39 @@ namespace QLGuiXe.Forms
                 thoiGianRa - thoiGianVao;
 
             decimal tienDuKien =
-                Convert.ToDecimal(luotGuiDangChon["TienDuKien"]);
+                Convert.ToDecimal(
+                    luotGuiDangChon["TienDuKien"]
+                );
 
             lblGiaTriBienSo.Text =
-                Convert.ToString(luotGuiDangChon["BienSo"]);
+                Convert.ToString(
+                    luotGuiDangChon["BienSo"]
+                );
 
             lblGiaTriLoaiXe.Text =
-                Convert.ToString(luotGuiDangChon["LoaiXe"]);
+                Convert.ToString(
+                    luotGuiDangChon["LoaiXe"]
+                );
 
             lblGiaTriMaThe.Text =
-                Convert.ToString(luotGuiDangChon["MaThe"]);
+                Convert.ToString(
+                    luotGuiDangChon["MaThe"]
+                );
 
             lblGiaTriKhuVuc.Text =
-                Convert.ToString(luotGuiDangChon["KhuVuc"]);
+                Convert.ToString(
+                    luotGuiDangChon["KhuVuc"]
+                );
 
             lblGiaTriThoiGianVao.Text =
-                thoiGianVao.ToString("dd/MM/yyyy HH:mm:ss");
+                thoiGianVao.ToString(
+                    "dd/MM/yyyy HH:mm:ss"
+                );
 
             lblGiaTriThoiGianRa.Text =
-                thoiGianRa.ToString("dd/MM/yyyy HH:mm:ss");
+                thoiGianRa.ToString(
+                    "dd/MM/yyyy HH:mm:ss"
+                );
 
             lblGiaTriThoiGianGui.Text =
                 (int)thoiGianGui.TotalHours
@@ -123,20 +164,26 @@ namespace QLGuiXe.Forms
                 + " phút";
 
             lblGiaTriLoaiVe.Text =
-                Convert.ToString(luotGuiDangChon["LoaiVe"]);
+                Convert.ToString(
+                    luotGuiDangChon["LoaiVe"]
+                );
 
             lblGiaTriSoTien.Text =
                 tienDuKien.ToString("#,##0 ₫");
 
             if (tienDuKien == 0)
             {
-                lblGiaTriSoTien.ForeColor = Color.Green;
+                lblGiaTriSoTien.ForeColor =
+                    Color.Green;
+
                 lblTrangThaiXuLy.Text =
                     "Vé tháng hợp lệ — không thu phí lượt";
             }
             else
             {
-                lblGiaTriSoTien.ForeColor = Color.Red;
+                lblGiaTriSoTien.ForeColor =
+                    Color.Red;
+
                 lblTrangThaiXuLy.Text =
                     "Chờ xác nhận và thanh toán";
             }
@@ -145,16 +192,23 @@ namespace QLGuiXe.Forms
             btnThanhToanXeRa.Enabled = false;
         }
 
-        private void btnTimKiemXe_Click(object sender, EventArgs e)
+        private void btnTimKiemXe_Click(
+            object sender,
+            EventArgs e)
         {
             if (txtBienSoHoacMaThe.Text.Trim() == "")
             {
-                MessageBox.Show("Vui lòng nhập biển số hoặc mã thẻ!");
+                MessageBox.Show(
+                    "Vui lòng nhập biển số hoặc mã thẻ!"
+                );
+
                 txtBienSoHoacMaThe.Focus();
                 return;
             }
 
-            TimXeDangGui(txtBienSoHoacMaThe.Text);
+            TimXeDangGui(
+                txtBienSoHoacMaThe.Text
+            );
         }
 
         private void dgvXeDangGui_CellClick(
@@ -168,21 +222,33 @@ namespace QLGuiXe.Forms
 
             txtBienSoHoacMaThe.Text =
                 Convert.ToString(
-                    dgvXeDangGui.Rows[e.RowIndex]
-                    .Cells["BienSo"].Value);
+                    dgvXeDangGui
+                    .Rows[e.RowIndex]
+                    .Cells["BienSo"]
+                    .Value
+                );
 
-            TimXeDangGui(txtBienSoHoacMaThe.Text);
+            TimXeDangGui(
+                txtBienSoHoacMaThe.Text
+            );
         }
 
-        private void btnXacNhanXeRa_Click(object sender, EventArgs e)
+        private void btnXacNhanXeRa_Click(
+            object sender,
+            EventArgs e)
         {
             if (luotGuiDangChon == null)
             {
-                MessageBox.Show("Vui lòng chọn xe cần xác nhận ra!");
+                MessageBox.Show(
+                    "Vui lòng chọn xe cần xác nhận ra!"
+                );
+
                 return;
             }
 
-            if (Convert.ToString(luotGuiDangChon["LoaiVe"]) == "THANG")
+            if (Convert.ToString(
+                luotGuiDangChon["LoaiVe"]
+                ) == "THANG")
             {
                 XacNhanXeRa("TIEN_MAT");
                 return;
@@ -195,22 +261,32 @@ namespace QLGuiXe.Forms
                 "Đã xác nhận thông tin — vui lòng thu tiền và thanh toán";
         }
 
-        private void btnThanhToanXeRa_Click(object sender, EventArgs e)
+        private void btnThanhToanXeRa_Click(
+            object sender,
+            EventArgs e)
         {
             if (luotGuiDangChon == null)
             {
-                MessageBox.Show("Vui lòng chọn xe cần thanh toán!");
+                MessageBox.Show(
+                    "Vui lòng chọn xe cần thanh toán!"
+                );
+
                 return;
             }
 
             if (cboPhuongThucThanhToan.Text == "")
             {
-                MessageBox.Show("Vui lòng chọn phương thức thanh toán!");
+                MessageBox.Show(
+                    "Vui lòng chọn phương thức thanh toán!"
+                );
+
                 cboPhuongThucThanhToan.Focus();
                 return;
             }
 
-            XacNhanXeRa(cboPhuongThucThanhToan.Text);
+            XacNhanXeRa(
+                cboPhuongThucThanhToan.Text
+            );
         }
 
         private void XacNhanXeRa(string phuongThuc)
@@ -223,7 +299,8 @@ namespace QLGuiXe.Forms
             if (PhienDangNhap.MaNhanVien == "")
             {
                 MessageBox.Show(
-                    "Vui lòng đăng nhập trước khi xác nhận xe ra!");
+                    "Vui lòng đăng nhập trước khi xác nhận xe ra!"
+                );
 
                 return;
             }
@@ -232,7 +309,8 @@ namespace QLGuiXe.Forms
                 new SqlParameter(
                     "@MaLuotGui",
                     SqlDbType.VarChar,
-                    20);
+                    20
+                );
 
             maLuotGui.Direction =
                 ParameterDirection.Output;
@@ -240,10 +318,12 @@ namespace QLGuiXe.Forms
             SqlParameter tienGui =
                 new SqlParameter(
                     "@TienGui",
-                    SqlDbType.Decimal);
+                    SqlDbType.Decimal
+                );
 
             tienGui.Precision = 18;
             tienGui.Scale = 2;
+
             tienGui.Direction =
                 ParameterDirection.Output;
 
@@ -255,34 +335,42 @@ namespace QLGuiXe.Forms
                     new SqlParameter(
                         "@BienSoHoacMaThe",
                         Convert.ToString(
-                            luotGuiDangChon["BienSo"])),
+                            luotGuiDangChon["BienSo"]
+                        )
+                    ),
 
                     new SqlParameter(
                         "@MaNVRa",
-                        PhienDangNhap.MaNhanVien),
+                        PhienDangNhap.MaNhanVien
+                    ),
 
                     new SqlParameter(
                         "@PhuongThuc",
-                        phuongThuc),
+                        phuongThuc
+                    ),
 
                     maLuotGui,
                     tienGui
                 );
 
                 decimal soTien =
-                    Convert.ToDecimal(tienGui.Value);
+                    Convert.ToDecimal(
+                        tienGui.Value
+                    );
 
                 if (soTien == 0)
                 {
                     MessageBox.Show(
-                        "Đã xác nhận xe ra. Vé tháng hợp lệ, phí lượt 0 ₫.");
+                        "Đã xác nhận xe ra. Vé tháng hợp lệ, phí lượt 0 ₫."
+                    );
                 }
                 else
                 {
                     MessageBox.Show(
                         "Thanh toán thành công "
                         + soTien.ToString("#,##0 ₫")
-                        + ".");
+                        + "."
+                    );
                 }
 
                 HienThiXeDangGui();
@@ -292,7 +380,8 @@ namespace QLGuiXe.Forms
             {
                 MessageBox.Show(
                     "Không thể xác nhận xe ra: "
-                    + ex.Message);
+                    + ex.Message
+                );
             }
         }
 
@@ -301,7 +390,8 @@ namespace QLGuiXe.Forms
             LamMoiDuLieu(true);
         }
 
-        private void LamMoiDuLieu(bool xoaTimKiem)
+        private void LamMoiDuLieu(
+            bool xoaTimKiem)
         {
             luotGuiDangChon = null;
 
@@ -330,14 +420,19 @@ namespace QLGuiXe.Forms
             btnThanhToanXeRa.Enabled = false;
         }
 
-        private void btnLamMoiXeRa_Click(object sender, EventArgs e)
+        private void btnLamMoiXeRa_Click(
+            object sender,
+            EventArgs e)
         {
             HienThiXeDangGui();
             LamMoiDuLieu();
+
             txtBienSoHoacMaThe.Focus();
         }
 
-        private void btnThoat_Click(object sender, EventArgs e)
+        private void btnThoat_Click(
+            object sender,
+            EventArgs e)
         {
             Close();
         }
