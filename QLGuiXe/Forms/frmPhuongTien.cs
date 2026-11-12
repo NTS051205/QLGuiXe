@@ -17,8 +17,7 @@ namespace QLGuiXe.Forms
             InitializeComponent();
         }
 
-        public frmPhuongTien(
-            string maKhachHang)
+        public frmPhuongTien(string maKhachHang)
         {
             InitializeComponent();
 
@@ -49,11 +48,16 @@ namespace QLGuiXe.Forms
 
             LoadKhachHang();
 
-            cboLoaiXe.SelectedIndex = 0;
-            cboLocLoaiXe.SelectedIndex = 0;
+            cboLoaiXe.SelectedIndex =
+                0;
+
+            cboLocLoaiXe.SelectedIndex =
+                0;
 
             CauHinhLuoi();
+
             LoadDanhSach();
+
             LamMoiNhapLieu();
 
             if (maKhachHangDuocChon != "")
@@ -96,14 +100,20 @@ namespace QLGuiXe.Forms
 
         private void CauHinhLuoi()
         {
-            dgvPhuongTien.ReadOnly = true;
-            dgvPhuongTien.AllowUserToAddRows = false;
-            dgvPhuongTien.AllowUserToDeleteRows = false;
+            dgvPhuongTien.ReadOnly =
+                true;
+
+            dgvPhuongTien.AllowUserToAddRows =
+                false;
+
+            dgvPhuongTien.AllowUserToDeleteRows =
+                false;
 
             dgvPhuongTien.SelectionMode =
                 DataGridViewSelectionMode.FullRowSelect;
 
-            dgvPhuongTien.MultiSelect = false;
+            dgvPhuongTien.MultiSelect =
+                false;
 
             dgvPhuongTien.AutoSizeColumnsMode =
                 DataGridViewAutoSizeColumnsMode.Fill;
@@ -159,10 +169,17 @@ namespace QLGuiXe.Forms
                         "dbo.sp_PHUONGTIEN_MaMoi"
                     );
 
-                txtMaPT.Text =
-                    Convert.ToString(
-                        dt.Rows[0]["MaMoi"]
-                    );
+                if (dt.Rows.Count > 0)
+                {
+                    txtMaPT.Text =
+                        Convert.ToString(
+                            dt.Rows[0]["MaMoi"]
+                        );
+                }
+                else
+                {
+                    txtMaPT.Clear();
+                }
             }
             catch
             {
@@ -203,7 +220,106 @@ namespace QLGuiXe.Forms
                 return false;
             }
 
+            if (cboLoaiXe.SelectedIndex == -1)
+            {
+                MessageBox.Show(
+                    "Vui lòng chọn loại xe."
+                );
+
+                cboLoaiXe.Focus();
+
+                return false;
+            }
+
             return true;
+        }
+
+        private bool KiemTraTrungPhuongTien()
+        {
+            DataTable dt =
+                kn.GetData(
+                    "dbo.sp_PHUONGTIEN_DanhSach"
+                );
+
+            for (int i = 0;
+                i < dt.Rows.Count;
+                i++)
+            {
+                if (Convert.ToString(
+                    dt.Rows[i]["MaPT"])
+                    .Trim()
+                    == txtMaPT.Text.Trim())
+                {
+                    MessageBox.Show(
+                        "Mã phương tiện đã tồn tại!"
+                    );
+
+                    return true;
+                }
+
+                if (Convert.ToString(
+                    dt.Rows[i]["BienSo"])
+                    .Trim()
+                    .ToUpper()
+                    ==
+                    txtBienSo.Text
+                    .Trim()
+                    .ToUpper())
+                {
+                    MessageBox.Show(
+                        "Biển số này đã tồn tại!"
+                    );
+
+                    txtBienSo.Focus();
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool KiemTraTrungBienSoKhiSua()
+        {
+            DataTable dt =
+                kn.GetData(
+                    "dbo.sp_PHUONGTIEN_DanhSach"
+                );
+
+            for (int i = 0;
+                i < dt.Rows.Count;
+                i++)
+            {
+                string maPT =
+                    Convert.ToString(
+                        dt.Rows[i]["MaPT"]
+                    ).Trim();
+
+                string bienSo =
+                    Convert.ToString(
+                        dt.Rows[i]["BienSo"]
+                    ).Trim();
+
+                if (maPT != txtMaPT.Text.Trim())
+                {
+                    if (bienSo.ToUpper()
+                        ==
+                        txtBienSo.Text
+                        .Trim()
+                        .ToUpper())
+                    {
+                        MessageBox.Show(
+                            "Biển số này đã tồn tại!"
+                        );
+
+                        txtBienSo.Focus();
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private object MaKhachHangDaChon()
@@ -237,7 +353,7 @@ namespace QLGuiXe.Forms
             {
                 new SqlParameter(
                     "@MaPT",
-                    txtMaPT.Text
+                    txtMaPT.Text.Trim()
                 ),
 
                 new SqlParameter(
@@ -270,6 +386,11 @@ namespace QLGuiXe.Forms
 
             try
             {
+                if (KiemTraTrungPhuongTien() == true)
+                {
+                    return;
+                }
+
                 kn.Execute(
                     "dbo.sp_PHUONGTIEN_Them",
                     LayThamSo()
@@ -280,6 +401,7 @@ namespace QLGuiXe.Forms
                 );
 
                 LoadDanhSach();
+
                 LamMoiNhapLieu();
             }
             catch (Exception ex)
@@ -308,6 +430,11 @@ namespace QLGuiXe.Forms
 
             try
             {
+                if (KiemTraTrungBienSoKhiSua() == true)
+                {
+                    return;
+                }
+
                 kn.Execute(
                     "dbo.sp_PHUONGTIEN_Sua",
                     LayThamSo()
@@ -318,6 +445,7 @@ namespace QLGuiXe.Forms
                 );
 
                 LoadDanhSach();
+
                 LamMoiNhapLieu();
             }
             catch (Exception ex)
@@ -360,9 +488,12 @@ namespace QLGuiXe.Forms
                     return;
                 }
 
-                string noiDung = "";
+                string noiDung =
+                    "";
 
-                for (int i = 0; i < dt.Rows.Count; i++)
+                for (int i = 0;
+                    i < dt.Rows.Count;
+                    i++)
                 {
                     DataRow row =
                         dt.Rows[i];
@@ -372,18 +503,28 @@ namespace QLGuiXe.Forms
                             row["ThoiGianVao"]
                         ).ToString(
                             "dd/MM/yyyy HH:mm"
-                        )
-                        + " - "
-                        + Convert.ToString(
+                        );
+
+                    noiDung +=
+                        " - ";
+
+                    noiDung +=
+                        Convert.ToString(
                             row["TrangThai"]
-                        )
-                        + " - "
-                        + Convert.ToDecimal(
+                        );
+
+                    noiDung +=
+                        " - ";
+
+                    noiDung +=
+                        Convert.ToDecimal(
                             row["TienGui"]
                         ).ToString(
                             "#,##0 ₫"
-                        )
-                        + Environment.NewLine;
+                        );
+
+                    noiDung +=
+                        Environment.NewLine;
                 }
 
                 MessageBox.Show(
@@ -484,7 +625,10 @@ namespace QLGuiXe.Forms
             string tuKhoa =
                 txtTimKiem.Text
                 .Trim()
-                .Replace("'", "''");
+                .Replace(
+                    "'",
+                    "''"
+                );
 
             string dieuKien =
                 "(MaPT LIKE '%"
@@ -520,6 +664,7 @@ namespace QLGuiXe.Forms
                 0;
 
             LoadDanhSach();
+
             LamMoiNhapLieu();
         }
 
