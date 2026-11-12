@@ -14,50 +14,40 @@ namespace QLGuiXe.Forms
         public frmXeVao()
         {
             InitializeComponent();
-
-            dgvXeDangGui.ReadOnly = true;
-            dgvXeDangGui.AllowUserToAddRows = false;
-            dgvXeDangGui.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvXeDangGui.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvXeDangGui.MultiSelect = false;
-
-            cboLoaiXe.Items.AddRange(new object[] { "Xe máy", "Ô tô" });
-            cboLoaiXe.SelectedIndex = 0;
-
-            TaiNhanVien();
-            TaiTheXe();
-            TaiKhuVuc();
-            HienThiXeDangGui();
-            KiemTraBienSo();
-
-            dongHo.Interval = 1000;
-            dongHo.Tick += CapNhatDongHo;
-            dongHo.Start();
-            CapNhatDongHo(this, EventArgs.Empty);
+            this.Load += frmXeVao_Load;
         }
 
         private void TaiNhanVien()
         {
             DataTable dt = kn.GetData("dbo.sp_XeVao_NhanVien");
+
+            cboNhanVien.DataSource = dt;
             cboNhanVien.DisplayMember = "HoTen";
             cboNhanVien.ValueMember = "MaNV";
-            cboNhanVien.DataSource = dt;
 
-            cboNhanVien.SelectedValue = PhienDangNhap.MaNhanVien;
+            if (PhienDangNhap.MaNhanVien != "")
+            {
+                cboNhanVien.SelectedValue = PhienDangNhap.MaNhanVien;
+            }
+
             cboNhanVien.Enabled = PhienDangNhap.LaAdmin;
         }
 
         private void TaiTheXe()
         {
             DataTable dt = kn.GetData("dbo.sp_XeVao_TheTrong");
+
+            cboTheXe.DataSource = dt;
             cboTheXe.DisplayMember = "MaThe";
             cboTheXe.ValueMember = "MaThe";
-            cboTheXe.DataSource = dt;
         }
 
         private void TaiKhuVuc()
         {
-            if (string.IsNullOrWhiteSpace(cboLoaiXe.Text)) return;
+            if (cboLoaiXe.Text == "")
+            {
+                return;
+            }
 
             DataTable dt = kn.GetData(
                 "dbo.sp_XeVao_KhuVuc",
@@ -66,6 +56,7 @@ namespace QLGuiXe.Forms
             cboKhuVuc.DataSource = dt;
             cboKhuVuc.DisplayMember = "TenKhuVuc";
             cboKhuVuc.ValueMember = "MaKhuVuc";
+
             CapNhatChoTrong();
         }
 
@@ -82,6 +73,7 @@ namespace QLGuiXe.Forms
             dgvXeDangGui.Columns["ThoiGianVao"].HeaderText = "Thời gian vào";
             dgvXeDangGui.Columns["NhanVienVao"].HeaderText = "Tiếp nhận";
             dgvXeDangGui.Columns["LoaiVe"].HeaderText = "Loại vé";
+
             dgvXeDangGui.Columns["ThoiGianVao"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
 
             dgvXeDangGui.Columns["MaPT"].Visible = false;
@@ -94,7 +86,8 @@ namespace QLGuiXe.Forms
         private void KiemTraBienSo()
         {
             string bienSo = txtBienSo.Text.Trim();
-            if (bienSo.Length == 0)
+
+            if (bienSo == "")
             {
                 lblTrangThaiPhuongTien.Text = "• Chưa nhập biển số";
                 lblTrangThaiTrongBai.Text = "• Chưa kiểm tra";
@@ -109,31 +102,57 @@ namespace QLGuiXe.Forms
                     "dbo.sp_XeVao_KiemTra",
                     new SqlParameter("@BienSo", bienSo));
 
+                if (dt.Rows.Count == 0)
+                {
+                    MessageBox.Show("Không tìm thấy thông tin kiểm tra biển số!");
+                    return;
+                }
+
                 DataRow row = dt.Rows[0];
+
                 bool daCo = Convert.ToBoolean(row["DaCoTrongHeThong"]);
                 bool dangTrongBai = Convert.ToBoolean(row["DangTrongBai"]);
                 bool coVeThang = Convert.ToBoolean(row["CoVeThang"]);
 
-                if (daCo && row["LoaiXe"] != DBNull.Value)
-                    cboLoaiXe.Text = Convert.ToString(row["LoaiXe"]);
+                if (daCo == true && row["LoaiXe"] != DBNull.Value)
+                {
+                    cboLoaiXe.Text = row["LoaiXe"].ToString();
+                }
 
-                lblTrangThaiPhuongTien.Text = daCo
-                    ? "✓ Đã có trong hệ thống"
-                    : "• Khách vãng lai / phương tiện mới";
-                lblTrangThaiPhuongTien.ForeColor = daCo ? Color.Green : Color.DimGray;
+                if (daCo == true)
+                {
+                    lblTrangThaiPhuongTien.Text = "✓ Đã có trong hệ thống";
+                    lblTrangThaiPhuongTien.ForeColor = Color.Green;
+                }
+                else
+                {
+                    lblTrangThaiPhuongTien.Text = "• Khách vãng lai / phương tiện mới";
+                    lblTrangThaiPhuongTien.ForeColor = Color.DimGray;
+                }
 
-                lblTrangThaiTrongBai.Text = dangTrongBai
-                    ? "✕ Phương tiện đang ở trong bãi"
-                    : "✓ Không có lượt gửi đang mở";
-                lblTrangThaiTrongBai.ForeColor = dangTrongBai ? Color.Red : Color.Green;
+                if (dangTrongBai == true)
+                {
+                    lblTrangThaiTrongBai.Text = "✕ Phương tiện đang ở trong bãi";
+                    lblTrangThaiTrongBai.ForeColor = Color.Red;
+                }
+                else
+                {
+                    lblTrangThaiTrongBai.Text = "✓ Không có lượt gửi đang mở";
+                    lblTrangThaiTrongBai.ForeColor = Color.Green;
+                }
 
-                lblTrangThaiVeThang.Text = coVeThang
-                    ? "✓ Vé tháng hợp lệ, đã thanh toán"
-                    : "• Không có vé tháng hợp lệ";
-                lblTrangThaiVeThang.ForeColor = coVeThang ? Color.Green : Color.DarkOrange;
-                lblGiaTriLoaiVe.Text = coVeThang
-                    ? "THANG — phí lượt 0 ₫"
-                    : "LUOT — tính theo bảng giá";
+                if (coVeThang == true)
+                {
+                    lblTrangThaiVeThang.Text = "✓ Vé tháng hợp lệ, đã thanh toán";
+                    lblTrangThaiVeThang.ForeColor = Color.Green;
+                    lblGiaTriLoaiVe.Text = "THANG — phí lượt 0 ₫";
+                }
+                else
+                {
+                    lblTrangThaiVeThang.Text = "• Không có vé tháng hợp lệ";
+                    lblTrangThaiVeThang.ForeColor = Color.DarkOrange;
+                    lblGiaTriLoaiVe.Text = "LUOT — tính theo bảng giá";
+                }
             }
             catch (Exception ex)
             {
@@ -143,7 +162,8 @@ namespace QLGuiXe.Forms
 
         private void CapNhatChoTrong()
         {
-            DataRowView? row = cboKhuVuc.SelectedItem as DataRowView;
+            DataRowView row = cboKhuVuc.SelectedItem as DataRowView;
+
             if (row == null)
             {
                 lblGiaTriChoTrong.Text = "—";
@@ -151,8 +171,17 @@ namespace QLGuiXe.Forms
             }
 
             int conTrong = Convert.ToInt32(row["ConTrong"]);
+
             lblGiaTriChoTrong.Text = conTrong + " chỗ";
-            lblGiaTriChoTrong.ForeColor = conTrong > 0 ? Color.Green : Color.Red;
+
+            if (conTrong > 0)
+            {
+                lblGiaTriChoTrong.ForeColor = Color.Green;
+            }
+            else
+            {
+                lblGiaTriChoTrong.ForeColor = Color.Red;
+            }
         }
 
         private void txtBienSo_TextChanged(object sender, EventArgs e)
@@ -170,21 +199,59 @@ namespace QLGuiXe.Forms
             CapNhatChoTrong();
         }
 
+
         private void btnXacNhanXeVao_Click(object sender, EventArgs e)
         {
-            if (txtBienSo.Text.Trim().Length < 5)
+            if (txtBienSo.Text.Trim() == "")
             {
-                MessageBox.Show("Vui lòng nhập biển số hợp lệ!");
+                MessageBox.Show("Vui lòng nhập biển số xe!");
                 txtBienSo.Focus();
                 return;
             }
-            if (cboTheXe.SelectedValue == null || cboKhuVuc.SelectedValue == null || cboNhanVien.SelectedValue == null)
+
+            if (txtBienSo.Text.Trim().Length < 5)
             {
-                MessageBox.Show("Vui lòng chọn đầy đủ thẻ xe, khu vực và nhân viên!");
+                MessageBox.Show("Biển số xe không hợp lệ!");
+                txtBienSo.Focus();
                 return;
             }
 
-            DataRowView? khuVuc = cboKhuVuc.SelectedItem as DataRowView;
+            if (cboLoaiXe.SelectedIndex == -1)
+            {
+                MessageBox.Show("Vui lòng chọn loại xe!");
+                cboLoaiXe.Focus();
+                return;
+            }
+
+            if (cboTheXe.SelectedValue == null)
+            {
+                MessageBox.Show("Vui lòng chọn thẻ xe!");
+                cboTheXe.Focus();
+                return;
+            }
+
+            if (cboKhuVuc.SelectedValue == null)
+            {
+                MessageBox.Show("Vui lòng chọn khu vực gửi xe!");
+                cboKhuVuc.Focus();
+                return;
+            }
+
+            if (cboNhanVien.SelectedValue == null)
+            {
+                MessageBox.Show("Vui lòng chọn nhân viên tiếp nhận!");
+                cboNhanVien.Focus();
+                return;
+            }
+
+            if (PhienDangNhap.MaNhanVien == "")
+            {
+                MessageBox.Show("Vui lòng đăng nhập trước khi nhận xe!");
+                return;
+            }
+
+            DataRowView khuVuc = cboKhuVuc.SelectedItem as DataRowView;
+
             if (khuVuc == null || Convert.ToInt32(khuVuc["ConTrong"]) <= 0)
             {
                 MessageBox.Show("Khu vực đã hết chỗ trống!");
@@ -196,21 +263,28 @@ namespace QLGuiXe.Forms
 
             try
             {
+                object maNhanVien = PhienDangNhap.MaNhanVien;
+
+                if (PhienDangNhap.LaAdmin == true)
+                {
+                    maNhanVien = cboNhanVien.SelectedValue;
+                }
+
                 kn.Execute(
                     "dbo.sp_XeVao",
                     new SqlParameter("@BienSo", txtBienSo.Text.Trim()),
                     new SqlParameter("@LoaiXe", cboLoaiXe.Text),
                     new SqlParameter("@MaThe", cboTheXe.SelectedValue),
                     new SqlParameter("@MaKhuVuc", cboKhuVuc.SelectedValue),
-                    new SqlParameter("@MaNVVao", PhienDangNhap.LaAdmin
-                        ? cboNhanVien.SelectedValue
-                        : (object)PhienDangNhap.MaNhanVien),
+                    new SqlParameter("@MaNVVao", maNhanVien),
                     new SqlParameter("@MaKH", DBNull.Value),
-                    maLuotMoi);
+                    maLuotMoi
+                );
 
-                MessageBox.Show("Xác nhận xe vào thành công! Mã lượt: " + Convert.ToString(maLuotMoi.Value));
+                MessageBox.Show("Xác nhận xe vào thành công! Mã lượt: "
+                    + maLuotMoi.Value.ToString());
+
                 HienThiXeDangGui();
-                TaiTheXe();
                 LamMoiDuLieu();
             }
             catch (Exception ex)
@@ -253,5 +327,33 @@ namespace QLGuiXe.Forms
             }
             base.Dispose(disposing);
         }
+
+
+        private void frmXeVao_Load(object sender, EventArgs e)
+        {
+            dgvXeDangGui.ReadOnly = true;
+            dgvXeDangGui.AllowUserToAddRows = false;
+            dgvXeDangGui.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvXeDangGui.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvXeDangGui.MultiSelect = false;
+
+            cboLoaiXe.Items.Clear();
+            cboLoaiXe.Items.Add("Xe máy");
+            cboLoaiXe.Items.Add("Ô tô");
+            cboLoaiXe.SelectedIndex = 0;
+
+            TaiNhanVien();
+            TaiTheXe();
+            TaiKhuVuc();
+            HienThiXeDangGui();
+            KiemTraBienSo();
+
+            dongHo.Interval = 1000;
+            dongHo.Tick += CapNhatDongHo;
+            dongHo.Start();
+
+            CapNhatDongHo(this, EventArgs.Empty);
+        }
+
     }
 }
