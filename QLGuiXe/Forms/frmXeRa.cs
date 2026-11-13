@@ -9,7 +9,7 @@ namespace QLGuiXe.Forms
     public partial class frmXeRa : Form
     {
         KETNOICSDL kn = new KETNOICSDL();
-        DataRow luotGuiDangChon;
+        DataRow? luotGuiDangChon;
 
         public frmXeRa()
         {

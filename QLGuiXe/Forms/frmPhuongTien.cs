@@ -220,7 +220,60 @@ namespace QLGuiXe.Forms
             return true;
         }
 
-        private object MaKhachHangDaChon()
+        private bool KiemTraTrungPhuongTien(
+            string maPTBoQua)
+        {
+            string maPT =
+                txtMaPT.Text.Trim();
+
+            string bienSo =
+                txtBienSo.Text.Trim();
+
+            foreach (DataRow row in dtPhuongTien.Rows)
+            {
+                string maPTHienTai =
+                    Convert.ToString(
+                        row["MaPT"]
+                    ).Trim();
+
+                if (maPTHienTai == maPTBoQua)
+                {
+                    continue;
+                }
+
+                if (maPTHienTai == maPT)
+                {
+                    MessageBox.Show(
+                        "Mã phương tiện đã tồn tại."
+                    );
+
+                    return true;
+                }
+
+                string bienSoHienTai =
+                    Convert.ToString(
+                        row["BienSo"]
+                    ).Trim();
+
+                if (string.Equals(
+                    bienSoHienTai,
+                    bienSo,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show(
+                        "Biển số này đã tồn tại."
+                    );
+
+                    txtBienSo.Focus();
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private object? MaKhachHangDaChon()
         {
             if (cboKhachHang.SelectedValue == null)
             {
@@ -241,6 +294,11 @@ namespace QLGuiXe.Forms
             EventArgs e)
         {
             if (KiemTraNhapLieu() == false)
+            {
+                return;
+            }
+
+            if (KiemTraTrungPhuongTien("") == true)
             {
                 return;
             }
@@ -269,7 +327,7 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            if (dgvPhuongTien.CurrentRow == null)
+            if (dgvPhuongTien.SelectedRows.Count == 0)
             {
                 MessageBox.Show(
                     "Vui lòng chọn phương tiện cần sửa."
@@ -279,6 +337,12 @@ namespace QLGuiXe.Forms
             }
 
             if (KiemTraNhapLieu() == false)
+            {
+                return;
+            }
+
+            if (KiemTraTrungPhuongTien(
+                txtMaPT.Text.Trim()) == true)
             {
                 return;
             }
@@ -307,7 +371,7 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            if (dgvPhuongTien.CurrentRow == null)
+            if (dgvPhuongTien.SelectedRows.Count == 0)
             {
                 MessageBox.Show(
                     "Vui lòng chọn phương tiện cần xem lịch sử."
@@ -425,7 +489,7 @@ namespace QLGuiXe.Forms
                     return;
                 }
 
-                DataRowView dongDuLieu =
+                DataRowView? dongDuLieu =
                     duLieu as DataRowView;
 
                 if (dongDuLieu == null)
@@ -564,7 +628,7 @@ namespace QLGuiXe.Forms
 
         private SqlParameter[] LayThamSo()
         {
-            object maKhachHang =
+            object? maKhachHang =
                 MaKhachHangDaChon();
 
             if (maKhachHang == null)

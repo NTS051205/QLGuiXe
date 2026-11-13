@@ -115,6 +115,34 @@ namespace QLGuiXe.Forms
             dgvDangKy.ClearSelection();
         }
 
+        private void ChonDangKyVuaTao(string maDangKy)
+        {
+            if (maDangKy == "")
+            {
+                return;
+            }
+
+            foreach (DataGridViewRow row in dgvDangKy.Rows)
+            {
+                string maDangKyTrenLuoi =
+                    Convert.ToString(
+                        row.Cells["MaDangKy"].Value
+                    );
+
+                if (maDangKyTrenLuoi == maDangKy)
+                {
+                    dgvDangKy.ClearSelection();
+                    row.Selected = true;
+                    dgvDangKy.CurrentCell =
+                        row.Cells["MaDangKy"];
+                    dgvDangKy.FirstDisplayedScrollingRowIndex =
+                        row.Index;
+
+                    return;
+                }
+            }
+        }
+
         private void TaiKhachHang()
         {
             DataTable dt =
@@ -285,7 +313,7 @@ namespace QLGuiXe.Forms
 
         private void HienThiKhachHangDangChon()
         {
-            DataRowView row =
+            DataRowView? row =
                 cboKhachHang.SelectedItem
                 as DataRowView;
 
@@ -373,7 +401,7 @@ namespace QLGuiXe.Forms
 
         private void HienThiPhuongTienDangChon()
         {
-            DataRowView row =
+            DataRowView? row =
                 cboPhuongTien.SelectedItem
                 as DataRowView;
 
@@ -659,13 +687,16 @@ namespace QLGuiXe.Forms
                         );
                 }
 
+                string maDangKyMoi =
+                    Convert.ToString(
+                        maDangKy.Value
+                    );
+
                 MessageBox.Show(
                     "Đăng ký vé tháng thành công!"
                     + Environment.NewLine
                     + "Mã đăng ký: "
-                    + Convert.ToString(
-                        maDangKy.Value
-                    )
+                    + maDangKyMoi
                     + Environment.NewLine
                     + "Tổng tiền: "
                     + soTien.ToString(
@@ -676,6 +707,9 @@ namespace QLGuiXe.Forms
                 );
 
                 HienThiDangKy();
+                ChonDangKyVuaTao(
+                    maDangKyMoi
+                );
                 TaiTheThang();
             }
             catch (Exception ex)
@@ -691,7 +725,7 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            DataRow row =
+            DataRow? row =
                 LayDongDangChon();
 
             if (row == null)
@@ -796,7 +830,7 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            DataRow row =
+            DataRow? row =
                 LayDongDangChon();
 
             if (row == null)
@@ -866,7 +900,7 @@ namespace QLGuiXe.Forms
             );
         }
 
-        private DataRow LayDongDangChon()
+        private DataRow? LayDongDangChon()
         {
             if (dgvDangKy.SelectedRows.Count == 0)
             {
@@ -890,7 +924,7 @@ namespace QLGuiXe.Forms
                 return null;
             }
 
-            DataRowView row =
+            DataRowView? row =
                 duLieu as DataRowView;
 
             if (row == null)

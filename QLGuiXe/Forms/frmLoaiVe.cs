@@ -184,7 +184,7 @@ namespace QLGuiXe.Forms
             }
 
             cboKyHieu.Enabled =
-                true;
+                false;
 
             dgvLoaiVe.ClearSelection();
 
