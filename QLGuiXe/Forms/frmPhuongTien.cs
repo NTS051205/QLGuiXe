@@ -7,224 +7,608 @@ namespace QLGuiXe.Forms
 {
     public partial class frmPhuongTien : Form
     {
-        private readonly KETNOICSDL kn = new KETNOICSDL();
-        private DataTable dtPhuongTien = new DataTable();
+        KETNOICSDL kn = new KETNOICSDL();
+        DataTable dtPhuongTien = new DataTable();
 
-        public frmPhuongTien() { InitializeComponent(); }
+        string maKhachHangChon = "";
 
-        private void frmPhuongTien_Load(object sender, EventArgs e)
+        public frmPhuongTien()
         {
-            cboLoaiXe.Items.AddRange(new object[] { "Xe máy", "Ô tô" });
-            cboLocLoaiXe.Items.AddRange(new object[] { "Tất cả", "Xe máy", "Ô tô" });
+            InitializeComponent();
+        }
+
+        public frmPhuongTien(string maKhachHang)
+        {
+            InitializeComponent();
+
+            maKhachHangChon =
+                maKhachHang;
+        }
+
+        private void frmPhuongTien_Load(
+            object sender,
+            EventArgs e)
+        {
+            cboLoaiXe.Items.AddRange(
+                new object[]
+                {
+                    "Xe máy",
+                    "Ô tô"
+                }
+            );
+
+            cboLocLoaiXe.Items.AddRange(
+                new object[]
+                {
+                    "Tất cả",
+                    "Xe máy",
+                    "Ô tô"
+                }
+            );
+
             LoadKhachHang();
+
             cboLoaiXe.SelectedIndex = 0;
             cboLocLoaiXe.SelectedIndex = 0;
+
             CauHinhLuoi();
             LoadDanhSach();
             LamMoiNhapLieu();
+
+            if (maKhachHangChon != "")
+            {
+                cboKhachHang.SelectedValue =
+                    maKhachHangChon;
+            }
         }
 
         private void LoadKhachHang()
         {
-            DataTable dt = kn.GetData("dbo.sp_PHUONGTIEN_KhachHang");
-            DataRow khachVangLai = dt.NewRow();
-            khachVangLai["MaKH"] = DBNull.Value;
-            khachVangLai["HoTen"] = "— Khách vãng lai —";
-            dt.Rows.InsertAt(khachVangLai, 0);
-            cboKhachHang.DisplayMember = "HoTen";
-            cboKhachHang.ValueMember = "MaKH";
-            cboKhachHang.DataSource = dt;
+            DataTable dt =
+                kn.GetData(
+                    "dbo.sp_PHUONGTIEN_KhachHang"
+                );
+
+            DataRow khachVangLai =
+                dt.NewRow();
+
+            khachVangLai["MaKH"] =
+                DBNull.Value;
+
+            khachVangLai["HoTen"] =
+                "— Khách vãng lai —";
+
+            dt.Rows.InsertAt(
+                khachVangLai,
+                0
+            );
+
+            cboKhachHang.DisplayMember =
+                "HoTen";
+
+            cboKhachHang.ValueMember =
+                "MaKH";
+
+            cboKhachHang.DataSource =
+                dt;
         }
 
         private void CauHinhLuoi()
         {
             dgvPhuongTien.ReadOnly = true;
-            dgvPhuongTien.AllowUserToAddRows = false;
-            dgvPhuongTien.AllowUserToDeleteRows = false;
-            dgvPhuongTien.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvPhuongTien.MultiSelect = false;
-            dgvPhuongTien.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvPhuongTien.RowHeadersVisible = false;
+
+            dgvPhuongTien.AllowUserToAddRows =
+                false;
+
+            dgvPhuongTien.AllowUserToDeleteRows =
+                false;
+
+            dgvPhuongTien.SelectionMode =
+                DataGridViewSelectionMode.FullRowSelect;
+
+            dgvPhuongTien.MultiSelect =
+                false;
+
+            dgvPhuongTien.AutoSizeColumnsMode =
+                DataGridViewAutoSizeColumnsMode.Fill;
+
+            dgvPhuongTien.RowHeadersVisible =
+                false;
         }
 
         private void LoadDanhSach()
         {
             try
             {
-                dtPhuongTien = kn.GetData("dbo.sp_PHUONGTIEN_DanhSach");
-                dgvPhuongTien.DataSource = dtPhuongTien;
-                dgvPhuongTien.Columns["MaPT"].HeaderText = "Mã phương tiện";
-                dgvPhuongTien.Columns["BienSo"].HeaderText = "Biển số";
-                dgvPhuongTien.Columns["LoaiXe"].HeaderText = "Loại xe";
-                dgvPhuongTien.Columns["KhachHang"].HeaderText = "Khách hàng sở hữu";
-                dgvPhuongTien.Columns["MaKH"].Visible = false;
-                LocDanhSach(this, EventArgs.Empty);
+                dtPhuongTien =
+                    kn.GetData(
+                        "dbo.sp_PHUONGTIEN_DanhSach"
+                    );
+
+                dgvPhuongTien.DataSource =
+                    dtPhuongTien;
+
+                dgvPhuongTien.Columns["MaPT"].HeaderText =
+                    "Mã phương tiện";
+
+                dgvPhuongTien.Columns["BienSo"].HeaderText =
+                    "Biển số";
+
+                dgvPhuongTien.Columns["LoaiXe"].HeaderText =
+                    "Loại xe";
+
+                dgvPhuongTien.Columns["KhachHang"].HeaderText =
+                    "Khách hàng sở hữu";
+
+                dgvPhuongTien.Columns["MaKH"].Visible =
+                    false;
+
+                LocDanhSach(
+                    this,
+                    EventArgs.Empty
+                );
             }
-            catch (Exception ex) { BaoLoi(ex); }
+            catch (Exception ex)
+            {
+                BaoLoi(ex);
+            }
         }
 
         private void LamMoiNhapLieu()
         {
-            try { txtMaPT.Text = Convert.ToString(kn.GetData("dbo.sp_PHUONGTIEN_MaMoi").Rows[0]["MaMoi"]); }
-            catch { txtMaPT.Clear(); }
+            try
+            {
+                DataTable dt =
+                    kn.GetData(
+                        "dbo.sp_PHUONGTIEN_MaMoi"
+                    );
+
+                if (dt.Rows.Count > 0)
+                {
+                    if (dt.Rows[0]["MaMoi"]
+                        != DBNull.Value)
+                    {
+                        txtMaPT.Text =
+                            Convert.ToString(
+                                dt.Rows[0]["MaMoi"]
+                            );
+                    }
+                    else
+                    {
+                        txtMaPT.Clear();
+                    }
+                }
+                else
+                {
+                    txtMaPT.Clear();
+                }
+            }
+            catch
+            {
+                txtMaPT.Clear();
+            }
+
             txtBienSo.Clear();
+
             cboLoaiXe.SelectedIndex = 0;
             cboKhachHang.SelectedIndex = 0;
+
             dgvPhuongTien.ClearSelection();
+
             txtBienSo.Focus();
+
+            if (maKhachHangChon != "")
+            {
+                cboKhachHang.SelectedValue =
+                    maKhachHangChon;
+            }
         }
 
         private bool KiemTraNhapLieu()
         {
-            if (string.IsNullOrWhiteSpace(txtBienSo.Text))
+            if (txtBienSo.Text.Trim() == "")
             {
-                MessageBox.Show("Vui lòng nhập biển số.");
+                MessageBox.Show(
+                    "Vui lòng nhập biển số."
+                );
+
+                txtBienSo.Focus();
+
                 return false;
             }
+
             return true;
         }
 
-        private object? MaKhachHangDaChon()
+        private object MaKhachHangDaChon()
         {
-            if (cboKhachHang.SelectedValue == null || cboKhachHang.SelectedValue == DBNull.Value)
+            if (cboKhachHang.SelectedValue == null)
+            {
                 return null;
+            }
+
+            if (cboKhachHang.SelectedValue
+                == DBNull.Value)
+            {
+                return null;
+            }
+
             return cboKhachHang.SelectedValue;
         }
 
-        private void btnThem_Click(object sender, EventArgs e)
+        private void btnThem_Click(
+            object sender,
+            EventArgs e)
         {
-            if (!KiemTraNhapLieu()) return;
+            if (KiemTraNhapLieu() == false)
+            {
+                return;
+            }
+
             try
             {
-                kn.Execute("dbo.sp_PHUONGTIEN_Them", LayThamSo());
-                MessageBox.Show("Thêm phương tiện thành công.");
+                kn.Execute(
+                    "dbo.sp_PHUONGTIEN_Them",
+                    LayThamSo()
+                );
+
+                MessageBox.Show(
+                    "Thêm phương tiện thành công."
+                );
+
                 LoadDanhSach();
                 LamMoiNhapLieu();
             }
-            catch (Exception ex) { BaoLoi(ex); }
+            catch (Exception ex)
+            {
+                BaoLoi(ex);
+            }
         }
 
-        private void btnSua_Click(object sender, EventArgs e)
+        private void btnSua_Click(
+            object sender,
+            EventArgs e)
         {
             if (dgvPhuongTien.CurrentRow == null)
             {
-                MessageBox.Show("Vui lòng chọn phương tiện cần sửa.");
+                MessageBox.Show(
+                    "Vui lòng chọn phương tiện cần sửa."
+                );
+
                 return;
             }
-            if (!KiemTraNhapLieu()) return;
+
+            if (KiemTraNhapLieu() == false)
+            {
+                return;
+            }
+
             try
             {
-                kn.Execute("dbo.sp_PHUONGTIEN_Sua", LayThamSo());
-                MessageBox.Show("Cập nhật phương tiện thành công.");
+                kn.Execute(
+                    "dbo.sp_PHUONGTIEN_Sua",
+                    LayThamSo()
+                );
+
+                MessageBox.Show(
+                    "Cập nhật phương tiện thành công."
+                );
+
                 LoadDanhSach();
                 LamMoiNhapLieu();
             }
-            catch (Exception ex) { BaoLoi(ex); }
+            catch (Exception ex)
+            {
+                BaoLoi(ex);
+            }
         }
 
-        private void btnLichSu_Click(object sender, EventArgs e)
+        private void btnLichSu_Click(
+            object sender,
+            EventArgs e)
         {
             if (dgvPhuongTien.CurrentRow == null)
             {
-                MessageBox.Show("Vui lòng chọn phương tiện cần xem lịch sử.");
+                MessageBox.Show(
+                    "Vui lòng chọn phương tiện cần xem lịch sử."
+                );
+
                 return;
             }
+
             try
             {
-                DataTable dt = kn.GetData("dbo.sp_PHUONGTIEN_LichSu",
-                    new SqlParameter("@MaPT", txtMaPT.Text));
+                DataTable dt =
+                    kn.GetData(
+                        "dbo.sp_PHUONGTIEN_LichSu",
+
+                        new SqlParameter(
+                            "@MaPT",
+                            txtMaPT.Text
+                        )
+                    );
 
                 if (dt.Rows.Count == 0)
                 {
-                    MessageBox.Show("Phương tiện chưa có lịch sử gửi xe.");
+                    MessageBox.Show(
+                        "Phương tiện chưa có lịch sử gửi xe."
+                    );
+
                     return;
                 }
 
-                string noiDung = string.Empty;
+                string noiDung =
+                    "";
+
                 foreach (DataRow row in dt.Rows)
                 {
-                    noiDung += Convert.ToDateTime(row["ThoiGianVao"]).ToString("dd/MM/yyyy HH:mm")
-                        + " - " + Convert.ToString(row["TrangThai"])
-                        + " - " + Convert.ToDecimal(row["TienGui"]).ToString("#,##0 ₫")
+                    string thoiGianVao =
+                        "Chưa xác định";
+
+                    string trangThai =
+                        "";
+
+                    string tienGui =
+                        "Chưa tính";
+
+                    if (row["ThoiGianVao"]
+                        != DBNull.Value)
+                    {
+                        thoiGianVao =
+                            Convert.ToDateTime(
+                                row["ThoiGianVao"]
+                            )
+                            .ToString(
+                                "dd/MM/yyyy HH:mm"
+                            );
+                    }
+
+                    if (row["TrangThai"]
+                        != DBNull.Value)
+                    {
+                        trangThai =
+                            Convert.ToString(
+                                row["TrangThai"]
+                            );
+                    }
+
+                    if (row["TienGui"]
+                        != DBNull.Value)
+                    {
+                        tienGui =
+                            Convert.ToDecimal(
+                                row["TienGui"]
+                            )
+                            .ToString(
+                                "#,##0 ₫"
+                            );
+                    }
+
+                    noiDung +=
+                        thoiGianVao
+                        + " - "
+                        + trangThai
+                        + " - "
+                        + tienGui
                         + Environment.NewLine;
                 }
-                MessageBox.Show(noiDung, "Lịch sử " + txtBienSo.Text);
+
+                MessageBox.Show(
+                    noiDung,
+                    "Lịch sử "
+                    + txtBienSo.Text
+                );
             }
-            catch (Exception ex) { BaoLoi(ex); }
+            catch (Exception ex)
+            {
+                BaoLoi(ex);
+            }
         }
 
-        private void dgvPhuongTien_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvPhuongTien_CellClick(
+            object sender,
+            DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0) return;
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
 
             try
             {
-                DataRowView? dongDuLieu =
-                    dgvPhuongTien.Rows[e.RowIndex].DataBoundItem as DataRowView;
+                object duLieu =
+                    dgvPhuongTien.Rows[e.RowIndex]
+                    .DataBoundItem;
 
-                if (dongDuLieu == null) return;
-
-                txtMaPT.Text = Convert.ToString(dongDuLieu["MaPT"]);
-                txtBienSo.Text = Convert.ToString(dongDuLieu["BienSo"]);
-                cboLoaiXe.Text = Convert.ToString(dongDuLieu["LoaiXe"]);
-
-                object maKhachHang = dongDuLieu["MaKH"];
-                if (maKhachHang == DBNull.Value ||
-                    string.IsNullOrWhiteSpace(Convert.ToString(maKhachHang)))
+                if (duLieu == null)
                 {
-                    cboKhachHang.SelectedIndex = 0;
+                    return;
+                }
+
+                DataRowView dongDuLieu =
+                    duLieu as DataRowView;
+
+                if (dongDuLieu == null)
+                {
+                    return;
+                }
+
+                if (dongDuLieu["MaPT"]
+                    != DBNull.Value)
+                {
+                    txtMaPT.Text =
+                        Convert.ToString(
+                            dongDuLieu["MaPT"]
+                        );
                 }
                 else
                 {
-                    cboKhachHang.SelectedValue = Convert.ToString(maKhachHang);
+                    txtMaPT.Clear();
+                }
+
+                if (dongDuLieu["BienSo"]
+                    != DBNull.Value)
+                {
+                    txtBienSo.Text =
+                        Convert.ToString(
+                            dongDuLieu["BienSo"]
+                        );
+                }
+                else
+                {
+                    txtBienSo.Clear();
+                }
+
+                if (dongDuLieu["LoaiXe"]
+                    != DBNull.Value)
+                {
+                    cboLoaiXe.Text =
+                        Convert.ToString(
+                            dongDuLieu["LoaiXe"]
+                        );
+                }
+
+                object maKhachHang =
+                    dongDuLieu["MaKH"];
+
+                if (maKhachHang == null
+                    ||
+                    maKhachHang == DBNull.Value
+                    ||
+                    Convert.ToString(
+                        maKhachHang
+                    ) == "")
+                {
+                    cboKhachHang.SelectedIndex =
+                        0;
+                }
+                else
+                {
+                    cboKhachHang.SelectedValue =
+                        Convert.ToString(
+                            maKhachHang
+                        );
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Không thể hiển thị thông tin phương tiện: " + ex.Message,
+                    "Không thể hiển thị thông tin phương tiện: "
+                    + ex.Message,
                     "Lỗi chọn dữ liệu",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                    MessageBoxIcon.Warning
+                );
             }
         }
 
-        private void LocDanhSach(object sender, EventArgs e)
+        private void LocDanhSach(
+            object sender,
+            EventArgs e)
         {
-            if (dtPhuongTien.Columns.Count == 0) return;
-            string tuKhoa = txtTimKiem.Text.Trim().Replace("'", "''");
-            string dieuKien = "(MaPT LIKE '%" + tuKhoa + "%' OR BienSo LIKE '%" + tuKhoa + "%')";
+            if (dtPhuongTien.Columns.Count == 0)
+            {
+                return;
+            }
+
+            string tuKhoa =
+                txtTimKiem.Text.Trim()
+                .Replace(
+                    "'",
+                    "''"
+                );
+
+            string dieuKien =
+                "(MaPT LIKE '%"
+                + tuKhoa
+                + "%' OR BienSo LIKE '%"
+                + tuKhoa
+                + "%')";
+
             if (cboLocLoaiXe.SelectedIndex > 0)
-                dieuKien += " AND LoaiXe='" + cboLocLoaiXe.Text + "'";
-            dtPhuongTien.DefaultView.RowFilter = dieuKien;
-            lblTongSo.Text = "Tổng số: " + dtPhuongTien.DefaultView.Count + " bản ghi";
+            {
+                dieuKien +=
+                    " AND LoaiXe='"
+                    + cboLocLoaiXe.Text
+                    + "'";
+            }
+
+            dtPhuongTien.DefaultView.RowFilter =
+                dieuKien;
+
+            lblTongSo.Text =
+                "Tổng số: "
+                + dtPhuongTien.DefaultView.Count
+                + " bản ghi";
         }
 
-        private void btnLamMoi_Click(object sender, EventArgs e)
+        private void btnLamMoi_Click(
+            object sender,
+            EventArgs e)
         {
             txtTimKiem.Clear();
-            cboLocLoaiXe.SelectedIndex = 0;
+
+            cboLocLoaiXe.SelectedIndex =
+                0;
+
             LoadDanhSach();
             LamMoiNhapLieu();
         }
 
-        private void btnThoat_Click(object sender, EventArgs e) { Close(); }
+        private void btnThoat_Click(
+            object sender,
+            EventArgs e)
+        {
+            Close();
+        }
 
         private SqlParameter[] LayThamSo()
         {
-            return new SqlParameter[]
+            object maKhachHang =
+                MaKhachHangDaChon();
+
+            if (maKhachHang == null)
             {
-                new SqlParameter("@MaPT", txtMaPT.Text),
-                new SqlParameter("@BienSo", txtBienSo.Text.Trim()),
-                new SqlParameter("@LoaiXe", cboLoaiXe.Text),
-                new SqlParameter("@MaKH", MaKhachHangDaChon() ?? DBNull.Value)
-            };
+                maKhachHang =
+                    DBNull.Value;
+            }
+
+            SqlParameter[] thamSo =
+                new SqlParameter[]
+                {
+                    new SqlParameter(
+                        "@MaPT",
+                        txtMaPT.Text
+                    ),
+
+                    new SqlParameter(
+                        "@BienSo",
+                        txtBienSo.Text.Trim()
+                    ),
+
+                    new SqlParameter(
+                        "@LoaiXe",
+                        cboLoaiXe.Text
+                    ),
+
+                    new SqlParameter(
+                        "@MaKH",
+                        maKhachHang
+                    )
+                };
+
+            return thamSo;
         }
 
-        private void BaoLoi(Exception ex)
+        private void BaoLoi(
+            Exception ex)
         {
-            MessageBox.Show(ex.Message, "Không thể cập nhật SQL Server",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(
+                ex.Message,
+                "Không thể cập nhật SQL Server",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            );
         }
     }
 }
