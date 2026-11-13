@@ -10,7 +10,7 @@ namespace QLGuiXe.Forms
         KETNOICSDL kn = new KETNOICSDL();
         DataTable dtPhuongTien = new DataTable();
 
-        string maKhachHangDuocChon = "";
+        string maKhachHangChon = "";
 
         public frmPhuongTien()
         {
@@ -21,7 +21,7 @@ namespace QLGuiXe.Forms
         {
             InitializeComponent();
 
-            maKhachHangDuocChon =
+            maKhachHangChon =
                 maKhachHang;
         }
 
@@ -48,22 +48,17 @@ namespace QLGuiXe.Forms
 
             LoadKhachHang();
 
-            cboLoaiXe.SelectedIndex =
-                0;
-
-            cboLocLoaiXe.SelectedIndex =
-                0;
+            cboLoaiXe.SelectedIndex = 0;
+            cboLocLoaiXe.SelectedIndex = 0;
 
             CauHinhLuoi();
-
             LoadDanhSach();
-
             LamMoiNhapLieu();
 
-            if (maKhachHangDuocChon != "")
+            if (maKhachHangChon != "")
             {
                 cboKhachHang.SelectedValue =
-                    maKhachHangDuocChon;
+                    maKhachHangChon;
             }
         }
 
@@ -100,8 +95,7 @@ namespace QLGuiXe.Forms
 
         private void CauHinhLuoi()
         {
-            dgvPhuongTien.ReadOnly =
-                true;
+            dgvPhuongTien.ReadOnly = true;
 
             dgvPhuongTien.AllowUserToAddRows =
                 false;
@@ -171,10 +165,18 @@ namespace QLGuiXe.Forms
 
                 if (dt.Rows.Count > 0)
                 {
-                    txtMaPT.Text =
-                        Convert.ToString(
-                            dt.Rows[0]["MaMoi"]
-                        );
+                    if (dt.Rows[0]["MaMoi"]
+                        != DBNull.Value)
+                    {
+                        txtMaPT.Text =
+                            Convert.ToString(
+                                dt.Rows[0]["MaMoi"]
+                            );
+                    }
+                    else
+                    {
+                        txtMaPT.Clear();
+                    }
                 }
                 else
                 {
@@ -188,23 +190,18 @@ namespace QLGuiXe.Forms
 
             txtBienSo.Clear();
 
-            cboLoaiXe.SelectedIndex =
-                0;
-
-            if (maKhachHangDuocChon != "")
-            {
-                cboKhachHang.SelectedValue =
-                    maKhachHangDuocChon;
-            }
-            else
-            {
-                cboKhachHang.SelectedIndex =
-                    0;
-            }
+            cboLoaiXe.SelectedIndex = 0;
+            cboKhachHang.SelectedIndex = 0;
 
             dgvPhuongTien.ClearSelection();
 
             txtBienSo.Focus();
+
+            if (maKhachHangChon != "")
+            {
+                cboKhachHang.SelectedValue =
+                    maKhachHangChon;
+            }
         }
 
         private bool KiemTraNhapLieu()
@@ -220,106 +217,7 @@ namespace QLGuiXe.Forms
                 return false;
             }
 
-            if (cboLoaiXe.SelectedIndex == -1)
-            {
-                MessageBox.Show(
-                    "Vui lòng chọn loại xe."
-                );
-
-                cboLoaiXe.Focus();
-
-                return false;
-            }
-
             return true;
-        }
-
-        private bool KiemTraTrungPhuongTien()
-        {
-            DataTable dt =
-                kn.GetData(
-                    "dbo.sp_PHUONGTIEN_DanhSach"
-                );
-
-            for (int i = 0;
-                i < dt.Rows.Count;
-                i++)
-            {
-                if (Convert.ToString(
-                    dt.Rows[i]["MaPT"])
-                    .Trim()
-                    == txtMaPT.Text.Trim())
-                {
-                    MessageBox.Show(
-                        "Mã phương tiện đã tồn tại!"
-                    );
-
-                    return true;
-                }
-
-                if (Convert.ToString(
-                    dt.Rows[i]["BienSo"])
-                    .Trim()
-                    .ToUpper()
-                    ==
-                    txtBienSo.Text
-                    .Trim()
-                    .ToUpper())
-                {
-                    MessageBox.Show(
-                        "Biển số này đã tồn tại!"
-                    );
-
-                    txtBienSo.Focus();
-
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private bool KiemTraTrungBienSoKhiSua()
-        {
-            DataTable dt =
-                kn.GetData(
-                    "dbo.sp_PHUONGTIEN_DanhSach"
-                );
-
-            for (int i = 0;
-                i < dt.Rows.Count;
-                i++)
-            {
-                string maPT =
-                    Convert.ToString(
-                        dt.Rows[i]["MaPT"]
-                    ).Trim();
-
-                string bienSo =
-                    Convert.ToString(
-                        dt.Rows[i]["BienSo"]
-                    ).Trim();
-
-                if (maPT != txtMaPT.Text.Trim())
-                {
-                    if (bienSo.ToUpper()
-                        ==
-                        txtBienSo.Text
-                        .Trim()
-                        .ToUpper())
-                    {
-                        MessageBox.Show(
-                            "Biển số này đã tồn tại!"
-                        );
-
-                        txtBienSo.Focus();
-
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         private object MaKhachHangDaChon()
@@ -338,43 +236,6 @@ namespace QLGuiXe.Forms
             return cboKhachHang.SelectedValue;
         }
 
-        private SqlParameter[] LayThamSo()
-        {
-            object maKhachHang =
-                MaKhachHangDaChon();
-
-            if (maKhachHang == null)
-            {
-                maKhachHang =
-                    DBNull.Value;
-            }
-
-            SqlParameter[] thamSo =
-            {
-                new SqlParameter(
-                    "@MaPT",
-                    txtMaPT.Text.Trim()
-                ),
-
-                new SqlParameter(
-                    "@BienSo",
-                    txtBienSo.Text.Trim()
-                ),
-
-                new SqlParameter(
-                    "@LoaiXe",
-                    cboLoaiXe.Text
-                ),
-
-                new SqlParameter(
-                    "@MaKH",
-                    maKhachHang
-                )
-            };
-
-            return thamSo;
-        }
-
         private void btnThem_Click(
             object sender,
             EventArgs e)
@@ -386,11 +247,6 @@ namespace QLGuiXe.Forms
 
             try
             {
-                if (KiemTraTrungPhuongTien() == true)
-                {
-                    return;
-                }
-
                 kn.Execute(
                     "dbo.sp_PHUONGTIEN_Them",
                     LayThamSo()
@@ -401,7 +257,6 @@ namespace QLGuiXe.Forms
                 );
 
                 LoadDanhSach();
-
                 LamMoiNhapLieu();
             }
             catch (Exception ex)
@@ -430,11 +285,6 @@ namespace QLGuiXe.Forms
 
             try
             {
-                if (KiemTraTrungBienSoKhiSua() == true)
-                {
-                    return;
-                }
-
                 kn.Execute(
                     "dbo.sp_PHUONGTIEN_Sua",
                     LayThamSo()
@@ -445,7 +295,6 @@ namespace QLGuiXe.Forms
                 );
 
                 LoadDanhSach();
-
                 LamMoiNhapLieu();
             }
             catch (Exception ex)
@@ -491,40 +340,57 @@ namespace QLGuiXe.Forms
                 string noiDung =
                     "";
 
-                for (int i = 0;
-                    i < dt.Rows.Count;
-                    i++)
+                foreach (DataRow row in dt.Rows)
                 {
-                    DataRow row =
-                        dt.Rows[i];
+                    string thoiGianVao =
+                        "Chưa xác định";
+
+                    string trangThai =
+                        "";
+
+                    string tienGui =
+                        "Chưa tính";
+
+                    if (row["ThoiGianVao"]
+                        != DBNull.Value)
+                    {
+                        thoiGianVao =
+                            Convert.ToDateTime(
+                                row["ThoiGianVao"]
+                            )
+                            .ToString(
+                                "dd/MM/yyyy HH:mm"
+                            );
+                    }
+
+                    if (row["TrangThai"]
+                        != DBNull.Value)
+                    {
+                        trangThai =
+                            Convert.ToString(
+                                row["TrangThai"]
+                            );
+                    }
+
+                    if (row["TienGui"]
+                        != DBNull.Value)
+                    {
+                        tienGui =
+                            Convert.ToDecimal(
+                                row["TienGui"]
+                            )
+                            .ToString(
+                                "#,##0 ₫"
+                            );
+                    }
 
                     noiDung +=
-                        Convert.ToDateTime(
-                            row["ThoiGianVao"]
-                        ).ToString(
-                            "dd/MM/yyyy HH:mm"
-                        );
-
-                    noiDung +=
-                        " - ";
-
-                    noiDung +=
-                        Convert.ToString(
-                            row["TrangThai"]
-                        );
-
-                    noiDung +=
-                        " - ";
-
-                    noiDung +=
-                        Convert.ToDecimal(
-                            row["TienGui"]
-                        ).ToString(
-                            "#,##0 ₫"
-                        );
-
-                    noiDung +=
-                        Environment.NewLine;
+                        thoiGianVao
+                        + " - "
+                        + trangThai
+                        + " - "
+                        + tienGui
+                        + Environment.NewLine;
                 }
 
                 MessageBox.Show(
@@ -550,55 +416,78 @@ namespace QLGuiXe.Forms
 
             try
             {
-                DataRowView dongDuLieu =
+                object duLieu =
                     dgvPhuongTien.Rows[e.RowIndex]
-                    .DataBoundItem
-                    as DataRowView;
+                    .DataBoundItem;
+
+                if (duLieu == null)
+                {
+                    return;
+                }
+
+                DataRowView dongDuLieu =
+                    duLieu as DataRowView;
 
                 if (dongDuLieu == null)
                 {
                     return;
                 }
 
-                txtMaPT.Text =
-                    Convert.ToString(
-                        dongDuLieu["MaPT"]
-                    );
+                if (dongDuLieu["MaPT"]
+                    != DBNull.Value)
+                {
+                    txtMaPT.Text =
+                        Convert.ToString(
+                            dongDuLieu["MaPT"]
+                        );
+                }
+                else
+                {
+                    txtMaPT.Clear();
+                }
 
-                txtBienSo.Text =
-                    Convert.ToString(
-                        dongDuLieu["BienSo"]
-                    );
+                if (dongDuLieu["BienSo"]
+                    != DBNull.Value)
+                {
+                    txtBienSo.Text =
+                        Convert.ToString(
+                            dongDuLieu["BienSo"]
+                        );
+                }
+                else
+                {
+                    txtBienSo.Clear();
+                }
 
-                cboLoaiXe.Text =
-                    Convert.ToString(
-                        dongDuLieu["LoaiXe"]
-                    );
+                if (dongDuLieu["LoaiXe"]
+                    != DBNull.Value)
+                {
+                    cboLoaiXe.Text =
+                        Convert.ToString(
+                            dongDuLieu["LoaiXe"]
+                        );
+                }
 
                 object maKhachHang =
                     dongDuLieu["MaKH"];
 
-                if (maKhachHang
-                    == DBNull.Value)
+                if (maKhachHang == null
+                    ||
+                    maKhachHang == DBNull.Value
+                    ||
+                    Convert.ToString(
+                        maKhachHang
+                    ) == "")
                 {
                     cboKhachHang.SelectedIndex =
                         0;
                 }
                 else
                 {
-                    if (Convert.ToString(
-                        maKhachHang).Trim() == "")
-                    {
-                        cboKhachHang.SelectedIndex =
-                            0;
-                    }
-                    else
-                    {
-                        cboKhachHang.SelectedValue =
-                            Convert.ToString(
-                                maKhachHang
-                            );
-                    }
+                    cboKhachHang.SelectedValue =
+                        Convert.ToString(
+                            maKhachHang
+                        );
                 }
             }
             catch (Exception ex)
@@ -623,8 +512,7 @@ namespace QLGuiXe.Forms
             }
 
             string tuKhoa =
-                txtTimKiem.Text
-                .Trim()
+                txtTimKiem.Text.Trim()
                 .Replace(
                     "'",
                     "''"
@@ -664,7 +552,6 @@ namespace QLGuiXe.Forms
                 0;
 
             LoadDanhSach();
-
             LamMoiNhapLieu();
         }
 
@@ -673,6 +560,44 @@ namespace QLGuiXe.Forms
             EventArgs e)
         {
             Close();
+        }
+
+        private SqlParameter[] LayThamSo()
+        {
+            object maKhachHang =
+                MaKhachHangDaChon();
+
+            if (maKhachHang == null)
+            {
+                maKhachHang =
+                    DBNull.Value;
+            }
+
+            SqlParameter[] thamSo =
+                new SqlParameter[]
+                {
+                    new SqlParameter(
+                        "@MaPT",
+                        txtMaPT.Text
+                    ),
+
+                    new SqlParameter(
+                        "@BienSo",
+                        txtBienSo.Text.Trim()
+                    ),
+
+                    new SqlParameter(
+                        "@LoaiXe",
+                        cboLoaiXe.Text
+                    ),
+
+                    new SqlParameter(
+                        "@MaKH",
+                        maKhachHang
+                    )
+                };
+
+            return thamSo;
         }
 
         private void BaoLoi(
