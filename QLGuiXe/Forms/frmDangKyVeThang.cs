@@ -18,24 +18,24 @@ namespace QLGuiXe.Forms
             InitializeComponent();
         }
 
-        private void frmDangKyVeThang_Load(object sender, EventArgs e)
+        private void frmDangKyVeThang_Load(
+            object sender,
+            EventArgs e)
         {
             dgvDangKy.ReadOnly = true;
             dgvDangKy.AllowUserToAddRows = false;
+
             dgvDangKy.SelectionMode =
                 DataGridViewSelectionMode.FullRowSelect;
+
             dgvDangKy.AutoSizeColumnsMode =
                 DataGridViewAutoSizeColumnsMode.Fill;
+
             dgvDangKy.MultiSelect = false;
 
-            cboPhuongThuc.Items.AddRange(
-                new object[]
-                {
-                    "TIEN_MAT",
-                    "CHUYEN_KHOAN",
-                    "THE"
-                }
-            );
+            cboPhuongThuc.Items.Add("TIEN_MAT");
+            cboPhuongThuc.Items.Add("CHUYEN_KHOAN");
+            cboPhuongThuc.Items.Add("THE");
 
             cboPhuongThuc.SelectedIndex = 0;
 
@@ -45,8 +45,8 @@ namespace QLGuiXe.Forms
             try
             {
                 TaiKhachHang();
-                TaiTheThang();
                 HienThiDangKy();
+                TaiTheThang();
                 TinhTien();
             }
             catch (Exception ex)
@@ -65,8 +65,7 @@ namespace QLGuiXe.Forms
                     "dbo.sp_DANGKYVETHANG_DanhSach"
                 );
 
-            dgvDangKy.DataSource =
-                dtDangKy;
+            dgvDangKy.DataSource = dtDangKy;
 
             dgvDangKy.Columns["MaDangKy"].HeaderText =
                 "Mã đăng ký";
@@ -145,7 +144,6 @@ namespace QLGuiXe.Forms
             DataTable dt =
                 kn.GetData(
                     "dbo.sp_DANGKYVETHANG_PhuongTien",
-
                     new SqlParameter(
                         "@MaKH",
                         maKhachHang
@@ -167,33 +165,101 @@ namespace QLGuiXe.Forms
 
             if (dt.Rows.Count == 0)
             {
-                cboPhuongTien.SelectedIndex =
-                    -1;
-
                 txtBienSo.Clear();
                 txtLoaiXe.Clear();
-
-                lblDonGiaValue.Text =
-                    "0 ₫";
-
-                lblTongTienValue.Text =
-                    "0 ₫";
             }
             else
             {
-                cboPhuongTien.SelectedIndex =
-                    0;
-
                 HienThiPhuongTienDangChon();
             }
         }
 
         private void TaiTheThang()
         {
-            DataTable dt =
+            DataTable dtThe =
                 kn.GetData(
                     "dbo.sp_DANGKYVETHANG_TheThang"
                 );
+
+            DataTable dtConTrong =
+                dtThe.Clone();
+
+            DateTime ngayBatDau =
+                dtpBatDau.Value.Date;
+
+            DateTime ngayKetThuc =
+                ngayBatDau.AddMonths(
+                    Convert.ToInt32(
+                        nudSoThang.Value
+                    )
+                );
+
+            for (int i = 0;
+                i < dtThe.Rows.Count;
+                i++)
+            {
+                string maThe =
+                    Convert.ToString(
+                        dtThe.Rows[i]["MaThe"]
+                    );
+
+                bool dangDuocSuDung =
+                    false;
+
+                for (int j = 0;
+                    j < dtDangKy.Rows.Count;
+                    j++)
+                {
+                    string maTheDangKy =
+                        Convert.ToString(
+                            dtDangKy.Rows[j]["MaThe"]
+                        );
+
+                    string trangThai =
+                        Convert.ToString(
+                            dtDangKy.Rows[j]["TrangThai"]
+                        );
+
+                    if (maTheDangKy == maThe
+                        &&
+                        trangThai != "HUY")
+                    {
+                        if (dtDangKy.Rows[j]["NgayBatDau"]
+                            != DBNull.Value
+                            &&
+                            dtDangKy.Rows[j]["NgayKetThuc"]
+                            != DBNull.Value)
+                        {
+                            DateTime tuNgay =
+                                Convert.ToDateTime(
+                                    dtDangKy.Rows[j]["NgayBatDau"]
+                                );
+
+                            DateTime denNgay =
+                                Convert.ToDateTime(
+                                    dtDangKy.Rows[j]["NgayKetThuc"]
+                                );
+
+                            if (ngayBatDau < denNgay
+                                &&
+                                tuNgay < ngayKetThuc)
+                            {
+                                dangDuocSuDung =
+                                    true;
+
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (dangDuocSuDung == false)
+                {
+                    dtConTrong.ImportRow(
+                        dtThe.Rows[i]
+                    );
+                }
+            }
 
             cboTheThang.DisplayMember =
                 "MaThe";
@@ -202,7 +268,7 @@ namespace QLGuiXe.Forms
                 "MaThe";
 
             cboTheThang.DataSource =
-                dt;
+                dtConTrong;
         }
 
         private void cboKhachHang_SelectedIndexChanged(
@@ -228,40 +294,69 @@ namespace QLGuiXe.Forms
                 txtHoTen.Clear();
                 txtSoDienThoai.Clear();
 
-                dangTaiPhuongTien = true;
-
                 cboPhuongTien.DataSource =
                     null;
-
-                dangTaiPhuongTien = false;
 
                 txtBienSo.Clear();
                 txtLoaiXe.Clear();
 
-                lblDonGiaValue.Text =
-                    "0 ₫";
+                return;
+            }
 
-                lblTongTienValue.Text =
-                    "0 ₫";
+            if (row["HoTen"] != DBNull.Value)
+            {
+                txtHoTen.Text =
+                    Convert.ToString(
+                        row["HoTen"]
+                    );
+            }
+            else
+            {
+                txtHoTen.Clear();
+            }
+
+            if (row["SoDienThoai"]
+                != DBNull.Value)
+            {
+                txtSoDienThoai.Text =
+                    Convert.ToString(
+                        row["SoDienThoai"]
+                    );
+            }
+            else
+            {
+                txtSoDienThoai.Clear();
+            }
+
+            if (row["MaKH"]
+                == DBNull.Value)
+            {
+                cboPhuongTien.DataSource =
+                    null;
+
+                txtBienSo.Clear();
+                txtLoaiXe.Clear();
 
                 return;
             }
 
-            txtHoTen.Text =
-                Convert.ToString(
-                    row["HoTen"]
-                );
-
-            txtSoDienThoai.Text =
-                Convert.ToString(
-                    row["SoDienThoai"]
-                );
-
-            TaiPhuongTien(
+            string maKH =
                 Convert.ToString(
                     row["MaKH"]
-                )
-            );
+                );
+
+            if (maKH == "")
+            {
+                cboPhuongTien.DataSource =
+                    null;
+
+                txtBienSo.Clear();
+                txtLoaiXe.Clear();
+
+                return;
+            }
+
+            TaiPhuongTien(maKH);
         }
 
         private void cboPhuongTien_SelectedIndexChanged(
@@ -287,24 +382,36 @@ namespace QLGuiXe.Forms
                 txtBienSo.Clear();
                 txtLoaiXe.Clear();
 
-                lblDonGiaValue.Text =
-                    "0 ₫";
-
-                lblTongTienValue.Text =
-                    "0 ₫";
+                TinhTien();
 
                 return;
             }
 
-            txtBienSo.Text =
-                Convert.ToString(
-                    row["BienSo"]
-                );
+            if (row["BienSo"]
+                != DBNull.Value)
+            {
+                txtBienSo.Text =
+                    Convert.ToString(
+                        row["BienSo"]
+                    );
+            }
+            else
+            {
+                txtBienSo.Clear();
+            }
 
-            txtLoaiXe.Text =
-                Convert.ToString(
-                    row["LoaiXe"]
-                );
+            if (row["LoaiXe"]
+                != DBNull.Value)
+            {
+                txtLoaiXe.Text =
+                    Convert.ToString(
+                        row["LoaiXe"]
+                    );
+            }
+            else
+            {
+                txtLoaiXe.Clear();
+            }
 
             TinhTien();
         }
@@ -312,7 +419,8 @@ namespace QLGuiXe.Forms
         private void TinhTien()
         {
             DateTime ngayKetThuc =
-                dtpBatDau.Value.Date.AddMonths(
+                dtpBatDau.Value.Date
+                .AddMonths(
                     Convert.ToInt32(
                         nudSoThang.Value
                     )
@@ -353,10 +461,14 @@ namespace QLGuiXe.Forms
 
             if (dt.Rows.Count > 0)
             {
-                donGia =
-                    Convert.ToDecimal(
-                        dt.Rows[0]["DonGia"]
-                    );
+                if (dt.Rows[0]["DonGia"]
+                    != DBNull.Value)
+                {
+                    donGia =
+                        Convert.ToDecimal(
+                            dt.Rows[0]["DonGia"]
+                        );
+                }
             }
 
             decimal tongTien =
@@ -379,6 +491,7 @@ namespace QLGuiXe.Forms
             EventArgs e)
         {
             TinhTien();
+            TaiTheThang();
         }
 
         private void nudSoThang_ValueChanged(
@@ -386,9 +499,12 @@ namespace QLGuiXe.Forms
             EventArgs e)
         {
             TinhTien();
+            TaiTheThang();
         }
 
-        private bool KiemTraDuLieuDangKy()
+        private void btnDangKy_Click(
+            object sender,
+            EventArgs e)
         {
             if (cboKhachHang.SelectedValue == null)
             {
@@ -398,173 +514,61 @@ namespace QLGuiXe.Forms
 
                 cboKhachHang.Focus();
 
-                return false;
+                return;
             }
 
             if (cboPhuongTien.SelectedValue == null)
             {
                 MessageBox.Show(
-                    "Khách hàng chưa có phương tiện."
-                    + Environment.NewLine
-                    + "Vui lòng thêm phương tiện trước khi đăng ký!"
+                    "Vui lòng chọn phương tiện!"
                 );
 
-                return false;
+                cboPhuongTien.Focus();
+
+                return;
             }
 
             if (cboTheThang.SelectedValue == null)
             {
                 MessageBox.Show(
-                    "Vui lòng chọn thẻ tháng!"
+                    "Không còn thẻ tháng trống trong thời gian đã chọn!"
                 );
 
                 cboTheThang.Focus();
 
-                return false;
-            }
-
-            return true;
-        }
-
-        private void btnThemKhachHang_Click(
-            object sender,
-            EventArgs e)
-        {
-            frmKhachHang frm =
-                new frmKhachHang();
-
-            frm.ShowDialog();
-
-            try
-            {
-                TaiKhachHang();
-
-                dangTaiKhachHang = true;
-
-                cboKhachHang.SelectedIndex =
-                    -1;
-
-                dangTaiKhachHang = false;
-
-                dangTaiPhuongTien = true;
-
-                cboPhuongTien.DataSource =
-                    null;
-
-                dangTaiPhuongTien = false;
-
-                txtHoTen.Clear();
-                txtSoDienThoai.Clear();
-                txtBienSo.Clear();
-                txtLoaiXe.Clear();
-
-                lblDonGiaValue.Text =
-                    "0 ₫";
-
-                lblTongTienValue.Text =
-                    "0 ₫";
-
-                cboKhachHang.Focus();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    "Lỗi tải lại khách hàng: "
-                    + ex.Message
-                );
-            }
-        }
-
-        private void btnThemPhuongTien_Click(
-            object sender,
-            EventArgs e)
-        {
-            if (cboKhachHang.SelectedValue == null)
-            {
-                MessageBox.Show(
-                    "Vui lòng chọn khách hàng trước!"
-                );
-
-                cboKhachHang.Focus();
-
                 return;
             }
 
-            string maKhachHang =
+            string maKH =
                 Convert.ToString(
                     cboKhachHang.SelectedValue
                 );
 
-            frmPhuongTien frm =
-                new frmPhuongTien(
-                    maKhachHang
+            string maPT =
+                Convert.ToString(
+                    cboPhuongTien.SelectedValue
                 );
 
-            frm.ShowDialog();
-
-            try
-            {
-                TaiPhuongTien(
-                    maKhachHang
+            string maThe =
+                Convert.ToString(
+                    cboTheThang.SelectedValue
                 );
 
-                if (cboPhuongTien.Items.Count > 0)
-                {
-                    cboPhuongTien.SelectedIndex =
-                        cboPhuongTien.Items.Count - 1;
-
-                    HienThiPhuongTienDangChon();
-                }
-                else
-                {
-                    cboPhuongTien.SelectedIndex =
-                        -1;
-
-                    txtBienSo.Clear();
-                    txtLoaiXe.Clear();
-
-                    lblDonGiaValue.Text =
-                        "0 ₫";
-
-                    lblTongTienValue.Text =
-                        "0 ₫";
-
-                    MessageBox.Show(
-                        "Khách hàng này chưa có phương tiện!"
-                    );
-                }
-            }
-            catch (Exception ex)
+            if (maKH == ""
+                || maPT == ""
+                || maThe == "")
             {
                 MessageBox.Show(
-                    "Lỗi tải lại phương tiện: "
-                    + ex.Message
+                    "Thông tin đăng ký không hợp lệ!"
                 );
-            }
-        }
 
-        private void btnDangKy_Click(
-            object sender,
-            EventArgs e)
-        {
-            if (KiemTraDuLieuDangKy() == false)
-            {
                 return;
             }
 
             TaoDangKy(
-                Convert.ToString(
-                    cboKhachHang.SelectedValue
-                ),
-
-                Convert.ToString(
-                    cboPhuongTien.SelectedValue
-                ),
-
-                Convert.ToString(
-                    cboTheThang.SelectedValue
-                ),
-
+                maKH,
+                maPT,
+                maThe,
                 dtpBatDau.Value.Date
             );
         }
@@ -643,8 +647,20 @@ namespace QLGuiXe.Forms
                     tongTien
                 );
 
+                decimal soTien = 0;
+
+                if (tongTien.Value != null
+                    &&
+                    tongTien.Value != DBNull.Value)
+                {
+                    soTien =
+                        Convert.ToDecimal(
+                            tongTien.Value
+                        );
+                }
+
                 MessageBox.Show(
-                    "Đăng ký thành công!"
+                    "Đăng ký vé tháng thành công!"
                     + Environment.NewLine
                     + "Mã đăng ký: "
                     + Convert.ToString(
@@ -652,9 +668,11 @@ namespace QLGuiXe.Forms
                     )
                     + Environment.NewLine
                     + "Tổng tiền: "
-                    + Convert.ToDecimal(
-                        tongTien.Value
-                    ).ToString("#,##0 ₫")
+                    + soTien.ToString(
+                        "#,##0 ₫"
+                    )
+                    + Environment.NewLine
+                    + "Trạng thái: Chờ thanh toán."
                 );
 
                 HienThiDangKy();
@@ -667,34 +685,6 @@ namespace QLGuiXe.Forms
                     + ex.Message
                 );
             }
-        }
-
-        private DataRow LayDongDangChon()
-        {
-            if (dgvDangKy.SelectedRows.Count == 0)
-            {
-                MessageBox.Show(
-                    "Vui lòng chọn một đăng ký trong danh sách!"
-                );
-
-                return null;
-            }
-
-            DataRowView rowView =
-                dgvDangKy.SelectedRows[0]
-                .DataBoundItem
-                as DataRowView;
-
-            if (rowView == null)
-            {
-                MessageBox.Show(
-                    "Vui lòng chọn một đăng ký trong danh sách!"
-                );
-
-                return null;
-            }
-
-            return rowView.Row;
         }
 
         private void btnThanhToan_Click(
@@ -720,6 +710,25 @@ namespace QLGuiXe.Forms
                 return;
             }
 
+            if (row["MaDangKy"]
+                == DBNull.Value)
+            {
+                MessageBox.Show(
+                    "Không xác định được mã đăng ký!"
+                );
+
+                return;
+            }
+
+            if (PhienDangNhap.MaNhanVien == "")
+            {
+                MessageBox.Show(
+                    "Không xác định được nhân viên thanh toán!"
+                );
+
+                return;
+            }
+
             SqlParameter maThanhToan =
                 new SqlParameter(
                     "@MaThanhToanMoi",
@@ -737,7 +746,9 @@ namespace QLGuiXe.Forms
 
                     new SqlParameter(
                         "@MaDangKy",
-                        row["MaDangKy"]
+                        Convert.ToString(
+                            row["MaDangKy"]
+                        )
                     ),
 
                     new SqlParameter(
@@ -765,6 +776,8 @@ namespace QLGuiXe.Forms
                     + Convert.ToString(
                         maThanhToan.Value
                     )
+                    + Environment.NewLine
+                    + "Vé tháng đã được kích hoạt."
                 );
 
                 HienThiDangKy();
@@ -802,6 +815,29 @@ namespace QLGuiXe.Forms
                 return;
             }
 
+            if (row["NgayKetThuc"]
+                == DBNull.Value)
+            {
+                MessageBox.Show(
+                    "Không xác định được ngày kết thúc!"
+                );
+
+                return;
+            }
+
+            if (row["MaKH"] == DBNull.Value
+                ||
+                row["MaPT"] == DBNull.Value
+                ||
+                row["MaThe"] == DBNull.Value)
+            {
+                MessageBox.Show(
+                    "Thông tin đăng ký không đầy đủ!"
+                );
+
+                return;
+            }
+
             DateTime ngayBatDau =
                 Convert.ToDateTime(
                     row["NgayKetThuc"]
@@ -830,6 +866,45 @@ namespace QLGuiXe.Forms
             );
         }
 
+        private DataRow LayDongDangChon()
+        {
+            if (dgvDangKy.SelectedRows.Count == 0)
+            {
+                MessageBox.Show(
+                    "Vui lòng chọn một đăng ký trong danh sách!"
+                );
+
+                return null;
+            }
+
+            object duLieu =
+                dgvDangKy.SelectedRows[0]
+                .DataBoundItem;
+
+            if (duLieu == null)
+            {
+                MessageBox.Show(
+                    "Không đọc được thông tin đăng ký!"
+                );
+
+                return null;
+            }
+
+            DataRowView row =
+                duLieu as DataRowView;
+
+            if (row == null)
+            {
+                MessageBox.Show(
+                    "Không đọc được thông tin đăng ký!"
+                );
+
+                return null;
+            }
+
+            return row.Row;
+        }
+
         private void dgvDangKy_CellClick(
             object sender,
             DataGridViewCellEventArgs e)
@@ -842,54 +917,79 @@ namespace QLGuiXe.Forms
             DataGridViewRow row =
                 dgvDangKy.Rows[e.RowIndex];
 
-            cboKhachHang.SelectedValue =
-                Convert.ToString(
-                    row.Cells["MaKH"].Value
-                );
-
-            cboPhuongTien.SelectedValue =
-                Convert.ToString(
-                    row.Cells["MaPT"].Value
-                );
-
-            cboTheThang.SelectedValue =
-                Convert.ToString(
-                    row.Cells["MaThe"].Value
-                );
-
-            DateTime ngayBatDau =
-                Convert.ToDateTime(
-                    row.Cells["NgayBatDau"].Value
-                );
-
-            int soThang =
-                Convert.ToInt32(
-                    row.Cells["SoThang"].Value
-                );
-
-            dtpBatDau.Value =
-                ngayBatDau;
-
-            if (soThang < nudSoThang.Minimum)
+            if (row.Cells["MaKH"].Value != null
+                &&
+                row.Cells["MaKH"].Value != DBNull.Value)
             {
-                soThang =
-                    Convert.ToInt32(
-                        nudSoThang.Minimum
+                cboKhachHang.SelectedValue =
+                    Convert.ToString(
+                        row.Cells["MaKH"].Value
                     );
             }
 
-            if (soThang > nudSoThang.Maximum)
+            if (row.Cells["MaPT"].Value != null
+                &&
+                row.Cells["MaPT"].Value != DBNull.Value)
             {
-                soThang =
-                    Convert.ToInt32(
-                        nudSoThang.Maximum
+                cboPhuongTien.SelectedValue =
+                    Convert.ToString(
+                        row.Cells["MaPT"].Value
                     );
             }
 
-            nudSoThang.Value =
-                soThang;
+            if (row.Cells["MaThe"].Value != null
+                &&
+                row.Cells["MaThe"].Value != DBNull.Value)
+            {
+                cboTheThang.SelectedValue =
+                    Convert.ToString(
+                        row.Cells["MaThe"].Value
+                    );
+            }
+
+            if (row.Cells["NgayBatDau"].Value != null
+                &&
+                row.Cells["NgayBatDau"].Value != DBNull.Value)
+            {
+                dtpBatDau.Value =
+                    Convert.ToDateTime(
+                        row.Cells["NgayBatDau"].Value
+                    );
+            }
+
+            if (row.Cells["SoThang"].Value != null
+                &&
+                row.Cells["SoThang"].Value != DBNull.Value)
+            {
+                int soThang =
+                    Convert.ToInt32(
+                        row.Cells["SoThang"].Value
+                    );
+
+                if (soThang
+                    < nudSoThang.Minimum)
+                {
+                    soThang =
+                        Convert.ToInt32(
+                            nudSoThang.Minimum
+                        );
+                }
+
+                if (soThang
+                    > nudSoThang.Maximum)
+                {
+                    soThang =
+                        Convert.ToInt32(
+                            nudSoThang.Maximum
+                        );
+                }
+
+                nudSoThang.Value =
+                    soThang;
+            }
 
             TinhTien();
+            TaiTheThang();
         }
 
         private void btnLamMoi_Click(
@@ -899,28 +999,7 @@ namespace QLGuiXe.Forms
             try
             {
                 HienThiDangKy();
-
-                dangTaiKhachHang = true;
-
-                cboKhachHang.SelectedIndex =
-                    -1;
-
-                dangTaiKhachHang = false;
-
-                dangTaiPhuongTien = true;
-
-                cboPhuongTien.DataSource =
-                    null;
-
-                dangTaiPhuongTien = false;
-
-                cboTheThang.SelectedIndex =
-                    -1;
-
-                txtHoTen.Clear();
-                txtSoDienThoai.Clear();
-                txtBienSo.Clear();
-                txtLoaiXe.Clear();
+                TaiKhachHang();
 
                 dtpBatDau.Value =
                     DateTime.Today;
@@ -928,21 +1007,8 @@ namespace QLGuiXe.Forms
                 nudSoThang.Value =
                     1;
 
-                lblNgayKetThucValue.Text =
-                    "";
-
-                lblDonGiaValue.Text =
-                    "0 ₫";
-
-                lblTongTienValue.Text =
-                    "0 ₫";
-
-                cboPhuongThuc.SelectedIndex =
-                    0;
-
-                dgvDangKy.ClearSelection();
-
-                cboKhachHang.Focus();
+                TaiTheThang();
+                TinhTien();
             }
             catch (Exception ex)
             {
@@ -951,6 +1017,59 @@ namespace QLGuiXe.Forms
                     + ex.Message
                 );
             }
+        }
+
+        private void btnThemKhachHang_Click(
+            object sender,
+            EventArgs e)
+        {
+            frmKhachHang frm =
+                new frmKhachHang();
+
+            frm.ShowDialog();
+
+            TaiKhachHang();
+        }
+
+        private void btnThemPhuongTien_Click(
+            object sender,
+            EventArgs e)
+        {
+            if (cboKhachHang.SelectedValue == null)
+            {
+                MessageBox.Show(
+                    "Vui lòng chọn khách hàng trước khi thêm phương tiện!"
+                );
+
+                cboKhachHang.Focus();
+
+                return;
+            }
+
+            string maKhachHang =
+                Convert.ToString(
+                    cboKhachHang.SelectedValue
+                );
+
+            if (maKhachHang == "")
+            {
+                MessageBox.Show(
+                    "Không xác định được khách hàng!"
+                );
+
+                return;
+            }
+
+            frmPhuongTien frm =
+                new frmPhuongTien(
+                    maKhachHang
+                );
+
+            frm.ShowDialog();
+
+            TaiPhuongTien(
+                maKhachHang
+            );
         }
 
         private void btnThoat_Click(

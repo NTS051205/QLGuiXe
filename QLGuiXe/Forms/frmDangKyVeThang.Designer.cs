@@ -474,7 +474,7 @@ namespace QLGuiXe.Forms
                 "lblTheThang";
 
             this.lblTheThang.Text =
-                "Thẻ tháng";
+                "Thẻ tháng còn trống";
 
             // 
             // cboTheThang
