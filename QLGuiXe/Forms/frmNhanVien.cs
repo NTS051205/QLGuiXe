@@ -1,15 +1,14 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace QLGuiXe.Forms
 {
     public partial class frmNhanVien : Form
     {
-        private readonly KETNOICSDL kn = new KETNOICSDL();
-        private DataTable dtNhanVien = new DataTable();
+        KETNOICSDL kn = new KETNOICSDL();
+        DataTable dtNhanVien = new DataTable();
 
         public frmNhanVien()
         {
@@ -18,15 +17,23 @@ namespace QLGuiXe.Forms
 
         private void frmNhanVien_Load(object sender, EventArgs e)
         {
-            cboTrangThai.Items.AddRange(new object[] { "HOAT_DONG", "TAM_NGHI", "VO_HIEU" });
-            cboLocTrangThai.Items.AddRange(new object[] { "Tất cả", "HOAT_DONG", "TAM_NGHI", "VO_HIEU" });
+            cboTrangThai.Items.AddRange(
+                new object[] { "HOAT_DONG", "TAM_NGHI", "VO_HIEU" }
+            );
+
+            cboLocTrangThai.Items.AddRange(
+                new object[] { "Tất cả", "HOAT_DONG", "TAM_NGHI", "VO_HIEU" }
+            );
+
             cboTrangThai.SelectedIndex = 0;
             cboLocTrangThai.SelectedIndex = 0;
 
             dgvNhanVien.ReadOnly = true;
             dgvNhanVien.AllowUserToAddRows = false;
-            dgvNhanVien.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvNhanVien.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvNhanVien.SelectionMode =
+                DataGridViewSelectionMode.FullRowSelect;
+            dgvNhanVien.AutoSizeColumnsMode =
+                DataGridViewAutoSizeColumnsMode.Fill;
             dgvNhanVien.MultiSelect = false;
 
             HienThiNhanVien();
@@ -37,42 +44,105 @@ namespace QLGuiXe.Forms
         {
             try
             {
-                dtNhanVien = kn.GetData("dbo.sp_NHANVIEN_DanhSach");
-                dgvNhanVien.DataSource = dtNhanVien;
+                dtNhanVien =
+                    kn.GetData("dbo.sp_NHANVIEN_DanhSach");
 
-                dgvNhanVien.Columns["MaNV"].HeaderText = "Mã nhân viên";
-                dgvNhanVien.Columns["HoTen"].HeaderText = "Họ tên";
-                dgvNhanVien.Columns["SoDienThoai"].HeaderText = "Số điện thoại";
-                dgvNhanVien.Columns["TrangThai"].HeaderText = "Trạng thái";
+                dgvNhanVien.DataSource =
+                    dtNhanVien;
 
-                LocDanhSach(this, EventArgs.Empty);
+                dgvNhanVien.Columns["MaNV"].HeaderText =
+                    "Mã nhân viên";
+
+                dgvNhanVien.Columns["HoTen"].HeaderText =
+                    "Họ tên";
+
+                dgvNhanVien.Columns["SoDienThoai"].HeaderText =
+                    "Số điện thoại";
+
+                dgvNhanVien.Columns["TrangThai"].HeaderText =
+                    "Trạng thái";
+
+                LocDanhSach(
+                    this,
+                    EventArgs.Empty
+                );
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi tải nhân viên: " + ex.Message);
+                MessageBox.Show(
+                    "Lỗi tải nhân viên: "
+                    + ex.Message
+                );
             }
         }
 
         private string LayMaMoi()
         {
-            DataTable dt = kn.GetData("dbo.sp_NHANVIEN_MaMoi");
-            return Convert.ToString(dt.Rows[0]["MaMoi"]);
+            DataTable dt =
+                kn.GetData(
+                    "dbo.sp_NHANVIEN_MaMoi"
+                );
+
+            return Convert.ToString(
+                dt.Rows[0]["MaMoi"]
+            );
+        }
+
+        private bool KiemTraSoDienThoai()
+        {
+            string soDienThoai =
+                txtSoDienThoai.Text.Trim();
+
+            if (soDienThoai.Length < 9 ||
+                soDienThoai.Length > 11)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < soDienThoai.Length; i++)
+            {
+                if (soDienThoai[i] < '0' ||
+                    soDienThoai[i] > '9')
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private bool KiemTraDuLieu()
         {
-            if (string.IsNullOrWhiteSpace(txtHoTen.Text))
+            if (txtHoTen.Text.Trim() == "")
             {
-                MessageBox.Show("Vui lòng nhập họ tên nhân viên!");
+                MessageBox.Show(
+                    "Vui lòng nhập họ tên nhân viên!"
+                );
+
                 txtHoTen.Focus();
+
                 return false;
             }
 
-            string soDienThoai = txtSoDienThoai.Text.Trim();
-            if (soDienThoai.Length < 9 || soDienThoai.Length > 11 || !soDienThoai.All(char.IsDigit))
+            if (txtSoDienThoai.Text.Trim() == "")
             {
-                MessageBox.Show("Số điện thoại phải gồm 9 đến 11 chữ số!");
+                MessageBox.Show(
+                    "Vui lòng nhập số điện thoại!"
+                );
+
                 txtSoDienThoai.Focus();
+
+                return false;
+            }
+
+            if (KiemTraSoDienThoai() == false)
+            {
+                MessageBox.Show(
+                    "Số điện thoại phải gồm 9 đến 11 chữ số!"
+                );
+
+                txtSoDienThoai.Focus();
+
                 return false;
             }
 
@@ -81,141 +151,296 @@ namespace QLGuiXe.Forms
 
         private SqlParameter[] LayThamSo()
         {
-            return new SqlParameter[]
+            SqlParameter[] thamSo =
             {
-                new SqlParameter("@MaNV", txtMaNV.Text.Trim()),
-                new SqlParameter("@HoTen", txtHoTen.Text.Trim()),
-                new SqlParameter("@SoDienThoai", txtSoDienThoai.Text.Trim()),
-                new SqlParameter("@TrangThai", cboTrangThai.Text)
+                new SqlParameter(
+                    "@MaNV",
+                    txtMaNV.Text.Trim()
+                ),
+
+                new SqlParameter(
+                    "@HoTen",
+                    txtHoTen.Text.Trim()
+                ),
+
+                new SqlParameter(
+                    "@SoDienThoai",
+                    txtSoDienThoai.Text.Trim()
+                ),
+
+                new SqlParameter(
+                    "@TrangThai",
+                    cboTrangThai.Text
+                )
             };
+
+            return thamSo;
         }
 
-        private void btnThem_Click(object sender, EventArgs e)
+        private void btnThem_Click(
+            object sender,
+            EventArgs e)
         {
-            if (!KiemTraDuLieu()) return;
-
-            try
+            if (KiemTraDuLieu() == false)
             {
-                kn.Execute("dbo.sp_NHANVIEN_Them", LayThamSo());
-                MessageBox.Show("Thêm nhân viên thành công!");
-                HienThiNhanVien();
-                LamMoiDuLieu();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi thêm: " + ex.Message);
-            }
-        }
-
-        private void btnSua_Click(object sender, EventArgs e)
-        {
-            if (dgvNhanVien.CurrentRow == null)
-            {
-                MessageBox.Show("Vui lòng chọn nhân viên cần sửa!");
-                return;
-            }
-            if (!KiemTraDuLieu()) return;
-
-            try
-            {
-                kn.Execute("dbo.sp_NHANVIEN_Sua", LayThamSo());
-                MessageBox.Show("Sửa nhân viên thành công!");
-                HienThiNhanVien();
-                LamMoiDuLieu();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi sửa: " + ex.Message);
-            }
-        }
-
-        private void btnVoHieu_Click(object sender, EventArgs e)
-        {
-            if (dgvNhanVien.CurrentRow == null)
-            {
-                MessageBox.Show("Vui lòng chọn nhân viên cần vô hiệu hóa!");
                 return;
             }
 
-            if (MessageBox.Show("Vô hiệu hóa nhân viên đã chọn?", "Xác nhận",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-
             try
             {
-                kn.Execute("dbo.sp_NHANVIEN_VoHieu",
-                    new SqlParameter("@MaNV", txtMaNV.Text));
+                kn.Execute(
+                    "dbo.sp_NHANVIEN_Them",
+                    LayThamSo()
+                );
+
+                MessageBox.Show(
+                    "Thêm nhân viên thành công!"
+                );
+
                 HienThiNhanVien();
                 LamMoiDuLieu();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi vô hiệu hóa: " + ex.Message);
+                MessageBox.Show(
+                    "Lỗi thêm: "
+                    + ex.Message
+                );
             }
         }
 
-        private void btnXem_Click(object sender, EventArgs e)
+        private void btnSua_Click(
+            object sender,
+            EventArgs e)
         {
             if (dgvNhanVien.CurrentRow == null)
             {
-                MessageBox.Show("Vui lòng chọn nhân viên cần xem!");
+                MessageBox.Show(
+                    "Vui lòng chọn nhân viên cần sửa!"
+                );
+
+                return;
+            }
+
+            if (KiemTraDuLieu() == false)
+            {
+                return;
+            }
+
+            try
+            {
+                kn.Execute(
+                    "dbo.sp_NHANVIEN_Sua",
+                    LayThamSo()
+                );
+
+                MessageBox.Show(
+                    "Sửa nhân viên thành công!"
+                );
+
+                HienThiNhanVien();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi sửa: "
+                    + ex.Message
+                );
+            }
+        }
+
+        private void btnVoHieu_Click(
+            object sender,
+            EventArgs e)
+        {
+            if (dgvNhanVien.CurrentRow == null)
+            {
+                MessageBox.Show(
+                    "Vui lòng chọn nhân viên cần vô hiệu hóa!"
+                );
+
+                return;
+            }
+
+            DialogResult ketQua =
+                MessageBox.Show(
+                    "Vô hiệu hóa nhân viên đã chọn?",
+                    "Xác nhận",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+            if (ketQua != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                kn.Execute(
+                    "dbo.sp_NHANVIEN_VoHieu",
+                    new SqlParameter(
+                        "@MaNV",
+                        txtMaNV.Text
+                    )
+                );
+
+                MessageBox.Show(
+                    "Vô hiệu hóa nhân viên thành công!"
+                );
+
+                HienThiNhanVien();
+                LamMoiDuLieu();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi vô hiệu hóa: "
+                    + ex.Message
+                );
+            }
+        }
+
+        private void btnXem_Click(
+            object sender,
+            EventArgs e)
+        {
+            if (dgvNhanVien.CurrentRow == null)
+            {
+                MessageBox.Show(
+                    "Vui lòng chọn nhân viên cần xem!"
+                );
+
                 return;
             }
 
             MessageBox.Show(
-                "Mã nhân viên: " + txtMaNV.Text + Environment.NewLine +
-                "Họ tên: " + txtHoTen.Text + Environment.NewLine +
-                "Số điện thoại: " + txtSoDienThoai.Text + Environment.NewLine +
-                "Trạng thái: " + cboTrangThai.Text,
-                "Chi tiết nhân viên");
+                "Mã nhân viên: "
+                + txtMaNV.Text
+                + Environment.NewLine
+                + "Họ tên: "
+                + txtHoTen.Text
+                + Environment.NewLine
+                + "Số điện thoại: "
+                + txtSoDienThoai.Text
+                + Environment.NewLine
+                + "Trạng thái: "
+                + cboTrangThai.Text,
+                "Chi tiết nhân viên"
+            );
         }
 
-        private void dgvNhanVien_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvNhanVien_CellClick(
+            object sender,
+            DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0) return;
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
 
-            DataGridViewRow row = dgvNhanVien.Rows[e.RowIndex];
-            txtMaNV.Text = Convert.ToString(row.Cells["MaNV"].Value);
-            txtHoTen.Text = Convert.ToString(row.Cells["HoTen"].Value);
-            txtSoDienThoai.Text = Convert.ToString(row.Cells["SoDienThoai"].Value);
-            cboTrangThai.Text = Convert.ToString(row.Cells["TrangThai"].Value);
+            DataGridViewRow row =
+                dgvNhanVien.Rows[e.RowIndex];
+
+            txtMaNV.Text =
+                Convert.ToString(
+                    row.Cells["MaNV"].Value
+                );
+
+            txtHoTen.Text =
+                Convert.ToString(
+                    row.Cells["HoTen"].Value
+                );
+
+            txtSoDienThoai.Text =
+                Convert.ToString(
+                    row.Cells["SoDienThoai"].Value
+                );
+
+            cboTrangThai.Text =
+                Convert.ToString(
+                    row.Cells["TrangThai"].Value
+                );
         }
 
         private void LamMoiDuLieu()
         {
-            try { txtMaNV.Text = LayMaMoi(); }
-            catch { txtMaNV.Clear(); }
+            try
+            {
+                txtMaNV.Text =
+                    LayMaMoi();
+            }
+            catch
+            {
+                txtMaNV.Clear();
+            }
 
             txtHoTen.Clear();
             txtSoDienThoai.Clear();
+
             cboTrangThai.SelectedIndex = 0;
+
             dgvNhanVien.ClearSelection();
+
             txtHoTen.Focus();
         }
 
-        private void LocDanhSach(object sender, EventArgs e)
+        private void LocDanhSach(
+            object sender,
+            EventArgs e)
         {
-            if (dtNhanVien.Columns.Count == 0) return;
+            if (dtNhanVien.Columns.Count == 0)
+            {
+                return;
+            }
 
-            string tuKhoa = txtTimKiem.Text.Trim().Replace("'", "''");
-            string dieuKien = "(MaNV LIKE '%" + tuKhoa + "%' OR HoTen LIKE '%" + tuKhoa
-                + "%' OR SoDienThoai LIKE '%" + tuKhoa + "%')";
+            string tuKhoa =
+                txtTimKiem.Text
+                .Trim()
+                .Replace("'", "''");
+
+            string dieuKien =
+                "(MaNV LIKE '%"
+                + tuKhoa
+                + "%' OR HoTen LIKE '%"
+                + tuKhoa
+                + "%' OR SoDienThoai LIKE '%"
+                + tuKhoa
+                + "%')";
 
             if (cboLocTrangThai.SelectedIndex > 0)
-                dieuKien += " AND TrangThai='" + cboLocTrangThai.Text + "'";
+            {
+                dieuKien +=
+                    " AND TrangThai='"
+                    + cboLocTrangThai.Text
+                    + "'";
+            }
 
-            dtNhanVien.DefaultView.RowFilter = dieuKien;
-            lblTongSo.Text = "Tổng số: " + dtNhanVien.DefaultView.Count + " bản ghi";
+            dtNhanVien.DefaultView.RowFilter =
+                dieuKien;
+
+            lblTongSo.Text =
+                "Tổng số: "
+                + dtNhanVien.DefaultView.Count
+                + " bản ghi";
         }
 
-        private void btnLamMoi_Click(object sender, EventArgs e)
+        private void btnLamMoi_Click(
+            object sender,
+            EventArgs e)
         {
             txtTimKiem.Clear();
+
             cboLocTrangThai.SelectedIndex = 0;
+
             HienThiNhanVien();
             LamMoiDuLieu();
         }
 
-        private void btnThoat_Click(object sender, EventArgs e)
+        private void btnThoat_Click(
+            object sender,
+            EventArgs e)
         {
             Close();
         }
