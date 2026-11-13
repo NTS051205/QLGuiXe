@@ -329,11 +329,9 @@ namespace QLGuiXe.Forms
             }
         }
 
-        private void btnXoa_Click(
-            object sender,
-            EventArgs e)
+        private void btnXoa_Click(object sender, EventArgs e)
         {
-            if (dgvKhachHang.SelectedRows.Count == 0)
+            if (dgvKhachHang.CurrentRow == null)
             {
                 MessageBox.Show(
                     "Vui lòng chọn khách hàng cần xóa!"
@@ -342,15 +340,12 @@ namespace QLGuiXe.Forms
                 return;
             }
 
-            DialogResult ketQua =
-                MessageBox.Show(
-                    "Bạn có chắc muốn xóa khách hàng này không?",
-                    "Xác nhận",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question
-                );
-
-            if (ketQua == DialogResult.No)
+            if (MessageBox.Show(
+                "Xóa khách hàng đã chọn?",
+                "Xác nhận",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+                ) != DialogResult.Yes)
             {
                 return;
             }
@@ -359,10 +354,9 @@ namespace QLGuiXe.Forms
             {
                 kn.Execute(
                     "dbo.sp_KHACHHANG_Xoa",
-
                     new SqlParameter(
                         "@MaKH",
-                        txtMaKH.Text.Trim()
+                        txtMaKH.Text
                     )
                 );
 
@@ -373,10 +367,29 @@ namespace QLGuiXe.Forms
                 HienThiKhachHang();
                 LamMoiDuLieu();
             }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 547)
+                {
+                    MessageBox.Show(
+                        "Không thể xóa khách hàng này vì khách hàng đã có phương tiện hoặc dữ liệu liên quan!",
+                        "Không thể xóa",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                }
+                else
+                {
+                    MessageBox.Show(
+                        "Lỗi xóa khách hàng: "
+                        + ex.Message
+                    );
+                }
+            }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Không thể xóa khách hàng: "
+                    "Lỗi xóa khách hàng: "
                     + ex.Message
                 );
             }
