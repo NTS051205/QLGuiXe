@@ -470,6 +470,11 @@ namespace QLGuiXe.Forms
             this.Load +=
                 new System.EventHandler(this.frmXeVao_Load);
 
+            this.FormClosed +=
+                new System.Windows.Forms.FormClosedEventHandler(
+                    this.frmXeVao_FormClosed
+                );
+
             ((System.ComponentModel.ISupportInitialize)(this.dgvXeDangGui)).EndInit();
 
             this.ResumeLayout(false);
