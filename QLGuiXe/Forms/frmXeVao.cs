@@ -9,7 +9,7 @@ namespace QLGuiXe.Forms
     public partial class frmXeVao : Form
     {
         KETNOICSDL kn = new KETNOICSDL();
-        Timer dongHo;
+        Timer? dongHo;
 
         public frmXeVao()
         {
@@ -269,7 +269,7 @@ namespace QLGuiXe.Forms
                 return;
             }
 
-            DataRowView row =
+            DataRowView? row =
                 cboKhuVuc.SelectedItem
                 as DataRowView;
 
@@ -408,7 +408,7 @@ namespace QLGuiXe.Forms
                 return;
             }
 
-            DataRowView khuVuc =
+            DataRowView? khuVuc =
                 cboKhuVuc.SelectedItem
                 as DataRowView;
 
