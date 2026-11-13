@@ -15,19 +15,33 @@ namespace QLGuiXe.Forms
             InitializeComponent();
         }
 
-        private void frmPhanCongCa_Load(object sender, EventArgs e)
+        private void frmPhanCongCa_Load(
+            object sender,
+            EventArgs e)
         {
-            dtpNgayLam.Value = DateTime.Today;
-            dtpTuNgay.Value = DateTime.Today.AddDays(-7);
-            dtpDenNgay.Value = DateTime.Today.AddDays(7);
+            dtpNgayLam.Value =
+                DateTime.Today;
 
-            dgvPhanCong.ReadOnly = true;
-            dgvPhanCong.AllowUserToAddRows = false;
+            dtpTuNgay.Value =
+                DateTime.Today.AddDays(-7);
+
+            dtpDenNgay.Value =
+                DateTime.Today.AddDays(7);
+
+            dgvPhanCong.ReadOnly =
+                true;
+
+            dgvPhanCong.AllowUserToAddRows =
+                false;
+
             dgvPhanCong.SelectionMode =
                 DataGridViewSelectionMode.FullRowSelect;
+
             dgvPhanCong.AutoSizeColumnsMode =
                 DataGridViewAutoSizeColumnsMode.Fill;
-            dgvPhanCong.MultiSelect = false;
+
+            dgvPhanCong.MultiSelect =
+                false;
 
             TaiComboBox();
             HienThiPhanCong();
@@ -37,23 +51,41 @@ namespace QLGuiXe.Forms
         private void TaiComboBox()
         {
             DataTable dtNhanVien =
-                kn.GetData("dbo.sp_PHANCONGCA_NhanVien");
+                kn.GetData(
+                    "dbo.sp_PHANCONGCA_NhanVien"
+                );
 
-            cboNhanVien.DataSource = dtNhanVien;
-            cboNhanVien.DisplayMember = "HoTen";
-            cboNhanVien.ValueMember = "MaNV";
+            cboNhanVien.DataSource =
+                dtNhanVien;
+
+            cboNhanVien.DisplayMember =
+                "HoTen";
+
+            cboNhanVien.ValueMember =
+                "MaNV";
 
             DataTable dtCaLam =
-                kn.GetData("dbo.sp_PHANCONGCA_CaLam");
+                kn.GetData(
+                    "dbo.sp_PHANCONGCA_CaLam"
+                );
 
-            cboCaLam.DataSource = dtCaLam;
-            cboCaLam.DisplayMember = "TenCa";
-            cboCaLam.ValueMember = "MaCa";
+            cboCaLam.DataSource =
+                dtCaLam;
+
+            cboCaLam.DisplayMember =
+                "TenCa";
+
+            cboCaLam.ValueMember =
+                "MaCa";
 
             cboLocNhanVien.Items.Clear();
-            cboLocNhanVien.Items.Add("Tất cả");
+            cboLocNhanVien.Items.Add(
+                "Tất cả"
+            );
 
-            for (int i = 0; i < dtNhanVien.Rows.Count; i++)
+            for (int i = 0;
+                i < dtNhanVien.Rows.Count;
+                i++)
             {
                 cboLocNhanVien.Items.Add(
                     Convert.ToString(
@@ -62,12 +94,17 @@ namespace QLGuiXe.Forms
                 );
             }
 
-            cboLocNhanVien.SelectedIndex = 0;
+            cboLocNhanVien.SelectedIndex =
+                0;
 
             cboLocCaLam.Items.Clear();
-            cboLocCaLam.Items.Add("Tất cả");
+            cboLocCaLam.Items.Add(
+                "Tất cả"
+            );
 
-            for (int i = 0; i < dtCaLam.Rows.Count; i++)
+            for (int i = 0;
+                i < dtCaLam.Rows.Count;
+                i++)
             {
                 cboLocCaLam.Items.Add(
                     Convert.ToString(
@@ -76,7 +113,8 @@ namespace QLGuiXe.Forms
                 );
             }
 
-            cboLocCaLam.SelectedIndex = 0;
+            cboLocCaLam.SelectedIndex =
+                0;
         }
 
         private void HienThiPhanCong()
@@ -91,26 +129,32 @@ namespace QLGuiXe.Forms
                 dgvPhanCong.DataSource =
                     dtPhanCong;
 
-                dgvPhanCong.Columns["MaPhanCong"].HeaderText =
+                dgvPhanCong.Columns["MaPhanCong"]
+                    .HeaderText =
                     "Mã phân công";
 
-                dgvPhanCong.Columns["NhanVien"].HeaderText =
+                dgvPhanCong.Columns["NhanVien"]
+                    .HeaderText =
                     "Nhân viên";
 
-                dgvPhanCong.Columns["CaLam"].HeaderText =
+                dgvPhanCong.Columns["CaLam"]
+                    .HeaderText =
                     "Ca làm";
 
-                dgvPhanCong.Columns["NgayLam"].HeaderText =
+                dgvPhanCong.Columns["NgayLam"]
+                    .HeaderText =
                     "Ngày làm";
 
                 dgvPhanCong.Columns["NgayLam"]
                     .DefaultCellStyle.Format =
                     "dd/MM/yyyy";
 
-                dgvPhanCong.Columns["MaNV"].Visible =
+                dgvPhanCong.Columns["MaNV"]
+                    .Visible =
                     false;
 
-                dgvPhanCong.Columns["MaCa"].Visible =
+                dgvPhanCong.Columns["MaCa"]
+                    .Visible =
                     false;
 
                 LocDanhSach(
@@ -134,6 +178,17 @@ namespace QLGuiXe.Forms
                     "dbo.sp_PHANCONGCA_MaMoi"
                 );
 
+            if (dt.Rows.Count == 0)
+            {
+                return "";
+            }
+
+            if (dt.Rows[0]["MaMoi"]
+                == DBNull.Value)
+            {
+                return "";
+            }
+
             return Convert.ToString(
                 dt.Rows[0]["MaMoi"]
             );
@@ -141,7 +196,8 @@ namespace QLGuiXe.Forms
 
         private bool KiemTraDuLieu()
         {
-            if (cboNhanVien.SelectedValue == null)
+            if (cboNhanVien.SelectedValue
+                == null)
             {
                 MessageBox.Show(
                     "Vui lòng chọn nhân viên!"
@@ -152,7 +208,8 @@ namespace QLGuiXe.Forms
                 return false;
             }
 
-            if (cboCaLam.SelectedValue == null)
+            if (cboCaLam.SelectedValue
+                == null)
             {
                 MessageBox.Show(
                     "Vui lòng chọn ca làm!"
@@ -173,7 +230,9 @@ namespace QLGuiXe.Forms
                     "dbo.sp_PHANCONGCA_DanhSach"
                 );
 
-            for (int i = 0; i < dt.Rows.Count; i++)
+            for (int i = 0;
+                i < dt.Rows.Count;
+                i++)
             {
                 string maPhanCong =
                     Convert.ToString(
@@ -200,6 +259,12 @@ namespace QLGuiXe.Forms
                         dt.Rows[i]["MaCa"]
                     );
 
+                if (dt.Rows[i]["NgayLam"]
+                    == DBNull.Value)
+                {
+                    continue;
+                }
+
                 DateTime ngayLam =
                     Convert.ToDateTime(
                         dt.Rows[i]["NgayLam"]
@@ -209,11 +274,80 @@ namespace QLGuiXe.Forms
                     == Convert.ToString(
                         cboNhanVien.SelectedValue
                     )
-                    && maCa
+                    &&
+                    maCa
                     == Convert.ToString(
                         cboCaLam.SelectedValue
                     )
-                    && ngayLam.Date
+                    &&
+                    ngayLam.Date
+                    == dtpNgayLam.Value.Date)
+                {
+                    MessageBox.Show(
+                        "Nhân viên này đã được phân công ca này trong ngày đã chọn!"
+                    );
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool KiemTraTrungKhiSua()
+        {
+            DataTable dt =
+                kn.GetData(
+                    "dbo.sp_PHANCONGCA_DanhSach"
+                );
+
+            for (int i = 0;
+                i < dt.Rows.Count;
+                i++)
+            {
+                string maPhanCong =
+                    Convert.ToString(
+                        dt.Rows[i]["MaPhanCong"]
+                    );
+
+                if (maPhanCong
+                    == txtMaPhanCong.Text.Trim())
+                {
+                    continue;
+                }
+
+                string maNV =
+                    Convert.ToString(
+                        dt.Rows[i]["MaNV"]
+                    );
+
+                string maCa =
+                    Convert.ToString(
+                        dt.Rows[i]["MaCa"]
+                    );
+
+                if (dt.Rows[i]["NgayLam"]
+                    == DBNull.Value)
+                {
+                    continue;
+                }
+
+                DateTime ngayLam =
+                    Convert.ToDateTime(
+                        dt.Rows[i]["NgayLam"]
+                    );
+
+                if (maNV
+                    == Convert.ToString(
+                        cboNhanVien.SelectedValue
+                    )
+                    &&
+                    maCa
+                    == Convert.ToString(
+                        cboCaLam.SelectedValue
+                    )
+                    &&
+                    ngayLam.Date
                     == dtpNgayLam.Value.Date)
                 {
                     MessageBox.Show(
@@ -296,7 +430,8 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            if (dgvPhanCong.CurrentRow == null)
+            if (dgvPhanCong.CurrentRow
+                == null)
             {
                 MessageBox.Show(
                     "Vui lòng chọn phân công cần sửa!"
@@ -306,6 +441,12 @@ namespace QLGuiXe.Forms
             }
 
             if (KiemTraDuLieu() == false)
+            {
+                return;
+            }
+
+            if (KiemTraTrungKhiSua()
+                == true)
             {
                 return;
             }
@@ -337,7 +478,8 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            if (dgvPhanCong.CurrentRow == null)
+            if (dgvPhanCong.CurrentRow
+                == null)
             {
                 MessageBox.Show(
                     "Vui lòng chọn phân công cần xóa!"
@@ -354,7 +496,8 @@ namespace QLGuiXe.Forms
                     MessageBoxIcon.Question
                 );
 
-            if (ketQua != DialogResult.Yes)
+            if (ketQua
+                != DialogResult.Yes)
             {
                 return;
             }
@@ -390,7 +533,8 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            if (dgvPhanCong.CurrentRow == null)
+            if (dgvPhanCong.CurrentRow
+                == null)
             {
                 MessageBox.Show(
                     "Vui lòng chọn phân công cần xem!"
@@ -427,27 +571,61 @@ namespace QLGuiXe.Forms
             }
 
             DataGridViewRow row =
-                dgvPhanCong.Rows[e.RowIndex];
+                dgvPhanCong.Rows[
+                    e.RowIndex
+                ];
 
-            txtMaPhanCong.Text =
-                Convert.ToString(
-                    row.Cells["MaPhanCong"].Value
-                );
+            if (row.Cells["MaPhanCong"].Value
+                != null
+                &&
+                row.Cells["MaPhanCong"].Value
+                != DBNull.Value)
+            {
+                txtMaPhanCong.Text =
+                    Convert.ToString(
+                        row.Cells["MaPhanCong"].Value
+                    );
+            }
+            else
+            {
+                txtMaPhanCong.Clear();
+            }
 
-            cboNhanVien.SelectedValue =
-                Convert.ToString(
-                    row.Cells["MaNV"].Value
-                );
+            if (row.Cells["MaNV"].Value
+                != null
+                &&
+                row.Cells["MaNV"].Value
+                != DBNull.Value)
+            {
+                cboNhanVien.SelectedValue =
+                    Convert.ToString(
+                        row.Cells["MaNV"].Value
+                    );
+            }
 
-            cboCaLam.SelectedValue =
-                Convert.ToString(
-                    row.Cells["MaCa"].Value
-                );
+            if (row.Cells["MaCa"].Value
+                != null
+                &&
+                row.Cells["MaCa"].Value
+                != DBNull.Value)
+            {
+                cboCaLam.SelectedValue =
+                    Convert.ToString(
+                        row.Cells["MaCa"].Value
+                    );
+            }
 
-            dtpNgayLam.Value =
-                Convert.ToDateTime(
-                    row.Cells["NgayLam"].Value
-                );
+            if (row.Cells["NgayLam"].Value
+                != null
+                &&
+                row.Cells["NgayLam"].Value
+                != DBNull.Value)
+            {
+                dtpNgayLam.Value =
+                    Convert.ToDateTime(
+                        row.Cells["NgayLam"].Value
+                    );
+            }
         }
 
         private void LamMoiDuLieu()
@@ -464,12 +642,14 @@ namespace QLGuiXe.Forms
 
             if (cboNhanVien.Items.Count > 0)
             {
-                cboNhanVien.SelectedIndex = 0;
+                cboNhanVien.SelectedIndex =
+                    0;
             }
 
             if (cboCaLam.Items.Count > 0)
             {
-                cboCaLam.SelectedIndex = 0;
+                cboCaLam.SelectedIndex =
+                    0;
             }
 
             dtpNgayLam.Value =
@@ -482,7 +662,8 @@ namespace QLGuiXe.Forms
             object sender,
             EventArgs e)
         {
-            if (dtPhanCong.Columns.Count == 0)
+            if (dtPhanCong.Columns.Count
+                == 0)
             {
                 return;
             }
@@ -490,16 +671,23 @@ namespace QLGuiXe.Forms
             string tuKhoa =
                 txtTimKiem.Text
                 .Trim()
-                .Replace("'", "''");
+                .Replace(
+                    "'",
+                    "''"
+                );
 
             string tuNgay =
                 dtpTuNgay.Value.Date
-                .ToString("MM/dd/yyyy");
+                .ToString(
+                    "MM/dd/yyyy"
+                );
 
             string denNgay =
                 dtpDenNgay.Value.Date
                 .AddDays(1)
-                .ToString("MM/dd/yyyy");
+                .ToString(
+                    "MM/dd/yyyy"
+                );
 
             string dieuKien =
                 "(MaPhanCong LIKE '%"
@@ -512,21 +700,29 @@ namespace QLGuiXe.Forms
                 + denNgay
                 + "#";
 
-            if (cboLocNhanVien.SelectedIndex > 0)
+            if (cboLocNhanVien.SelectedIndex
+                > 0)
             {
                 dieuKien +=
                     " AND NhanVien='"
                     + cboLocNhanVien.Text
-                    .Replace("'", "''")
+                    .Replace(
+                        "'",
+                        "''"
+                    )
                     + "'";
             }
 
-            if (cboLocCaLam.SelectedIndex > 0)
+            if (cboLocCaLam.SelectedIndex
+                > 0)
             {
                 dieuKien +=
                     " AND CaLam='"
                     + cboLocCaLam.Text
-                    .Replace("'", "''")
+                    .Replace(
+                        "'",
+                        "''"
+                    )
                     + "'";
             }
 
@@ -545,8 +741,11 @@ namespace QLGuiXe.Forms
         {
             txtTimKiem.Clear();
 
-            cboLocNhanVien.SelectedIndex = 0;
-            cboLocCaLam.SelectedIndex = 0;
+            cboLocNhanVien.SelectedIndex =
+                0;
+
+            cboLocCaLam.SelectedIndex =
+                0;
 
             dtpTuNgay.Value =
                 DateTime.Today.AddDays(-7);
