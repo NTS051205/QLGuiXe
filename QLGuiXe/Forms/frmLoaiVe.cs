@@ -183,7 +183,12 @@ namespace QLGuiXe.Forms
                     0;
             }
 
+            cboKyHieu.Enabled =
+                true;
+
             dgvLoaiVe.ClearSelection();
+
+            txtTenLoaiVe.Focus();
         }
 
         private void LamMoiTheXe()
@@ -197,10 +202,18 @@ namespace QLGuiXe.Forms
 
                 if (dt.Rows.Count > 0)
                 {
-                    txtMaVe.Text =
-                        Convert.ToString(
-                            dt.Rows[0]["MaMoi"]
-                        );
+                    if (dt.Rows[0]["MaMoi"]
+                        != DBNull.Value)
+                    {
+                        txtMaVe.Text =
+                            Convert.ToString(
+                                dt.Rows[0]["MaMoi"]
+                            );
+                    }
+                    else
+                    {
+                        txtMaVe.Clear();
+                    }
                 }
                 else
                 {
@@ -271,10 +284,8 @@ namespace QLGuiXe.Forms
             if (cboKyHieu.SelectedIndex == -1)
             {
                 MessageBox.Show(
-                    "Vui lòng chọn ký hiệu."
+                    "Không xác định được ký hiệu loại vé."
                 );
-
-                cboKyHieu.Focus();
 
                 return false;
             }
@@ -353,26 +364,6 @@ namespace QLGuiXe.Forms
                         );
 
                         txtTenLoaiVe.Focus();
-
-                        return true;
-                    }
-
-                    if (Convert.ToString(
-                        dt.Rows[i]["KyHieu"])
-                        .Trim()
-                        .ToUpper()
-                        ==
-                        cboKyHieu.Text
-                        .Trim()
-                        .ToUpper())
-                    {
-                        MessageBox.Show(
-                            "Ký hiệu "
-                            + cboKyHieu.Text
-                            + " đã được sử dụng!"
-                        );
-
-                        cboKyHieu.Focus();
 
                         return true;
                     }
@@ -734,6 +725,11 @@ namespace QLGuiXe.Forms
                 Convert.ToString(
                     row.Cells["KyHieu"].Value
                 );
+
+            cboKyHieu.Enabled =
+                false;
+
+            txtTenLoaiVe.Focus();
         }
 
         private void dgvTheXe_CellClick(
@@ -763,10 +759,17 @@ namespace QLGuiXe.Forms
                     row.Cells["LoaiVe"].Value
                 );
 
-            dtpNgayCap.Value =
-                Convert.ToDateTime(
-                    row.Cells["NgayCap"].Value
-                );
+            if (row.Cells["NgayCap"].Value
+                != null
+                &&
+                row.Cells["NgayCap"].Value
+                != DBNull.Value)
+            {
+                dtpNgayCap.Value =
+                    Convert.ToDateTime(
+                        row.Cells["NgayCap"].Value
+                    );
+            }
 
             cboTrangThai.Text =
                 Convert.ToString(
@@ -802,6 +805,17 @@ namespace QLGuiXe.Forms
                 "Tổng số: "
                 + dtLoaiVe.DefaultView.Count
                 + " bản ghi";
+        }
+
+        private void btnLamMoiLoaiVe_Click(
+            object sender,
+            EventArgs e)
+        {
+            txtTimKiemLoaiVe.Clear();
+
+            LoadLoaiVe();
+            LoadTheXe();
+            LamMoiLoaiVe();
         }
 
         private void LocTheXe(

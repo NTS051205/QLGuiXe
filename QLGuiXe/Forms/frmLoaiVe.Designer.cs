@@ -28,6 +28,7 @@ namespace QLGuiXe.Forms
             this.lblKyHieu = new System.Windows.Forms.Label();
             this.cboKyHieu = new System.Windows.Forms.ComboBox();
             this.btnSuaLoaiVe = new System.Windows.Forms.Button();
+            this.btnLamMoiLoaiVe = new System.Windows.Forms.Button();
             this.btnThoatLoaiVe = new System.Windows.Forms.Button();
             this.lblTimKiemLoaiVe = new System.Windows.Forms.Label();
             this.txtTimKiemLoaiVe = new System.Windows.Forms.TextBox();
@@ -94,6 +95,7 @@ namespace QLGuiXe.Forms
             this.tabPageLoaiVe.Controls.Add(this.lblKyHieu);
             this.tabPageLoaiVe.Controls.Add(this.cboKyHieu);
             this.tabPageLoaiVe.Controls.Add(this.btnSuaLoaiVe);
+            this.tabPageLoaiVe.Controls.Add(this.btnLamMoiLoaiVe);
             this.tabPageLoaiVe.Controls.Add(this.btnThoatLoaiVe);
             this.tabPageLoaiVe.Controls.Add(this.lblTimKiemLoaiVe);
             this.tabPageLoaiVe.Controls.Add(this.txtTimKiemLoaiVe);
@@ -259,10 +261,33 @@ namespace QLGuiXe.Forms
                 );
 
             // 
+            // btnLamMoiLoaiVe
+            // 
+            this.btnLamMoiLoaiVe.Location =
+                new System.Drawing.Point(139, 119);
+
+            this.btnLamMoiLoaiVe.Name =
+                "btnLamMoiLoaiVe";
+
+            this.btnLamMoiLoaiVe.Size =
+                new System.Drawing.Size(100, 34);
+
+            this.btnLamMoiLoaiVe.Text =
+                "Làm mới";
+
+            this.btnLamMoiLoaiVe.UseVisualStyleBackColor =
+                true;
+
+            this.btnLamMoiLoaiVe.Click +=
+                new System.EventHandler(
+                    this.btnLamMoiLoaiVe_Click
+                );
+
+            // 
             // btnThoatLoaiVe
             // 
             this.btnThoatLoaiVe.Location =
-                new System.Drawing.Point(139, 119);
+                new System.Drawing.Point(249, 119);
 
             this.btnThoatLoaiVe.Name =
                 "btnThoatLoaiVe";
@@ -928,6 +953,7 @@ namespace QLGuiXe.Forms
         private System.Windows.Forms.Label lblKyHieu;
         private System.Windows.Forms.ComboBox cboKyHieu;
         private System.Windows.Forms.Button btnSuaLoaiVe;
+        private System.Windows.Forms.Button btnLamMoiLoaiVe;
         private System.Windows.Forms.Button btnThoatLoaiVe;
         private System.Windows.Forms.Label lblTimKiemLoaiVe;
         private System.Windows.Forms.TextBox txtTimKiemLoaiVe;
