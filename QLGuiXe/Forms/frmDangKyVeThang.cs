@@ -41,6 +41,10 @@ namespace QLGuiXe.Forms
 
             dtpBatDau.Value = DateTime.Today;
             nudSoThang.Value = 1;
+            nudSoThangHoan.Value = 1;
+
+            btnHoanTien.Enabled =
+                PhienDangNhap.LaAdmin;
 
             try
             {
@@ -744,6 +748,20 @@ namespace QLGuiXe.Forms
                 return;
             }
 
+            if (Convert.ToString(
+                row["TrangThai"])
+                == "HUY"
+                || Convert.ToString(
+                    row["ThanhToan"])
+                    == "HOAN_TIEN")
+            {
+                MessageBox.Show(
+                    "Đăng ký đã bị hủy hoặc hoàn tiền nên không thể thanh toán!"
+                );
+
+                return;
+            }
+
             if (row["MaDangKy"]
                 == DBNull.Value)
             {
@@ -900,6 +918,527 @@ namespace QLGuiXe.Forms
             );
         }
 
+        private void btnSuaDangKy_Click(
+            object sender,
+            EventArgs e)
+        {
+            DataRow? row =
+                LayDongDangChon();
+
+            if (row == null)
+            {
+                return;
+            }
+
+            string thanhToan =
+                Convert.ToString(
+                    row["ThanhToan"]
+                );
+
+            string trangThai =
+                Convert.ToString(
+                    row["TrangThai"]
+                );
+
+            if (thanhToan != "CHUA_THANH_TOAN"
+                || trangThai == "HUY")
+            {
+                MessageBox.Show(
+                    "Chỉ được sửa đăng ký chưa thanh toán và chưa hủy!"
+                );
+
+                return;
+            }
+
+            int soThangCu =
+                Convert.ToInt32(
+                    row["SoThang"]
+                );
+
+            int soThangMoi =
+                Convert.ToInt32(
+                    nudSoThang.Value
+                );
+
+            if (soThangCu == soThangMoi)
+            {
+                MessageBox.Show(
+                    "Số tháng chưa thay đổi."
+                );
+
+                return;
+            }
+
+            DialogResult ketQua =
+                MessageBox.Show(
+                    "Đổi số tháng từ "
+                    + soThangCu
+                    + " thành "
+                    + soThangMoi
+                    + " tháng?",
+                    "Xác nhận sửa đăng ký",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question
+                );
+
+            if (ketQua != DialogResult.Yes)
+            {
+                return;
+            }
+
+            SqlParameter ngayKetThuc =
+                new SqlParameter(
+                    "@NgayKetThuc",
+                    SqlDbType.Date
+                );
+
+            ngayKetThuc.Direction =
+                ParameterDirection.Output;
+
+            SqlParameter tongTien =
+                new SqlParameter(
+                    "@TongTien",
+                    SqlDbType.Decimal
+                );
+
+            tongTien.Precision = 18;
+            tongTien.Scale = 2;
+            tongTien.Direction =
+                ParameterDirection.Output;
+
+            string maDangKy =
+                Convert.ToString(
+                    row["MaDangKy"]
+                );
+
+            try
+            {
+                kn.Execute(
+                    "dbo.sp_SuaDangKyVeThang",
+
+                    new SqlParameter(
+                        "@MaDangKy",
+                        maDangKy
+                    ),
+
+                    new SqlParameter(
+                        "@SoThang",
+                        soThangMoi
+                    ),
+
+                    ngayKetThuc,
+                    tongTien
+                );
+
+                MessageBox.Show(
+                    "Sửa đăng ký thành công!"
+                    + Environment.NewLine
+                    + "Ngày kết thúc mới: "
+                    + Convert.ToDateTime(
+                        ngayKetThuc.Value
+                    ).ToString("dd/MM/yyyy")
+                    + Environment.NewLine
+                    + "Tổng tiền mới: "
+                    + Convert.ToDecimal(
+                        tongTien.Value
+                    ).ToString("#,##0 ₫")
+                );
+
+                HienThiDangKy();
+                ChonDangKyVuaTao(
+                    maDangKy
+                );
+                TaiTheThang();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi sửa đăng ký: "
+                    + ex.Message
+                );
+            }
+        }
+
+        private void btnHuyDangKy_Click(
+            object sender,
+            EventArgs e)
+        {
+            DataRow? row =
+                LayDongDangChon();
+
+            if (row == null)
+            {
+                return;
+            }
+
+            if (Convert.ToString(
+                row["ThanhToan"])
+                != "CHUA_THANH_TOAN")
+            {
+                MessageBox.Show(
+                    "Đăng ký đã thanh toán. Hãy dùng chức năng hoàn tiền."
+                );
+
+                return;
+            }
+
+            if (Convert.ToString(
+                row["TrangThai"])
+                == "HUY")
+            {
+                MessageBox.Show(
+                    "Đăng ký này đã được hủy."
+                );
+
+                return;
+            }
+
+            string maDangKy =
+                Convert.ToString(
+                    row["MaDangKy"]
+                );
+
+            DialogResult ketQua =
+                MessageBox.Show(
+                    "Hủy đăng ký "
+                    + maDangKy
+                    + "? Thao tác này không xóa lịch sử.",
+                    "Xác nhận hủy đăng ký",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
+
+            if (ketQua != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                kn.Execute(
+                    "dbo.sp_HuyDangKyVeThang",
+                    new SqlParameter(
+                        "@MaDangKy",
+                        maDangKy
+                    )
+                );
+
+                MessageBox.Show(
+                    "Đã hủy đăng ký "
+                    + maDangKy
+                    + "."
+                );
+
+                HienThiDangKy();
+                TaiTheThang();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi hủy đăng ký: "
+                    + ex.Message
+                );
+            }
+        }
+
+        private void btnHoanTien_Click(
+            object sender,
+            EventArgs e)
+        {
+            if (PhienDangNhap.LaAdmin == false)
+            {
+                MessageBox.Show(
+                    "Chỉ tài khoản ADMIN được hoàn tiền."
+                );
+
+                return;
+            }
+
+            DataRow? row =
+                LayDongDangChon();
+
+            if (row == null)
+            {
+                return;
+            }
+
+            if (Convert.ToString(
+                row["ThanhToan"])
+                != "DA_THANH_TOAN")
+            {
+                MessageBox.Show(
+                    "Chỉ hoàn tiền cho đăng ký đã thanh toán."
+                );
+
+                return;
+            }
+
+            if (txtLyDoHoanTien.Text.Trim() == "")
+            {
+                MessageBox.Show(
+                    "Vui lòng nhập lý do hoàn tiền."
+                );
+
+                txtLyDoHoanTien.Focus();
+                return;
+            }
+
+            string maDangKy =
+                Convert.ToString(
+                    row["MaDangKy"]
+                );
+
+            if (row["NgayBatDau"] == DBNull.Value
+                || row["NgayKetThuc"] == DBNull.Value
+                || row["TongTien"] == DBNull.Value
+                || row["DonGiaThang"] == DBNull.Value
+                || row["SoThang"] == DBNull.Value)
+            {
+                MessageBox.Show(
+                    "Thông tin thời hạn hoặc số tiền không đầy đủ."
+                );
+
+                return;
+            }
+
+            DateTime ngayBatDau =
+                Convert.ToDateTime(
+                    row["NgayBatDau"]
+                ).Date;
+
+            DateTime ngayKetThuc =
+                Convert.ToDateTime(
+                    row["NgayKetThuc"]
+                ).Date;
+
+            decimal tongTien =
+                Convert.ToDecimal(
+                    row["TongTien"]
+                );
+
+            decimal donGiaThang =
+                Convert.ToDecimal(
+                    row["DonGiaThang"]
+                );
+
+            int soThangHienTai =
+                Convert.ToInt32(
+                    row["SoThang"]
+                );
+
+            int soThangHoan =
+                Convert.ToInt32(
+                    nudSoThangHoan.Value
+                );
+
+            if (soThangHoan > soThangHienTai)
+            {
+                MessageBox.Show(
+                    "Số tháng hoàn lớn hơn số tháng của đăng ký."
+                );
+
+                return;
+            }
+
+            int soThangConLaiDuKien =
+                soThangHienTai - soThangHoan;
+
+            DateTime ngayKetThucMoiDuKien =
+                ngayBatDau.AddMonths(
+                    soThangConLaiDuKien
+                );
+
+            DateTime ngayBatDauPhanHoan =
+                ngayKetThucMoiDuKien;
+
+            if (DateTime.Today
+                > ngayBatDauPhanHoan)
+            {
+                ngayBatDauPhanHoan =
+                    DateTime.Today;
+            }
+
+            int tongSoNgayPhanHoan =
+                (ngayKetThuc
+                - ngayKetThucMoiDuKien).Days;
+
+            int soNgayChuaSuDung =
+                (ngayKetThuc
+                - ngayBatDauPhanHoan).Days;
+
+            if (tongSoNgayPhanHoan <= 0
+                || soNgayChuaSuDung <= 0)
+            {
+                MessageBox.Show(
+                    "Phần tháng đã chọn không còn ngày chưa sử dụng để hoàn tiền."
+                );
+
+                return;
+            }
+
+            decimal soTienHoanDuKien =
+                Math.Round(
+                    donGiaThang
+                    * soThangHoan
+                    * soNgayChuaSuDung
+                    / tongSoNgayPhanHoan,
+                    0,
+                    MidpointRounding.AwayFromZero
+                );
+
+            DialogResult ketQua =
+                MessageBox.Show(
+                    "Đăng ký: "
+                    + maDangKy
+                    + Environment.NewLine
+                    + "Số tháng chọn hoàn: "
+                    + soThangHoan
+                    + Environment.NewLine
+                    + "Số ngày của phần hoàn: "
+                    + tongSoNgayPhanHoan
+                    + Environment.NewLine
+                    + "Số ngày chưa sử dụng: "
+                    + soNgayChuaSuDung
+                    + Environment.NewLine
+                    + "Số tiền đã trả: "
+                    + tongTien.ToString("#,##0 ₫")
+                    + Environment.NewLine
+                    + "Số tiền dự kiến hoàn: "
+                    + soTienHoanDuKien.ToString("#,##0 ₫")
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + "Bạn có chắc muốn hoàn tiền "
+                    + "và cập nhật lại thời hạn vé?",
+                    "Xác nhận hoàn tiền",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
+
+            if (ketQua != DialogResult.Yes)
+            {
+                return;
+            }
+
+            SqlParameter soThangConLai =
+                new SqlParameter(
+                    "@SoThangConLai",
+                    SqlDbType.TinyInt
+                );
+
+            soThangConLai.Direction =
+                ParameterDirection.Output;
+
+            SqlParameter ngayKetThucMoi =
+                new SqlParameter(
+                    "@NgayKetThucMoi",
+                    SqlDbType.Date
+                );
+
+            ngayKetThucMoi.Direction =
+                ParameterDirection.Output;
+
+            SqlParameter soTienHoan =
+                new SqlParameter(
+                    "@SoTienHoan",
+                    SqlDbType.Decimal
+                );
+
+            soTienHoan.Precision = 18;
+            soTienHoan.Scale = 2;
+            soTienHoan.Direction =
+                ParameterDirection.Output;
+
+            SqlParameter maThanhToanHoan =
+                new SqlParameter(
+                    "@MaThanhToanHoanMoi",
+                    SqlDbType.VarChar,
+                    20
+                );
+
+            maThanhToanHoan.Direction =
+                ParameterDirection.Output;
+
+            try
+            {
+                kn.Execute(
+                    "dbo.sp_HoanTienVeThang",
+
+                    new SqlParameter(
+                        "@MaDangKy",
+                        maDangKy
+                    ),
+
+                    new SqlParameter(
+                        "@MaNV",
+                        PhienDangNhap.MaNhanVien
+                    ),
+
+                    new SqlParameter(
+                        "@LyDo",
+                        txtLyDoHoanTien.Text.Trim()
+                    ),
+
+                    new SqlParameter(
+                        "@SoThangHoan",
+                        soThangHoan
+                    ),
+
+                    soThangConLai,
+                    ngayKetThucMoi,
+                    soTienHoan,
+                    maThanhToanHoan
+                );
+
+                MessageBox.Show(
+                    "Hoàn tiền thành công!"
+                    + Environment.NewLine
+                    + "Mã giao dịch hoàn: "
+                    + Convert.ToString(
+                        maThanhToanHoan.Value
+                    )
+                    + Environment.NewLine
+                    + "Số tháng đã hoàn: "
+                    + soThangHoan
+                    + Environment.NewLine
+                    + "Số tháng còn lại: "
+                    + Convert.ToInt32(
+                        soThangConLai.Value
+                    )
+                    + " tháng"
+                    + Environment.NewLine
+                    + "Số tiền hoàn: "
+                    + Convert.ToDecimal(
+                        soTienHoan.Value
+                    ).ToString("#,##0 ₫")
+                    + Environment.NewLine
+                    + (
+                        Convert.ToInt32(
+                            soThangConLai.Value
+                        ) == 0
+                        || Convert.ToDateTime(
+                            ngayKetThucMoi.Value
+                        ).Date <= DateTime.Today
+                        ? "Đăng ký đã chuyển sang HỦY."
+                        : "Ngày kết thúc mới: "
+                          + Convert.ToDateTime(
+                              ngayKetThucMoi.Value
+                          ).ToString("dd/MM/yyyy")
+                    )
+                );
+
+                txtLyDoHoanTien.Clear();
+                HienThiDangKy();
+                TaiTheThang();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Lỗi hoàn tiền: "
+                    + ex.Message
+                );
+            }
+        }
+
         private DataRow? LayDongDangChon()
         {
             if (dgvDangKy.SelectedRows.Count == 0)
@@ -1020,6 +1559,12 @@ namespace QLGuiXe.Forms
 
                 nudSoThang.Value =
                     soThang;
+
+                nudSoThangHoan.Maximum =
+                    soThang;
+
+                nudSoThangHoan.Value =
+                    1;
             }
 
             TinhTien();
@@ -1040,6 +1585,14 @@ namespace QLGuiXe.Forms
 
                 nudSoThang.Value =
                     1;
+
+                nudSoThangHoan.Maximum =
+                    24;
+
+                nudSoThangHoan.Value =
+                    1;
+
+                txtLyDoHoanTien.Clear();
 
                 TaiTheThang();
                 TinhTien();
