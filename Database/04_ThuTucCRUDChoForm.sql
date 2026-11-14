@@ -289,9 +289,46 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT MaDangKy, MaKH, KhachHang, MaPT, BienSo, LoaiXe, MaVe, MaThe,
-           NgayBatDau, NgayKetThuc, SoThang, DonGiaThang, TongTien, ThanhToan, TrangThai
-    FROM dbo.vw_DangKyVeThang ORDER BY NgayKetThuc DESC;
+    SELECT
+        dk.MaDangKy,
+        dk.MaKH,
+        dk.KhachHang,
+        dk.MaPT,
+        dk.BienSo,
+        dk.LoaiXe,
+        dk.MaVe,
+        dk.MaThe,
+        dk.NgayBatDau,
+        dk.NgayKetThuc,
+        dk.SoThang,
+        dk.DonGiaThang,
+        dk.TongTien,
+        dk.ThanhToan,
+        dk.TrangThai
+    FROM dbo.vw_DangKyVeThang AS dk
+    WHERE dk.TrangThai <> 'HUY'
+      AND
+      (
+          dk.ThanhToan <> 'DA_THANH_TOAN'
+          OR NOT EXISTS
+          (
+              SELECT 1
+              FROM dbo.vw_DangKyVeThang AS moi
+              WHERE moi.MaPT = dk.MaPT
+                AND moi.ThanhToan = 'DA_THANH_TOAN'
+                AND moi.TrangThai <> 'HUY'
+                AND
+                (
+                    moi.NgayKetThuc > dk.NgayKetThuc
+                    OR
+                    (
+                        moi.NgayKetThuc = dk.NgayKetThuc
+                        AND moi.MaDangKy > dk.MaDangKy
+                    )
+                )
+          )
+      )
+    ORDER BY dk.NgayKetThuc DESC;
 END;
 GO
 CREATE OR ALTER PROCEDURE dbo.sp_DANGKYVETHANG_KhachHang
@@ -338,7 +375,21 @@ BEGIN
         (SELECT COUNT(*) FROM dbo.LUOTGUIXE WHERE TrangThai='DANG_GUI') AS XeDangGui,
         (SELECT ISNULL(SUM(CONVERT(INT, ConTrong)),0) FROM dbo.vw_KhuVucTinhTrang WHERE TrangThai='HOAT_DONG') AS ChoTrong,
         (SELECT COUNT(*) FROM dbo.vw_DangKyVeThang WHERE TrangThai='HIEU_LUC') AS VeThangHieuLuc,
-        (SELECT ISNULL(SUM(SoTien),0) FROM dbo.vw_ThanhToan WHERE TrangThai='THANH_CONG' AND CONVERT(DATE, ThoiGian)=@Today) AS DoanhThuHomNay;
+        (
+            SELECT ISNULL(
+                SUM(
+                    CASE
+                        WHEN TrangThai = 'THANH_CONG' THEN SoTien
+                        WHEN TrangThai = 'HOAN_TIEN' THEN -SoTien
+                        ELSE 0
+                    END
+                ),
+                0
+            )
+            FROM dbo.vw_ThanhToan
+            WHERE TrangThai IN ('THANH_CONG', 'HOAN_TIEN')
+              AND CONVERT(DATE, ThoiGian) = @Today
+        ) AS DoanhThuHomNay;
 END;
 GO
 CREATE OR ALTER PROCEDURE dbo.sp_TrangChu_KhuVuc AS EXEC dbo.sp_KHUVUC_DanhSach;
@@ -356,11 +407,32 @@ CREATE OR ALTER PROCEDURE dbo.sp_BaoCao_PhuongTien AS
     GROUP BY pt.MaPT, pt.BienSo, pt.LoaiXe, kh.HoTen ORDER BY pt.MaPT;
 GO
 CREATE OR ALTER PROCEDURE dbo.sp_BaoCao_DoanhThu @TuNgay DATE, @DenNgay DATE AS
-    SELECT CONVERT(VARCHAR(10), CONVERT(DATE, tt.ThoiGian), 103) AS MALOAI,
-           tt.LoaiThanhToan AS TENLOAI, CONVERT(INT, COUNT(*)) AS KYHAN,
-           tt.PhuongThuc AS LOAITIEN, CONVERT(INT, SUM(tt.SoTien)) AS LAISUAT
+    SELECT
+           CONVERT(VARCHAR(10), CONVERT(DATE, tt.ThoiGian), 103) AS MALOAI,
+           CASE
+               WHEN tt.TrangThai = 'HOAN_TIEN' THEN N'HOÀN TIỀN VÉ THÁNG'
+               WHEN tt.LoaiThanhToan = 'VE_THANG' THEN N'VÉ THÁNG'
+               ELSE N'VÉ LƯỢT'
+           END AS TENLOAI,
+           CONVERT(INT, COUNT(*)) AS KYHAN,
+           tt.PhuongThuc AS LOAITIEN,
+           CONVERT(
+               INT,
+               SUM(
+                   CASE
+                       WHEN tt.TrangThai = 'HOAN_TIEN' THEN -tt.SoTien
+                       ELSE tt.SoTien
+                   END
+               )
+           ) AS LAISUAT
     FROM dbo.vw_ThanhToan AS tt
-    WHERE tt.TrangThai='THANH_CONG' AND tt.ThoiGian>=@TuNgay AND tt.ThoiGian<DATEADD(DAY,1,@DenNgay)
-    GROUP BY CONVERT(DATE, tt.ThoiGian), tt.LoaiThanhToan, tt.PhuongThuc
+    WHERE tt.TrangThai IN ('THANH_CONG', 'HOAN_TIEN')
+      AND tt.ThoiGian >= @TuNgay
+      AND tt.ThoiGian < DATEADD(DAY, 1, @DenNgay)
+    GROUP BY
+        CONVERT(DATE, tt.ThoiGian),
+        tt.LoaiThanhToan,
+        tt.TrangThai,
+        tt.PhuongThuc
     ORDER BY CONVERT(DATE, tt.ThoiGian), tt.LoaiThanhToan;
 GO

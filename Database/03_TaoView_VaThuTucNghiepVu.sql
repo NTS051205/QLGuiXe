@@ -498,5 +498,289 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.sp_SuaDangKyVeThang
+    @MaDangKy    VARCHAR(20),
+    @SoThang     TINYINT,
+    @NgayKetThuc DATE OUTPUT,
+    @TongTien    DECIMAL(18,2) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF @SoThang NOT BETWEEN 1 AND 24
+        THROW 50500, N'Số tháng đăng ký phải từ 1 đến 24.', 1;
+
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @MaPT VARCHAR(20);
+        DECLARE @MaVe VARCHAR(20);
+        DECLARE @NgayBatDau DATE;
+        DECLARE @DonGiaThang DECIMAL(18,2);
+        DECLARE @ThanhToan VARCHAR(20);
+        DECLARE @TrangThai VARCHAR(20);
+
+        SELECT
+            @MaPT = MaPT,
+            @MaVe = MaVe,
+            @NgayBatDau = NgayBatDau,
+            @DonGiaThang = DonGiaThang,
+            @ThanhToan = ThanhToan,
+            @TrangThai = TrangThai
+        FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
+        WHERE MaDangKy = @MaDangKy;
+
+        IF @MaPT IS NULL
+            THROW 50501, N'Không tìm thấy đăng ký vé tháng.', 1;
+
+        IF @TrangThai = 'HUY'
+            THROW 50502, N'Đăng ký đã bị hủy nên không thể sửa.', 1;
+
+        IF @ThanhToan <> 'CHUA_THANH_TOAN'
+            THROW 50503, N'Chỉ được sửa đăng ký chưa thanh toán.', 1;
+
+        SET @NgayKetThuc = DATEADD(MONTH, @SoThang, @NgayBatDau);
+
+        IF EXISTS
+        (
+            SELECT 1
+            FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
+            WHERE MaDangKy <> @MaDangKy
+              AND TrangThai <> 'HUY'
+              AND (MaPT = @MaPT OR MaVe = @MaVe)
+              AND @NgayBatDau < NgayKetThuc
+              AND NgayBatDau < @NgayKetThuc
+        )
+            THROW 50504, N'Thời hạn sau khi sửa bị chồng với một đăng ký khác.', 1;
+
+        SET @TongTien = @DonGiaThang * @SoThang;
+
+        UPDATE dbo.DANGKYVETHANG
+        SET SoThang = @SoThang,
+            NgayKetThuc = @NgayKetThuc,
+            TongTien = @TongTien
+        WHERE MaDangKy = @MaDangKy;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_HuyDangKyVeThang
+    @MaDangKy VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @ThanhToan VARCHAR(20);
+        DECLARE @TrangThai VARCHAR(20);
+
+        SELECT
+            @ThanhToan = ThanhToan,
+            @TrangThai = TrangThai
+        FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
+        WHERE MaDangKy = @MaDangKy;
+
+        IF @ThanhToan IS NULL
+            THROW 50600, N'Không tìm thấy đăng ký vé tháng.', 1;
+
+        IF @TrangThai = 'HUY'
+            THROW 50601, N'Đăng ký này đã được hủy.', 1;
+
+        IF @ThanhToan <> 'CHUA_THANH_TOAN'
+            THROW 50602, N'Đăng ký đã thanh toán. Hãy sử dụng chức năng hoàn tiền.', 1;
+
+        UPDATE dbo.DANGKYVETHANG
+        SET TrangThai = 'HUY'
+        WHERE MaDangKy = @MaDangKy;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_HoanTienVeThang
+    @MaDangKy          VARCHAR(20),
+    @MaNV               VARCHAR(20),
+    @LyDo               NVARCHAR(255),
+    @SoThangHoan        TINYINT,
+    @SoThangConLai      TINYINT OUTPUT,
+    @NgayKetThucMoi     DATE OUTPUT,
+    @SoTienHoan         DECIMAL(18,2) OUTPUT,
+    @MaThanhToanHoanMoi VARCHAR(20) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NULLIF(LTRIM(RTRIM(@LyDo)), N'') IS NULL
+        THROW 50700, N'Vui lòng nhập lý do hoàn tiền.', 1;
+
+    IF @SoThangHoan < 1
+        THROW 50708, N'Số tháng hoàn phải lớn hơn 0.', 1;
+
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM dbo.TAIKHOAN
+        WHERE MaNV = @MaNV
+          AND VaiTro = 'ADMIN'
+          AND TrangThai = 'HOAT_DONG'
+    )
+        THROW 50701, N'Chỉ tài khoản ADMIN được hoàn tiền.', 1;
+
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        DECLARE @ThanhToan VARCHAR(20);
+        DECLARE @TrangThai VARCHAR(20);
+        DECLARE @NgayBatDau DATE;
+        DECLARE @NgayKetThuc DATE;
+        DECLARE @SoThangHienTai TINYINT;
+        DECLARE @DonGiaThang DECIMAL(18,2);
+        DECLARE @PhuongThuc VARCHAR(20);
+        DECLARE @SoThanhToanMoi INT;
+        DECLARE @NgayBatDauPhanHoan DATE;
+        DECLARE @TongSoNgayPhanHoan INT;
+        DECLARE @SoNgayChuaSuDung INT;
+        DECLARE @TodayVn DATE = CONVERT(
+            DATE,
+            (SYSUTCDATETIME() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time'
+        );
+
+        SELECT
+            @ThanhToan = ThanhToan,
+            @TrangThai = TrangThai,
+            @NgayBatDau = NgayBatDau,
+            @NgayKetThuc = NgayKetThuc,
+            @SoThangHienTai = SoThang,
+            @DonGiaThang = DonGiaThang
+        FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
+        WHERE MaDangKy = @MaDangKy;
+
+        IF @ThanhToan IS NULL
+            THROW 50702, N'Không tìm thấy đăng ký vé tháng.', 1;
+
+        IF @TrangThai = 'HUY' OR @ThanhToan = 'HOAN_TIEN'
+            THROW 50703, N'Đăng ký này đã được hủy hoặc hoàn tiền.', 1;
+
+        IF @ThanhToan <> 'DA_THANH_TOAN'
+            THROW 50704, N'Đăng ký chưa thanh toán nên không cần hoàn tiền.', 1;
+
+        IF @TodayVn >= @NgayKetThuc
+            THROW 50705, N'Vé đã hết hạn nên không còn số ngày để hoàn tiền.', 1;
+
+        IF @SoThangHoan > @SoThangHienTai
+            THROW 50709, N'Số tháng hoàn lớn hơn số tháng của đăng ký.', 1;
+
+        SELECT TOP (1)
+            @PhuongThuc = PhuongThuc
+        FROM dbo.THANHTOAN WITH (UPDLOCK, HOLDLOCK)
+        WHERE MaDangKy = @MaDangKy
+          AND LoaiThanhToan = 'VE_THANG'
+          AND TrangThai = 'THANH_CONG'
+        ORDER BY ThoiGianUtc DESC;
+
+        IF @PhuongThuc IS NULL
+            THROW 50706, N'Không tìm thấy giao dịch thành công để hoàn tiền.', 1;
+
+        SET @SoThangConLai = @SoThangHienTai - @SoThangHoan;
+
+        SET @NgayKetThucMoi =
+            DATEADD(MONTH, @SoThangConLai, @NgayBatDau);
+
+        SET @NgayBatDauPhanHoan = CASE
+            WHEN @TodayVn > @NgayKetThucMoi THEN @TodayVn
+            ELSE @NgayKetThucMoi
+        END;
+
+        SET @TongSoNgayPhanHoan =
+            DATEDIFF(DAY, @NgayKetThucMoi, @NgayKetThuc);
+
+        SET @SoNgayChuaSuDung =
+            DATEDIFF(DAY, @NgayBatDauPhanHoan, @NgayKetThuc);
+
+        SET @SoTienHoan = ROUND(
+            (@DonGiaThang * @SoThangHoan)
+            * CONVERT(DECIMAL(18,6), @SoNgayChuaSuDung)
+            / NULLIF(@TongSoNgayPhanHoan, 0),
+            0
+        );
+
+        IF ISNULL(@SoTienHoan, 0) <= 0
+            THROW 50707, N'Số tiền hoàn được tính bằng 0.', 1;
+
+        IF @NgayKetThucMoi <= @TodayVn
+            SET @SoThangConLai = 0;
+
+        SELECT @SoThanhToanMoi = ISNULL(MAX(SoThuTu), 0) + 1
+        FROM
+        (
+            SELECT TRY_CONVERT(INT, SUBSTRING(MaThanhToan, 3, 10)) AS SoThuTu
+            FROM dbo.THANHTOAN WITH (UPDLOCK, HOLDLOCK)
+        ) AS ds
+        WHERE SoThuTu IS NOT NULL;
+
+        SET @MaThanhToanHoanMoi =
+            'TT' + RIGHT('000' + CONVERT(VARCHAR(10), @SoThanhToanMoi), 3);
+
+        INSERT dbo.THANHTOAN
+            (MaThanhToan, LoaiThanhToan, MaLuotGui, MaDangKy,
+             SoTien, PhuongThuc, TrangThai, MaNV, MaThamChieu, GhiChu)
+        VALUES
+            (@MaThanhToanHoanMoi, 'VE_THANG', NULL, @MaDangKy,
+             @SoTienHoan, @PhuongThuc, 'HOAN_TIEN', @MaNV,
+             'REFUND-' + @MaDangKy,
+             CONCAT(
+                 N'Hoàn ', @SoThangHoan, N' tháng. ',
+                 N'Tương ứng ', @SoNgayChuaSuDung, N'/',
+                 @TongSoNgayPhanHoan, N' ngày chưa sử dụng. ',
+                 CASE
+                     WHEN @SoThangConLai = 0 OR @NgayKetThucMoi <= @TodayVn
+                         THEN N'Hủy toàn bộ phần thời hạn còn lại. '
+                     ELSE CONCAT(
+                         N'Còn ', @SoThangConLai,
+                         N' tháng, kết thúc mới ',
+                         CONVERT(VARCHAR(10), @NgayKetThucMoi, 120), N'. '
+                     )
+                 END,
+                 N'Lý do: ', LTRIM(RTRIM(@LyDo))
+             ));
+
+        IF @SoThangConLai = 0 OR @NgayKetThucMoi <= @TodayVn
+        BEGIN
+            UPDATE dbo.DANGKYVETHANG
+            SET ThanhToan = 'HOAN_TIEN',
+                TrangThai = 'HUY'
+            WHERE MaDangKy = @MaDangKy;
+        END
+        ELSE
+        BEGIN
+            UPDATE dbo.DANGKYVETHANG
+            SET SoThang = @SoThangConLai,
+                NgayKetThuc = @NgayKetThucMoi,
+                TongTien = @DonGiaThang * @SoThangConLai
+            WHERE MaDangKy = @MaDangKy;
+        END;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+END;
+GO
+
 PRINT N'Đã tạo các view cho UI và stored procedure nghiệp vụ.';
 GO
