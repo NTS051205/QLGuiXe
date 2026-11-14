@@ -20,7 +20,8 @@ Không sử dụng WPF, ASP.NET hoặc thư viện giao diện thương mại.
 - Tổng quan số xe đang gửi, chỗ còn trống, vé tháng và doanh thu.
 - Tiếp nhận xe vào, kiểm tra biển số, thẻ xe, khu vực và vé tháng.
 - Xe ra, tính thời gian gửi, tính phí vé lượt và ghi nhận thanh toán.
-- Đăng ký, thanh toán và gia hạn vé tháng.
+- Đăng ký, sửa hoặc hủy khi chưa thanh toán, thanh toán và gia hạn vé tháng.
+- ADMIN chọn số tháng cần hoàn; tiền hoàn được tính theo số ngày chưa sử dụng trong phần tháng đã chọn.
 - Quản lý khách hàng, phương tiện, loại vé, thẻ xe, bảng giá và khu vực.
 - Quản lý nhân viên, tài khoản, ca làm và phân công ca.
 - Tra cứu lịch sử gửi xe.
@@ -32,7 +33,8 @@ Không sử dụng WPF, ASP.NET hoặc thư viện giao diện thương mại.
 |---|:---:|:---:|
 | Xe vào, xe ra | Có | Có |
 | Lịch sử gửi xe | Có | Có |
-| Đăng ký/thanh toán vé tháng | Có | Có |
+| Đăng ký/sửa/hủy/thanh toán/gia hạn vé tháng | Có | Có |
+| Hoàn tiền vé tháng | Có | Không |
 | Quản lý danh mục | Có | Không |
 | Quản lý nhân sự, tài khoản | Có | Không |
 | Báo cáo | Có | Không |
@@ -170,9 +172,12 @@ Database/
 - Một thẻ không dùng cho hai lượt gửi chưa hoàn thành.
 - Vé tháng chỉ hợp lệ khi đã thanh toán và còn trong thời hạn.
 - Ngày kết thúc vé tháng là cận trên không bao gồm.
+- Gia hạn tạo một kỳ đăng ký mới để giữ lịch sử.
+- Kỳ chưa thanh toán được sửa số tháng hoặc hủy. Với kỳ đã thanh toán, ADMIN chọn số tháng hoàn; hệ thống chỉ hoàn phần ngày chưa sử dụng, sau đó rút ngắn ngày kết thúc hoặc chuyển sang `HUY` nếu không còn thời hạn hiệu lực.
+- Báo cáo doanh thu hiển thị riêng giao dịch hoàn tiền và tính doanh thu ròng bằng tiền thu trừ tiền hoàn.
 - Vé tháng hợp lệ có phí lượt bằng `0 ₫`.
 - Vé lượt áp dụng giá thường, giá sau 19 giờ hoặc giá qua đêm.
-- Doanh thu chỉ tính thanh toán có trạng thái `THANH_CONG`.
+- Doanh thu ròng bằng tiền thanh toán thành công trừ các giao dịch hoàn tiền.
 - Dữ liệu thời gian nghiệp vụ lưu UTC và hiển thị theo giờ Việt Nam.
 
 ## Chức năng chưa triển khai

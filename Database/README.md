@@ -34,12 +34,16 @@ Nếu muốn làm lại dữ liệu từ đầu, xóa database `QLGuiXe` rồi c
 - `MaKH` trong `PHUONGTIEN` được phép `NULL` cho khách vãng lai.
 - Một phương tiện và một thẻ chỉ có tối đa một lượt gửi `DANG_GUI`.
 - Vé tháng hợp lệ phải đã thanh toán và thỏa `NgayBatDau <= ngày hiện tại < NgayKetThuc`.
+- Đăng ký vé tháng chưa thanh toán được phép sửa số tháng hoặc chuyển sang `HUY`.
+- Đăng ký đã thanh toán không được sửa trực tiếp. ADMIN chọn số tháng cần hoàn; tiền hoàn được tính theo tỷ lệ số ngày chưa sử dụng trong phần tháng đã chọn. Hệ thống rút ngắn ngày kết thúc nếu phần còn lại vẫn còn hiệu lực, hoặc chuyển đăng ký sang `HUY` nếu không còn thời hạn. Vé đã hết hạn không được hoàn.
+- Giao dịch thu ban đầu vẫn giữ `THANH_CONG`; hệ thống tạo thêm giao dịch `HOAN_TIEN` để lưu lịch sử và tính doanh thu ròng.
+- Gia hạn tạo một dòng đăng ký mới bắt đầu từ ngày kết thúc cũ, nhờ đó vẫn giữ được lịch sử các kỳ vé.
 - Xe dùng vé tháng hợp lệ có phí lượt bằng `0`.
 - Vé lượt xe máy có giá mẫu: thường `5.000 ₫`, sau 19 giờ `10.000 ₫`, qua đêm `20.000 ₫`.
 - Vé lượt ô tô có giá mẫu: thường `30.000 ₫`, sau 19 giờ `40.000 ₫`, qua đêm `50.000 ₫`.
 - Nếu thời gian vào và ra khác ngày thì dùng giá qua đêm; nếu cùng ngày và ra từ 19:00 thì dùng giá sau 19 giờ.
 - Sức chứa khu vực được tính từ lượt gửi đang mở, không lưu số đếm dư thừa.
-- Doanh thu lấy từ `THANHTOAN` có trạng thái `THANH_CONG`.
+- Doanh thu ròng bằng tổng giao dịch `THANH_CONG` trừ tổng giao dịch `HOAN_TIEN`.
 - Các thời điểm nghiệp vụ dùng `DATETIME2` UTC; view đổi sang múi giờ Việt Nam để hiển thị.
 - Không cascade delete dữ liệu lịch sử.
 
@@ -52,5 +56,7 @@ Nếu muốn làm lại dữ liệu từ đầu, xóa database `QLGuiXe` rồi c
 Vai trò được lấy từ bảng `TAIKHOAN` khi đăng nhập. Giao diện khóa các menu quản trị đối với nhân viên; mã nhân viên lập phiếu xe vào/xe ra và thanh toán lấy từ phiên đăng nhập hiện tại.
 
 Các câu `IF` và `THROW` trong `03_TaoView_VaThuTucNghiepVu.sql` chỉ dùng để ngăn dữ liệu sai ở những nghiệp vụ quan trọng như một xe vào hai lần, dùng trùng thẻ, đăng ký vé tháng chồng thời hạn hoặc thanh toán hai lần. Các thủ tục danh sách và CRUD trong `04_ThuTucCRUDChoForm.sql` giữ cách viết đơn giản để dễ học và dễ gọi từ Form.
+
+Khi database đã tồn tại và chỉ cần cập nhật chức năng sửa, hủy và hoàn tiền vé tháng, chạy lại file `03_TaoView_VaThuTucNghiepVu.sql`. Không cần xóa dữ liệu hoặc chạy lại file `01` và `02`.
 
 Ba tài khoản hoạt động trong dữ liệu mẫu là `admin / Admin@123`, `quocbao / NhanVien@123` và `duclong / NhanVien@123`. Tài khoản `thuha` được giữ ở trạng thái khóa để minh họa bộ lọc. Hash SHA2 trong seed chỉ dùng để minh họa; khi làm đăng nhập thật cần băm mật khẩu bằng PBKDF2, BCrypt hoặc Argon2 ở tầng C#.

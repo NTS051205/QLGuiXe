@@ -56,8 +56,15 @@ namespace QLGuiXe.Forms
             this.btnDangKy = new System.Windows.Forms.Button();
             this.btnThanhToan = new System.Windows.Forms.Button();
             this.btnGiaHan = new System.Windows.Forms.Button();
+            this.btnSuaDangKy = new System.Windows.Forms.Button();
+            this.btnHuyDangKy = new System.Windows.Forms.Button();
+            this.btnHoanTien = new System.Windows.Forms.Button();
             this.btnLamMoi = new System.Windows.Forms.Button();
             this.btnThoat = new System.Windows.Forms.Button();
+            this.lblLyDoHoanTien = new System.Windows.Forms.Label();
+            this.txtLyDoHoanTien = new System.Windows.Forms.TextBox();
+            this.lblSoThangHoan = new System.Windows.Forms.Label();
+            this.nudSoThangHoan = new System.Windows.Forms.NumericUpDown();
 
             this.lblDanhSach = new System.Windows.Forms.Label();
             this.dgvDangKy = new System.Windows.Forms.DataGridView();
@@ -65,6 +72,7 @@ namespace QLGuiXe.Forms
             this.grpKhachHang.SuspendLayout();
             this.grpVeThang.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudSoThang)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudSoThangHoan)).BeginInit();
             this.grpThanhToan.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDangKy)).BeginInit();
 
@@ -671,11 +679,39 @@ namespace QLGuiXe.Forms
             );
 
             this.grpThanhToan.Controls.Add(
+                this.btnSuaDangKy
+            );
+
+            this.grpThanhToan.Controls.Add(
+                this.btnHuyDangKy
+            );
+
+            this.grpThanhToan.Controls.Add(
+                this.btnHoanTien
+            );
+
+            this.grpThanhToan.Controls.Add(
                 this.btnLamMoi
             );
 
             this.grpThanhToan.Controls.Add(
                 this.btnThoat
+            );
+
+            this.grpThanhToan.Controls.Add(
+                this.lblLyDoHoanTien
+            );
+
+            this.grpThanhToan.Controls.Add(
+                this.txtLyDoHoanTien
+            );
+
+            this.grpThanhToan.Controls.Add(
+                this.lblSoThangHoan
+            );
+
+            this.grpThanhToan.Controls.Add(
+                this.nudSoThangHoan
             );
 
             this.grpThanhToan.Location =
@@ -832,11 +868,80 @@ namespace QLGuiXe.Forms
                     this.btnGiaHan_Click
                 );
 
+            //
+            // btnSuaDangKy
+            //
+            this.btnSuaDangKy.Location =
+                new System.Drawing.Point(20, 175);
+
+            this.btnSuaDangKy.Name =
+                "btnSuaDangKy";
+
+            this.btnSuaDangKy.Size =
+                new System.Drawing.Size(100, 35);
+
+            this.btnSuaDangKy.Text =
+                "Sửa đăng ký";
+
+            this.btnSuaDangKy.UseVisualStyleBackColor =
+                true;
+
+            this.btnSuaDangKy.Click +=
+                new System.EventHandler(
+                    this.btnSuaDangKy_Click
+                );
+
+            //
+            // btnHuyDangKy
+            //
+            this.btnHuyDangKy.Location =
+                new System.Drawing.Point(135, 175);
+
+            this.btnHuyDangKy.Name =
+                "btnHuyDangKy";
+
+            this.btnHuyDangKy.Size =
+                new System.Drawing.Size(100, 35);
+
+            this.btnHuyDangKy.Text =
+                "Hủy đăng ký";
+
+            this.btnHuyDangKy.UseVisualStyleBackColor =
+                true;
+
+            this.btnHuyDangKy.Click +=
+                new System.EventHandler(
+                    this.btnHuyDangKy_Click
+                );
+
+            //
+            // btnHoanTien
+            //
+            this.btnHoanTien.Location =
+                new System.Drawing.Point(250, 175);
+
+            this.btnHoanTien.Name =
+                "btnHoanTien";
+
+            this.btnHoanTien.Size =
+                new System.Drawing.Size(100, 35);
+
+            this.btnHoanTien.Text =
+                "Hoàn tiền";
+
+            this.btnHoanTien.UseVisualStyleBackColor =
+                true;
+
+            this.btnHoanTien.Click +=
+                new System.EventHandler(
+                    this.btnHoanTien_Click
+                );
+
             // 
             // btnLamMoi
             // 
             this.btnLamMoi.Location =
-                new System.Drawing.Point(75, 180);
+                new System.Drawing.Point(75, 225);
 
             this.btnLamMoi.Name =
                 "btnLamMoi";
@@ -859,7 +964,7 @@ namespace QLGuiXe.Forms
             // btnThoat
             // 
             this.btnThoat.Location =
-                new System.Drawing.Point(195, 180);
+                new System.Drawing.Point(195, 225);
 
             this.btnThoat.Name =
                 "btnThoat";
@@ -877,6 +982,69 @@ namespace QLGuiXe.Forms
                 new System.EventHandler(
                     this.btnThoat_Click
                 );
+
+            //
+            // lblLyDoHoanTien
+            //
+            this.lblLyDoHoanTien.AutoSize =
+                true;
+
+            this.lblLyDoHoanTien.Location =
+                new System.Drawing.Point(18, 282);
+
+            this.lblLyDoHoanTien.Name =
+                "lblLyDoHoanTien";
+
+            this.lblLyDoHoanTien.Text =
+                "Lý do hoàn";
+
+            //
+            // txtLyDoHoanTien
+            //
+            this.txtLyDoHoanTien.Location =
+                new System.Drawing.Point(120, 278);
+
+            this.txtLyDoHoanTien.Name =
+                "txtLyDoHoanTien";
+
+            this.txtLyDoHoanTien.Size =
+                new System.Drawing.Size(225, 23);
+
+            //
+            // lblSoThangHoan
+            //
+            this.lblSoThangHoan.AutoSize =
+                true;
+
+            this.lblSoThangHoan.Location =
+                new System.Drawing.Point(18, 318);
+
+            this.lblSoThangHoan.Name =
+                "lblSoThangHoan";
+
+            this.lblSoThangHoan.Text =
+                "Số tháng hoàn";
+
+            //
+            // nudSoThangHoan
+            //
+            this.nudSoThangHoan.Location =
+                new System.Drawing.Point(120, 314);
+
+            this.nudSoThangHoan.Maximum =
+                new decimal(new int[] { 24, 0, 0, 0 });
+
+            this.nudSoThangHoan.Minimum =
+                new decimal(new int[] { 1, 0, 0, 0 });
+
+            this.nudSoThangHoan.Name =
+                "nudSoThangHoan";
+
+            this.nudSoThangHoan.Size =
+                new System.Drawing.Size(225, 23);
+
+            this.nudSoThangHoan.Value =
+                new decimal(new int[] { 1, 0, 0, 0 });
 
             // 
             // lblDanhSach
@@ -993,6 +1161,7 @@ namespace QLGuiXe.Forms
             this.grpVeThang.PerformLayout();
 
             ((System.ComponentModel.ISupportInitialize)(this.nudSoThang)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudSoThangHoan)).EndInit();
 
             this.grpThanhToan.ResumeLayout(false);
             this.grpThanhToan.PerformLayout();
@@ -1044,8 +1213,15 @@ namespace QLGuiXe.Forms
         private System.Windows.Forms.Button btnDangKy;
         private System.Windows.Forms.Button btnThanhToan;
         private System.Windows.Forms.Button btnGiaHan;
+        private System.Windows.Forms.Button btnSuaDangKy;
+        private System.Windows.Forms.Button btnHuyDangKy;
+        private System.Windows.Forms.Button btnHoanTien;
         private System.Windows.Forms.Button btnLamMoi;
         private System.Windows.Forms.Button btnThoat;
+        private System.Windows.Forms.Label lblLyDoHoanTien;
+        private System.Windows.Forms.TextBox txtLyDoHoanTien;
+        private System.Windows.Forms.Label lblSoThangHoan;
+        private System.Windows.Forms.NumericUpDown nudSoThangHoan;
 
         private System.Windows.Forms.Label lblDanhSach;
         private System.Windows.Forms.DataGridView dgvDangKy;
