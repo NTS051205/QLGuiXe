@@ -8,6 +8,10 @@
 USE QLGuiXe;
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.sp_KiemTraKetNoi
 AS
 BEGIN
@@ -363,6 +367,13 @@ BEGIN
     INNER JOIN dbo.LOAIVE AS lv ON lv.MaLoaiVe = v.MaLoaiVe
     WHERE lv.KyHieu = 'THANG'
       AND v.TrangThai = 'HOAT_DONG'
+      AND NOT EXISTS
+      (
+          SELECT 1
+          FROM dbo.DANGKYVETHANG AS dk
+          WHERE dk.MaVe = v.MaVe
+            AND dk.TrangThai <> 'HUY'
+      )
     ORDER BY v.MaThe;
 END;
 GO
