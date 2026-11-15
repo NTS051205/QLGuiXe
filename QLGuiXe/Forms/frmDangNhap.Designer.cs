@@ -19,7 +19,6 @@ partial class frmDangNhap
     private CheckBox chkHienMatKhau;
     private Label lblLoi;
     private Button btnDangNhap;
-    private Button btnDangNhapDemo;
     private Button btnThoat;
     private Label lblTrangThaiKetNoi;
     private Label lblPhienBan;
@@ -41,7 +40,6 @@ partial class frmDangNhap
         chkHienMatKhau = new CheckBox();
         lblLoi = new Label();
         btnDangNhap = new Button();
-        btnDangNhapDemo = new Button();
         btnThoat = new Button();
         lblTrangThaiKetNoi = new Label();
         lblPhienBan = new Label();
@@ -58,7 +56,6 @@ partial class frmDangNhap
         grpDangNhap.Controls.Add(chkHienMatKhau);
         grpDangNhap.Controls.Add(lblLoi);
         grpDangNhap.Controls.Add(btnDangNhap);
-        grpDangNhap.Controls.Add(btnDangNhapDemo);
         grpDangNhap.Controls.Add(btnThoat);
         grpDangNhap.Controls.Add(lblTrangThaiKetNoi);
         grpDangNhap.Location = new Point(35, 25);
@@ -134,7 +131,7 @@ partial class frmDangNhap
         // 
         // btnDangNhap
         // 
-        btnDangNhap.Location = new Point(110, 235);
+        btnDangNhap.Location = new Point(183, 235);
         btnDangNhap.Name = "btnDangNhap";
         btnDangNhap.Size = new Size(140, 38);
         btnDangNhap.TabIndex = 7;
@@ -142,22 +139,12 @@ partial class frmDangNhap
         btnDangNhap.UseVisualStyleBackColor = true;
         btnDangNhap.Click += btnDangNhap_Click;
         // 
-        // btnDangNhapDemo
-        // 
-        btnDangNhapDemo.Location = new Point(256, 235);
-        btnDangNhapDemo.Name = "btnDangNhapDemo";
-        btnDangNhapDemo.Size = new Size(140, 38);
-        btnDangNhapDemo.TabIndex = 8;
-        btnDangNhapDemo.Text = "Đăng nhập thử";
-        btnDangNhapDemo.UseVisualStyleBackColor = true;
-        btnDangNhapDemo.Click += btnDangNhapDemo_Click;
-        //
         // btnThoat
         //
         btnThoat.Location = new Point(183, 280);
         btnThoat.Name = "btnThoat";
         btnThoat.Size = new Size(140, 38);
-        btnThoat.TabIndex = 9;
+        btnThoat.TabIndex = 8;
         btnThoat.Text = "Thoát";
         btnThoat.UseVisualStyleBackColor = true;
         btnThoat.Click += btnThoat_Click;
@@ -167,7 +154,7 @@ partial class frmDangNhap
         lblTrangThaiKetNoi.Location = new Point(30, 330);
         lblTrangThaiKetNoi.Name = "lblTrangThaiKetNoi";
         lblTrangThaiKetNoi.Size = new Size(450, 36);
-        lblTrangThaiKetNoi.TabIndex = 10;
+        lblTrangThaiKetNoi.TabIndex = 9;
         lblTrangThaiKetNoi.Text = "Đang kiểm tra kết nối SQL Server...";
         lblTrangThaiKetNoi.TextAlign = ContentAlignment.MiddleCenter;
         // 
