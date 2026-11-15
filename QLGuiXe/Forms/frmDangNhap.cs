@@ -66,20 +66,6 @@ public partial class frmDangNhap : Form
         }
     }
 
-    private void btnDangNhapDemo_Click(object? sender, EventArgs e)
-    {
-        try
-        {
-            kn.GetData("dbo.sp_KiemTraKetNoi");
-            PhienDangNhap.LuuThongTin("NV001", "Nguyễn Minh Anh", "ADMIN", "admin-demo");
-            OpenMainForm();
-        }
-        catch (Exception ex)
-        {
-            lblLoi.Text = "Không thể mở dữ liệu: " + ex.Message;
-        }
-    }
-
     private void btnThoat_Click(object? sender, EventArgs e)
     {
         Close();

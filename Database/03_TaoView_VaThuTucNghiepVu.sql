@@ -8,6 +8,10 @@
 USE QLGuiXe;
 GO
 
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
@@ -381,6 +385,17 @@ BEGIN
         IF @MaVe IS NULL
             THROW 50302, N'Thẻ tháng không tồn tại hoặc không hoạt động.', 1;
 
+        /* Thẻ được giữ cho phương tiện cho tới khi đăng ký bị hủy. */
+        IF EXISTS
+        (
+            SELECT 1
+            FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
+            WHERE MaVe = @MaVe
+              AND MaPT <> @MaPT
+              AND TrangThai <> 'HUY'
+        )
+            THROW 50305, N'Thẻ tháng đang được giữ cho một phương tiện khác. Chủ cũ phải hủy đăng ký để giải phóng thẻ.', 1;
+
         SET @NgayKetThuc = DATEADD(MONTH, @SoThang, @NgayBatDau);
 
         IF EXISTS
@@ -433,6 +448,92 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.sp_GiaHanVeThang
+    @MaDangKyCu    VARCHAR(20),
+    @SoThang       TINYINT,
+    @NgayBatDauYeuCau DATE = NULL,
+    @MaDangKyMoi   VARCHAR(20) OUTPUT,
+    @NgayBatDauMoi DATE OUTPUT,
+    @NgayKetThuc   DATE OUTPUT,
+    @TongTien      DECIMAL(18,2) OUTPUT,
+    @MaTheGiaHan   VARCHAR(30) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @MaKH VARCHAR(20);
+    DECLARE @MaPT VARCHAR(20);
+    DECLARE @MaVeCu VARCHAR(20);
+    DECLARE @MaTheCu VARCHAR(30);
+    DECLARE @NgayKetThucCu DATE;
+    DECLARE @TodayVn DATE =
+        CONVERT(
+            DATE,
+            (SYSUTCDATETIME() AT TIME ZONE 'UTC')
+                AT TIME ZONE 'SE Asia Standard Time'
+        );
+
+    SELECT
+        @MaKH = dk.MaKH,
+        @MaPT = dk.MaPT,
+        @MaVeCu = dk.MaVe,
+        @MaTheCu = v.MaThe,
+        @NgayKetThucCu = dk.NgayKetThuc
+    FROM dbo.DANGKYVETHANG AS dk
+    INNER JOIN dbo.VE AS v ON v.MaVe = dk.MaVe
+    WHERE dk.MaDangKy = @MaDangKyCu
+      AND dk.ThanhToan = 'DA_THANH_TOAN'
+      AND dk.TrangThai <> 'HUY';
+
+    IF @MaPT IS NULL
+        THROW 50310, N'Chỉ được gia hạn đăng ký đã thanh toán và chưa hủy.', 1;
+
+    /* Vé còn hiệu lực nối tiếp kỳ cũ; vé hết hạn được chọn ngày mới từ hôm nay. */
+    SET @NgayBatDauMoi = CASE
+        WHEN @NgayKetThucCu > @TodayVn THEN @NgayKetThucCu
+        WHEN @NgayBatDauYeuCau IS NULL OR @NgayBatDauYeuCau < @TodayVn THEN @TodayVn
+        ELSE @NgayBatDauYeuCau
+    END;
+
+    SET @MaTheGiaHan = @MaTheCu;
+
+    /* Gia hạn luôn giữ đúng thẻ cũ của khách hàng. */
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM dbo.VE AS v
+        INNER JOIN dbo.LOAIVE AS lv
+            ON lv.MaLoaiVe = v.MaLoaiVe
+        WHERE v.MaVe = @MaVeCu
+          AND v.TrangThai = 'HOAT_DONG'
+          AND lv.KyHieu = 'THANG'
+    )
+        THROW 50311, N'Thẻ tháng cũ đã bị khóa hoặc hỏng nên không thể gia hạn.', 1;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM dbo.DANGKYVETHANG AS dk
+        WHERE dk.MaVe = @MaVeCu
+          AND dk.MaDangKy <> @MaDangKyCu
+          AND dk.MaPT <> @MaPT
+          AND dk.TrangThai <> 'HUY'
+    )
+        THROW 50312, N'Thẻ tháng đã bị gán cho phương tiện khác trong dữ liệu cũ. Hãy hủy đăng ký sai trước khi gia hạn.', 1;
+
+    EXEC dbo.sp_DangKyVeThang
+        @MaKH = @MaKH,
+        @MaPT = @MaPT,
+        @MaThe = @MaTheGiaHan,
+        @NgayBatDau = @NgayBatDauMoi,
+        @SoThang = @SoThang,
+        @MaDangKyMoi = @MaDangKyMoi OUTPUT,
+        @NgayKetThuc = @NgayKetThuc OUTPUT,
+        @TongTien = @TongTien OUTPUT;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.sp_ThanhToanVeThang
     @MaDangKy       VARCHAR(20),
     @MaNV           VARCHAR(20),
@@ -452,8 +553,24 @@ BEGIN
         DECLARE @TongTien DECIMAL(18,2);
         DECLARE @ThanhToan VARCHAR(20);
         DECLARE @SoThanhToanMoi INT;
+        DECLARE @MaPT VARCHAR(20);
+        DECLARE @MaVe VARCHAR(20);
+        DECLARE @NgayBatDau DATE;
+        DECLARE @NgayKetThuc DATE;
+        DECLARE @SoThang TINYINT;
+        DECLARE @DonGiaThang DECIMAL(18,2);
+        DECLARE @MaDangKyGoc VARCHAR(20);
+        DECLARE @SoThangGoc TINYINT;
 
-        SELECT @TongTien = TongTien, @ThanhToan = ThanhToan
+        SELECT
+            @TongTien = TongTien,
+            @ThanhToan = ThanhToan,
+            @MaPT = MaPT,
+            @MaVe = MaVe,
+            @NgayBatDau = NgayBatDau,
+            @NgayKetThuc = NgayKetThuc,
+            @SoThang = SoThang,
+            @DonGiaThang = DonGiaThang
         FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
         WHERE MaDangKy = @MaDangKy AND TrangThai <> 'HUY';
 
@@ -480,14 +597,55 @@ BEGIN
             (@MaThanhToanMoi, 'VE_THANG', NULL, @MaDangKy,
              @TongTien, @PhuongThuc, 'THANH_CONG', @MaNV, @MaThamChieu);
 
-        UPDATE dbo.DANGKYVETHANG
-        SET ThanhToan = 'DA_THANH_TOAN',
-            TrangThai = CASE
-                WHEN CONVERT(DATE, (SYSUTCDATETIME() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time') >= NgayKetThuc
-                    THEN 'HET_HAN'
-                ELSE 'HIEU_LUC'
-            END
-        WHERE MaDangKy = @MaDangKy;
+        /*
+            Neu ky moi noi lien ky cu thi gop thanh mot dong dang ky.
+            Giao dich thanh toan van duoc giu rieng de bao cao dung doanh thu.
+        */
+        SELECT TOP (1)
+            @MaDangKyGoc = MaDangKy,
+            @SoThangGoc = SoThang
+        FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
+        WHERE MaDangKy <> @MaDangKy
+          AND MaPT = @MaPT
+          AND MaVe = @MaVe
+          AND ThanhToan = 'DA_THANH_TOAN'
+          AND TrangThai <> 'HUY'
+          AND NgayKetThuc = @NgayBatDau
+          AND DonGiaThang = @DonGiaThang
+          AND SoThang + @SoThang <= 24
+        ORDER BY NgayBatDau DESC, MaDangKy DESC;
+
+        IF @MaDangKyGoc IS NOT NULL
+        BEGIN
+            UPDATE dbo.THANHTOAN
+            SET MaDangKy = @MaDangKyGoc
+            WHERE MaThanhToan = @MaThanhToanMoi;
+
+            UPDATE dbo.DANGKYVETHANG
+            SET NgayKetThuc = @NgayKetThuc,
+                SoThang = @SoThangGoc + @SoThang,
+                TongTien = TongTien + @TongTien,
+                TrangThai = CASE
+                    WHEN CONVERT(DATE, (SYSUTCDATETIME() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time') >= @NgayKetThuc
+                        THEN 'HET_HAN'
+                    ELSE 'HIEU_LUC'
+                END
+            WHERE MaDangKy = @MaDangKyGoc;
+
+            DELETE FROM dbo.DANGKYVETHANG
+            WHERE MaDangKy = @MaDangKy;
+        END
+        ELSE
+        BEGIN
+            UPDATE dbo.DANGKYVETHANG
+            SET ThanhToan = 'DA_THANH_TOAN',
+                TrangThai = CASE
+                    WHEN CONVERT(DATE, (SYSUTCDATETIME() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time') >= NgayKetThuc
+                        THEN 'HET_HAN'
+                    ELSE 'HIEU_LUC'
+                END
+            WHERE MaDangKy = @MaDangKy;
+        END;
 
         COMMIT TRANSACTION;
     END TRY
@@ -581,10 +739,16 @@ BEGIN
     BEGIN TRY
         DECLARE @ThanhToan VARCHAR(20);
         DECLARE @TrangThai VARCHAR(20);
+        DECLARE @NgayKetThuc DATE;
+        DECLARE @TodayVn DATE = CONVERT(
+            DATE,
+            (SYSUTCDATETIME() AT TIME ZONE 'UTC') AT TIME ZONE 'SE Asia Standard Time'
+        );
 
         SELECT
             @ThanhToan = ThanhToan,
-            @TrangThai = TrangThai
+            @TrangThai = TrangThai,
+            @NgayKetThuc = NgayKetThuc
         FROM dbo.DANGKYVETHANG WITH (UPDLOCK, HOLDLOCK)
         WHERE MaDangKy = @MaDangKy;
 
@@ -594,8 +758,11 @@ BEGIN
         IF @TrangThai = 'HUY'
             THROW 50601, N'Đăng ký này đã được hủy.', 1;
 
-        IF @ThanhToan <> 'CHUA_THANH_TOAN'
-            THROW 50602, N'Đăng ký đã thanh toán. Hãy sử dụng chức năng hoàn tiền.', 1;
+        IF @ThanhToan = 'DA_THANH_TOAN' AND @TodayVn < @NgayKetThuc
+            THROW 50602, N'Vé đã thanh toán và còn thời hạn. Hãy sử dụng chức năng hoàn tiền.', 1;
+
+        IF @ThanhToan NOT IN ('CHUA_THANH_TOAN', 'DA_THANH_TOAN')
+            THROW 50603, N'Đăng ký không còn ở trạng thái có thể hủy.', 1;
 
         UPDATE dbo.DANGKYVETHANG
         SET TrangThai = 'HUY'
