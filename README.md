@@ -1,6 +1,6 @@
 # QLGuiXe — Hệ thống quản lý gửi xe
 
-Đồ án môn Lập trình .NET xây dựng bằng C# Windows Forms và Microsoft SQL Server. Ứng dụng quản lý xe vào, xe ra, khách hàng, phương tiện, vé lượt, vé tháng, bảng giá, khu vực đỗ xe, nhân sự và báo cáo Crystal Reports.
+Lập trình .NET xây dựng bằng C# Windows Forms và Microsoft SQL Server. Ứng dụng quản lý xe vào, xe ra, khách hàng, phương tiện, vé lượt, vé tháng, bảng giá, khu vực đỗ xe, nhân sự và báo cáo Crystal Reports.
 
 ## Công nghệ sử dụng
 
